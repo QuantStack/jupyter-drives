@@ -1,0 +1,451 @@
+openapi: "3.0.3"
+info:
+  title: Jupyter Drives API
+  version: "5"
+  contact:
+    name: Jupyter Contribution Project
+    url: https://github.com/QuantStack/jupyter-drives
+
+
+paths:
+  /api/drives/{path}:
+    parameters:
+      - $ref: "#/components/parameters/path"
+      - $ref: "#/components/parameters/drive"
+    get:
+      summary: Get contents of file or directory
+      description: "A client can optionally specify a type and/or format argument via URL parameter. When given, the Contents service shall return a model in the requested type and/or format. If the request cannot be satisfied, e.g. type=text is requested, but the file is binary, then the request shall fail with 400 and have a JSON response containing a 'reason' field, with the value 'bad format' or 'bad type', depending on what was requested."
+      parameters:
+        - name: type
+          in: query
+          description: File type ('file', 'directory')
+          schema:
+            type: string
+            enum:
+              - file
+              - directory
+        - name: format
+          in: query
+          description: "How file content should be returned ('text', 'base64')"
+          schema:
+            type: string
+            enum:
+              - text
+              - base64
+        - name: content
+          in: query
+          description: "Return content (0 for no content, 1 for return content)"
+          schema:
+            type: integer
+      responses:
+        404:
+          description: No item found
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+        200:
+          description: Contents of file or directory
+          headers:
+            Last-Modified:
+              description: Last modified date for file
+              schema:
+                type: string
+                format: dateTime
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Contents"
+        500:
+          description: Model key error
+    post:
+      summary: Create a new file in the specified path
+      description: "A POST to /api/drives/path creates a New untitled, empty file or directory. A POST to /api/contents/path with body {'copy_from': '/path/to/OtherNotebook.ipynb'} creates a new copy of OtherNotebook in path."
+      requestBody:
+          description: Path of file to copy
+          content: 
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  copy_from:
+                    type: string
+                  ext:
+                    type: string
+                  type:
+                    type: string
+          required: true
+      responses:
+        201:
+          description: File created
+          headers:
+            Location:
+              description: URL for the new file
+              schema:
+                  type: string
+                  format: url
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Contents"
+        404:
+          description: No item found
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+    patch:
+      summary: Rename a file or directory without re-uploading content
+
+      requestBody:
+        required: true
+        description: New path for file or directory.
+        content:
+          'application/json':
+            schema:
+              type: object
+              properties:
+                path:
+                  type: string
+                  format: path
+                  description: New path for file or directory
+      responses:
+        200:
+          description: Path updated
+          headers:
+            Location:
+              description: Updated URL for the file or directory
+              schema:
+                type: string
+                format: url
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Contents"
+        400:
+          description: No data provided
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+    put:
+      summary: Save, copy or upload file.
+      description: |
+        Saves the file in the location specified by name and path.
+        If the body specifies a `source`, the file content will be copied from there.
+        Otherwise the `content`, `type` and `format` must be provided.
+
+        PUT is very similar to POST, but the requester specifies the name, whereas with POST, the server picks the name."
+
+      requestBody:
+        description: New path for file or directory
+        content:
+          'application/json':
+            schema:
+              oneOf:
+                - type: object
+                  required: ["name", "path"]
+                  properties:
+                    name:
+                      type: string
+                      description: The new filename if changed
+                    path:
+                      type: string
+                      description: New path for file or directory
+                    type:
+                      type: string
+                      description: Path dtype ('notebook', 'file', 'directory')
+                    format:
+                      type: string
+                      description: File format ('json', 'text', 'base64')
+                    content:
+                      type: string
+                      description: The actual body of the document excluding directory type
+                - type: object
+                  required: ["name", "path"]
+                  properties:
+                    name:
+                      type: string
+                      description: The new filename if changed
+                    path:
+                      type: string
+                      description: New path for file or directory
+                    source:
+                      type: string
+                      pattern: ((?P<drive>[^:]+):)?(?P<path>.+)
+
+      responses:
+        200:
+          description: File saved
+          headers:
+            Location:
+              description: Updated URL for the file or directory
+              schema:
+                type: string
+                format: url
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Contents"
+        201:
+          description: Path created
+          headers:
+            Location:
+              description: URL for the file or directory
+              schema:
+                type: string
+                format: url
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Contents"
+        400:
+          description: No data provided
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+    delete:
+      summary: Delete a file in the given path
+
+      responses:
+        204:
+          description: File deleted
+          headers:
+            Location:
+              description: URL for the removed file
+              schema:
+                type: string
+                format: url
+  /api/drives/{path}/checkpoints:
+    parameters:
+      - $ref: "#/components/parameters/path"
+      - $ref: "#/components/parameters/drive"
+    get:
+      summary: Get a list of checkpoints for a file
+      description: List checkpoints for a given file. There will typically be zero or one results.
+      responses:
+        404:
+          description: No item found
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+        200:
+          description: List of checkpoints for a file
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Checkpoints"
+        500:
+          description: Model key error
+    post:
+      summary: Create a new checkpoint for a file
+      description: "Create a new checkpoint with the current state of a file. With the default FileContentsManager, only one checkpoint is supported, so creating new checkpoints clobbers existing ones."
+
+      responses:
+        201:
+          description: Checkpoint created
+          headers:
+            Location:
+              description: URL for the checkpoint
+              schema:
+                type: string
+                format: url
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Checkpoints"
+        404:
+          description: No item found
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+  /api/drives/{path}/checkpoints/{checkpoint_id}:
+    post:
+      summary: Restore a file to a particular checkpointed state
+      parameters:
+        - $ref: "#/components/parameters/path"
+        - $ref: "#/components/parameters/drive"
+        - $ref: "#/components/parameters/checkpoint_id"
+      responses:
+        204:
+          description: Checkpoint restored
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+    delete:
+      summary: Delete a checkpoint
+      parameters:
+        - $ref: "#/components/parameters/path"
+        - $ref: "#/components/parameters/checkpoint_id"
+
+      responses:
+        204:
+          description: Checkpoint deleted
+
+components:
+  parameters:
+    checkpoint_id:
+      name: checkpoint_id
+      required: true
+      in: path
+      description: Checkpoint id for a file
+      schema:
+        type: string
+    drive:
+      name: drive
+      in: query
+      description: Drive name
+      schema:
+        type: string
+    path:
+      name: path
+      required: true
+      in: path
+      description: file path
+      schema:
+        type: string
+    permissions:
+      name: permissions
+      schema:
+        type: string
+      required: false
+      in: query
+      description: |
+        JSON-serialized dictionary of `{"resource": ["action",]}`
+        (dict of lists of strings) to check.
+        The same dictionary structure will be returned,
+        containing only the actions for which the user is authorized.
+  
+  schemas:
+    Contents:
+      description: "A contents object.  The content and format keys may be null if content is not contained.  If type is 'file', then the mimetype will be null."
+      type: object
+      required:
+        - type
+        - name
+        - path
+        - writable
+        - created
+        - last_modified
+        - mimetype
+        - format
+        - content
+      properties:
+        name:
+          type: string
+          description: "Name of file or directory, equivalent to the last part of the path"
+        path:
+          type: string
+          description: Full path for file or directory
+        drive:
+          type: string
+          description: Drive name for file or directory
+        type:
+          type: string
+          description: Type of content
+          enum:
+            - directory
+            - file
+            - notebook
+        writable:
+          type: boolean
+          description: indicates whether the requester has permission to edit the file
+        created:
+          type: string
+          description: Creation timestamp
+          format: dateTime
+        last_modified:
+          type: string
+          description: Last modified timestamp
+          format: dateTime
+        size:
+          type: integer
+          description: "The size of the file or notebook in bytes. If no size is provided, defaults to null."
+        mimetype:
+          type: string
+          description: "The mimetype of a file.  If content is not null, and type is 'file', this will contain the mimetype of the file, otherwise this will be null."
+        content:
+          type: string
+          description: "The content, if requested (otherwise null).  Will be an array if type is 'directory'"
+        format:
+          type: string
+          description: Format of content (one of null, 'text', 'base64', 'json')
+    Checkpoints:
+      description: A checkpoint object.
+      type: object
+      required:
+        - id
+        - last_modified
+      properties:
+        id:
+          type: string
+          description: Unique id for the checkpoint.
+        last_modified:
+          type: string
+          description: Last modified timestamp
+          format: dateTime
