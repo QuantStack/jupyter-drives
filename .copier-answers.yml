@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.2.1
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: ''
+author_name: Jupyter Contribution Team
+data_format: string
+file_extension: ''
+has_binder: true
+has_settings: false
+kind: server
+labextension_name: '@jupyter/drives'
+mimetype: ''
+mimetype_name: ''
+project_short_description: A Jupyter extension to support drives in the backend.
+python_name: jupyter_drives
+repository: https://github.com/QuantStack/jupyter-drives
+test: true
+viewer_name: ''
+
