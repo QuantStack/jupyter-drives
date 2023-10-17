@@ -8,7 +8,76 @@ info:
 
 
 paths:
-  /api/drives/{path}:
+  /api/drives:
+    get:
+      summary: Get available drives
+      responses:
+        404:
+          description: No drive found
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+        200:
+          description: List of drives
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Drives"
+    post:
+      summary: Mount a drive
+      requestBody:
+          description: Path of file to copy
+          content:
+            'application/json':
+              schema:
+                type: object
+      responses:
+        201:
+          description: Drive mounted
+          headers:
+            Location:
+              description: URL for the new drive content
+              schema:
+                  type: string
+                  format: url
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Drive"
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+  /api/drives/{drive}:
+    parameters:
+      - $ref: "#/components/parameters/drive"
+    delete:
+      summary: Unmount a drive
+
+      responses:
+        204:
+          description: Drive unmounted
+
+  /api/drives/{drive}/{path}:
     parameters:
       - $ref: "#/components/parameters/path"
       - $ref: "#/components/parameters/drive"
@@ -69,7 +138,7 @@ paths:
           description: Model key error
     post:
       summary: Create a new file in the specified path
-      description: "A POST to /api/drives/path creates a New untitled, empty file or directory. A POST to /api/contents/path with body {'copy_from': '/path/to/OtherNotebook.ipynb'} creates a new copy of OtherNotebook in path."
+      description: "A POST to /api/drives/drive/path creates a New untitled, empty file or directory. A POST to /api/contents/path with body {'copy_from': '/path/to/OtherNotebook.ipynb'} creates a new copy of OtherNotebook in path."
       requestBody:
           description: Path of file to copy
           content: 
@@ -249,7 +318,7 @@ paths:
               schema:
                 type: string
                 format: url
-  /api/drives/{path}/checkpoints:
+  /api/drives/{drive}/{path}/checkpoints:
     parameters:
       - $ref: "#/components/parameters/path"
       - $ref: "#/components/parameters/drive"
@@ -314,7 +383,7 @@ paths:
                   reason:
                     type: string
                     description: Explanation of error reason
-  /api/drives/{path}/checkpoints/{checkpoint_id}:
+  /api/drives/{drive}/{path}/checkpoints/{checkpoint_id}:
     post:
       summary: Restore a file to a particular checkpointed state
       parameters:
@@ -358,7 +427,8 @@ components:
         type: string
     drive:
       name: drive
-      in: query
+      required: true
+      in: path
       description: Drive name
       schema:
         type: string
@@ -449,3 +519,9 @@ components:
           type: string
           description: Last modified timestamp
           format: dateTime
+    Drive:
+      description: A drive object.
+      type: object
+    Drives:
+      description: A list of drives.
+      type: array
