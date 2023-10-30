@@ -94,14 +94,14 @@
     },
     "jupyterlab": {
         "discovery": {
-        "server": {
-            "managers": [
-                "pip"
-            ],
-            "base": {
-                "name": "jupyter_drives"
+            "server": {
+                "managers": [
+                    "pip"
+                ],
+                "base": {
+                    "name": "jupyter_drives"
+                }
             }
-        }
         },
         "extension": true,
         "outputDir": "jupyter_drives/labextension"
