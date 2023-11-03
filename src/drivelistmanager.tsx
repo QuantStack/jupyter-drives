@@ -18,9 +18,10 @@ export interface IDrive {
 }
 
 export interface IDriveInputProps {
+  isName: boolean;
   value: string;
   getValue: (event: any) => void;
-  updateSelectedDrives: (item: string) => void;
+  updateSelectedDrives: (item: string, isName: boolean) => void;
 }
 export function DriveInputComponent(props: IDriveInputProps) {
   return (
@@ -33,7 +34,7 @@ export function DriveInputComponent(props: IDriveInputProps) {
         <Button
           className="input-add-drive-button"
           onClick={() => {
-            props.updateSelectedDrives(props.value);
+            props.updateSelectedDrives(props.value, props.isName);
           }}
         >
           add drive
@@ -43,9 +44,11 @@ export function DriveInputComponent(props: IDriveInputProps) {
   );
 }
 interface ISearchListProps {
+  isName: boolean;
+  value: string;
   filteredList: Array<string>;
   filter: (value: any) => void;
-  updateSelectedDrives: (item: string) => void;
+  updateSelectedDrives: (item: string, isName: boolean) => void;
 }
 
 export function DriveSearchListComponent(props: ISearchListProps) {
@@ -67,7 +70,7 @@ export function DriveSearchListComponent(props: ISearchListProps) {
               <Button
                 className="search-add-drive-button"
                 onClick={() => {
-                  props.updateSelectedDrives(item);
+                  props.updateSelectedDrives(item, true);
                 }}
               >
                 add drive
@@ -152,9 +155,18 @@ export function DriveListManagerComponent(props: IProps) {
     return isIncluded;
   };
 
-  const updateDrivesSelectedByName = (item: string) => {
+  const updateSelectedDrives = (item: string, isName: boolean) => {
     updatedSelectedDrives = [...props.model.selectedDrives];
-    const pickedDrive: IDrive = { name: driveName, url: '' };
+    let pickedDrive: IDrive;
+    if (isName) {
+      pickedDrive = { name: driveName, url: '' };
+    } else {
+      if (item !== driveUrl) {
+        setDriveUrl(item);
+      }
+      pickedDrive = { name: '', url: driveUrl };
+    }
+
     const checkDrive = isDriveAlreadySelected(
       pickedDrive,
       updatedSelectedDrives
@@ -166,28 +178,7 @@ export function DriveListManagerComponent(props: IProps) {
     }
 
     setSelectedDrives(updatedSelectedDrives);
-    props.model.selectedDrives = updatedSelectedDrives;
-  };
-
-  const updateDrivesSelectedByUrl = (item: string) => {
-    updatedSelectedDrives = [...props.model.selectedDrives];
-    if (item !== driveUrl) {
-      setDriveUrl(item);
-    }
-
-    const pickedDrive: IDrive = { name: '', url: driveUrl };
-    const checkDrive = isDriveAlreadySelected(
-      pickedDrive,
-      updatedSelectedDrives
-    );
-    if (checkDrive === false) {
-      updatedSelectedDrives.push(pickedDrive);
-    } else {
-      console.log('The selected drive is already in the list');
-    }
-
-    setSelectedDrives(updatedSelectedDrives);
-    props.model.selectedDrives = updatedSelectedDrives;
+    props.model.setSelectedDrives(updatedSelectedDrives);
   };
 
   const getValue = (event: any) => {
@@ -220,17 +211,24 @@ export function DriveListManagerComponent(props: IProps) {
             <label> Enter a drive URL</label>
             <label> </label>
             <DriveInputComponent
+              isName={false}
               value={driveUrl}
               getValue={getValue}
-              updateSelectedDrives={updateDrivesSelectedByUrl}
+              updateSelectedDrives={(value, isName) =>
+                updateSelectedDrives(value, isName)
+              }
             />
 
             <label> Select drive(s) from list</label>
             <label> </label>
             <DriveSearchListComponent
+              isName={true}
+              value={driveName}
               filteredList={nameFilteredList}
               filter={filter}
-              updateSelectedDrives={updateDrivesSelectedByName}
+              updateSelectedDrives={(value, isName) =>
+                updateSelectedDrives(value, isName)
+              }
             />
           </div>
 
@@ -255,6 +253,9 @@ export class DriveListModel extends VDomModel {
     super();
 
     this.availableDrives = availableDrives;
+    this.selectedDrives = selectedDrives;
+  }
+  setSelectedDrives(selectedDrives: IDrive[]) {
     this.selectedDrives = selectedDrives;
   }
 }

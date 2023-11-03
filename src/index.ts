@@ -51,74 +51,86 @@ const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
     const { commands } = app;
     const { tracker } = factory;
     const trans = translator.load('jupyter_drives');
+    const selectedDrivesModelMap = new Map<IDrive[], DriveListModel>();
+
+    let selectedDrives: IDrive[] = [
+      {
+        name: 'CoconutDrive',
+        url: '/coconut/url'
+      }
+    ];
+
+    const availableDrives: IDrive[] = [
+      {
+        name: 'CoconutDrive',
+        url: '/coconut/url'
+      },
+      {
+        name: 'PearDrive',
+        url: '/pear/url'
+      },
+      {
+        name: 'StrawberryDrive',
+        url: '/strawberrydrive/url'
+      },
+      {
+        name: 'BlueberryDrive',
+        url: '/blueberrydrive/url'
+      },
+      {
+        name: '',
+        url: '/mydrive/url'
+      },
+      {
+        name: 'RaspberryDrive',
+        url: '/raspberrydrive/url'
+      },
+
+      {
+        name: 'PineAppleDrive',
+        url: ''
+      },
+
+      { name: 'PomeloDrive', url: '/https://pomelodrive/url' },
+      {
+        name: 'OrangeDrive',
+        url: ''
+      },
+      {
+        name: 'TomatoDrive',
+        url: ''
+      },
+      {
+        name: '',
+        url: 'superDrive/url'
+      },
+      {
+        name: 'AvocadoDrive',
+        url: ''
+      }
+    ];
+    let model = selectedDrivesModelMap.get(selectedDrives);
+
+    //const model = new DriveListModel(availableDrives, selectedDrives);
 
     commands.addCommand(CommandIDs.openDrivesDialog, {
       execute: args => {
         const widget = tracker.currentWidget;
-        const selectedDrives: IDrive[] = [
-          {
-            name: 'CoconutDrive',
-            url: '/coconut/url'
-          }
-        ];
 
-        const availableDrives: IDrive[] = [
-          {
-            name: 'CoconutDrive',
-            url: '/coconut/url'
-          },
-          {
-            name: 'PearDrive',
-            url: '/pear/url'
-          },
-          {
-            name: 'StrawberryDrive',
-            url: '/strawberrydrive/url'
-          },
-          {
-            name: 'BlueberryDrive',
-            url: '/blueberrydrive/url'
-          },
-          {
-            name: '',
-            url: '/mydrive/url'
-          },
-          {
-            name: 'RaspberryDrive',
-            url: '/raspberrydrive/url'
-          },
-
-          {
-            name: 'PineAppleDrive',
-            url: ''
-          },
-
-          { name: 'PomeloDrive', url: '/https://pomelodrive/url' },
-          {
-            name: 'OrangeDrive',
-            url: ''
-          },
-          {
-            name: 'TomatoDrive',
-            url: ''
-          },
-          {
-            name: '',
-            url: 'superDrive/url'
-          },
-          {
-            name: 'AvocadoDrive',
-            url: ''
-          }
-        ];
-
-        const model = new DriveListModel(availableDrives, selectedDrives);
-
+        if (!model) {
+          model = new DriveListModel(availableDrives, selectedDrives);
+          selectedDrivesModelMap.set(selectedDrives, model);
+        } else {
+          selectedDrives = model.selectedDrives;
+          selectedDrivesModelMap.set(selectedDrives, model);
+        }
         if (widget) {
-          showDialog({
-            body: new DriveListView(model),
-            buttons: [Dialog.cancelButton()]
-          });
+          if (model) {
+            showDialog({
+              body: new DriveListView(model),
+              buttons: [Dialog.cancelButton()]
+            });
+          }
         }
       },
 
