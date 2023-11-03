@@ -8,7 +8,7 @@ import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { ITranslator } from '@jupyterlab/translation';
 import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
-import { DriveListModel, DriveListView } from './drivelistmanager';
+import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon } from './icons';
 
 namespace CommandIDs {
@@ -55,17 +55,64 @@ const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
     commands.addCommand(CommandIDs.openDrivesDialog, {
       execute: args => {
         const widget = tracker.currentWidget;
-        const driveList = [
-          'BananaDrive',
-          'RaspberryDrive',
-          'PineAppleDrive',
-          'PomeloDrive',
-          'OrangeDrive',
-          'TomatoDrive',
-          'AvocadoDrive'
+        const selectedDrives: IDrive[] = [
+          {
+            name: 'CoconutDrive',
+            url: '/coconut/url'
+          }
         ];
 
-        const model = new DriveListModel(driveList);
+        const availableDrives: IDrive[] = [
+          {
+            name: 'CoconutDrive',
+            url: '/coconut/url'
+          },
+          {
+            name: 'PearDrive',
+            url: '/pear/url'
+          },
+          {
+            name: 'StrawberryDrive',
+            url: '/strawberrydrive/url'
+          },
+          {
+            name: 'BlueberryDrive',
+            url: '/blueberrydrive/url'
+          },
+          {
+            name: '',
+            url: '/mydrive/url'
+          },
+          {
+            name: 'RaspberryDrive',
+            url: '/raspberrydrive/url'
+          },
+
+          {
+            name: 'PineAppleDrive',
+            url: ''
+          },
+
+          { name: 'PomeloDrive', url: '/https://pomelodrive/url' },
+          {
+            name: 'OrangeDrive',
+            url: ''
+          },
+          {
+            name: 'TomatoDrive',
+            url: ''
+          },
+          {
+            name: '',
+            url: 'superDrive/url'
+          },
+          {
+            name: 'AvocadoDrive',
+            url: ''
+          }
+        ];
+
+        const model = new DriveListModel(availableDrives, selectedDrives);
 
         if (widget) {
           showDialog({
