@@ -100,16 +100,14 @@ export function DriveDataGridComponent(props: IDriveDataGridProps) {
         </DataGridRow>
 
         {props.drives.map((item, index) => (
-          <li key={item.name}>
-            <DataGridRow row-type="default">
-              <DataGridCell className="data-grid-cell" grid-column="1">
-                {item.name}
-              </DataGridCell>
-              <DataGridCell className="data-grid-cell" grid-column="2">
-                {item.url}
-              </DataGridCell>
-            </DataGridRow>
-          </li>
+          <DataGridRow key={item.name} row-type="default">
+            <DataGridCell className="data-grid-cell" grid-column="1">
+              {item.name}
+            </DataGridCell>
+            <DataGridCell className="data-grid-cell" grid-column="2">
+              {item.url}
+            </DataGridCell>
+          </DataGridRow>
         ))}
       </DataGrid>
     </div>
@@ -208,8 +206,7 @@ export function DriveListManagerComponent(props: IProps) {
         </div>
         <div className="row">
           <div className="column">
-            <label> Enter a drive URL</label>
-            <label> </label>
+            <div> Enter a drive URL</div>
             <DriveInputComponent
               isName={false}
               value={driveUrl}
@@ -219,8 +216,7 @@ export function DriveListManagerComponent(props: IProps) {
               }
             />
 
-            <label> Select drive(s) from list</label>
-            <label> </label>
+            <div> Select drive(s) from list</div>
             <DriveSearchListComponent
               isName={true}
               value={driveName}
