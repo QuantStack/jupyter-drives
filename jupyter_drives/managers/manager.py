@@ -14,7 +14,7 @@ from ..base import DrivesConfig
 
 import re
 
-class JupyterDrivesManager(abs.ABC):
+class JupyterDrivesManager(abc.ABC):
     """
     Abstract base class for jupyter-drives manager.
 
