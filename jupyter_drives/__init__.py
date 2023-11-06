@@ -9,7 +9,7 @@ except ImportError:
     __version__ = "dev"
 from .handlers import setup_handlers
 from .base import DrivesConfig
-from managers import JupyterDrivesManager
+from .managers.manager import JupyterDrivesManager
 from .managers.s3 import S3Manager
 import traitlets
 
