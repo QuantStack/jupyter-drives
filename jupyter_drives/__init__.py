@@ -8,6 +8,10 @@ except ImportError:
     warnings.warn("Importing 'jupyter_drives' outside a proper installation.")
     __version__ = "dev"
 from .handlers import setup_handlers
+from .base import DrivesConfig
+from managers import JupyterDrivesManager
+from .managers.s3 import S3Manager
+import traitlets
 
 
 def _jupyter_labextension_paths():
@@ -31,6 +35,11 @@ def _load_jupyter_server_extension(server_app):
     server_app: jupyterlab.labapp.LabApp
         JupyterLab application instance
     """
-    setup_handlers(server_app.web_app)
+    setup_handlers(server_app.web_app, server_app.config)
     name = "jupyter_drives"
     server_app.log.info(f"Registered {name} server extension")
+
+# Entry points
+def get_s3_manager(config: "traitlets.config.Config") -> "JupyterDrivesManager":
+    """S3 Manager factory"""
+    return S3Manager(config)   
