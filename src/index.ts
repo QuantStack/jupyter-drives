@@ -1,6 +1,9 @@
 import {
+  ILayoutRestorer,
   JupyterFrontEnd,
   JupyterFrontEndPlugin
+  //ILabShell,
+  //IRouter
 } from '@jupyterlab/application';
 
 import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
@@ -9,9 +12,16 @@ import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
 import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon } from './icons';
+import { IDocumentManager } from '@jupyterlab/docmanager';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { Drive } from './contents';
+import { DefaultAndDrivesFileBrowser } from './browser';
+
+const PLUGIN_ID = '@jupyterlab/jupyter:drives';
 
 namespace CommandIDs {
   export const openDrivesDialog = 'drives:open-drives-dialog';
+  export const openPath = 'filebrowser:open-path';
 }
 
 /**
@@ -25,6 +35,56 @@ const plugin: JupyterFrontEndPlugin<void> = {
     console.log('JupyterLab extension @jupyter/drives is activated!');
   }
 };
+
+/**
+ * The JupyterLab plugin for the Drives Filebrowser.
+ */
+const driveFileBrowserPlugin: JupyterFrontEndPlugin<void> = {
+  id: PLUGIN_ID,
+  requires: [IDocumentManager, IFileBrowserFactory, ISettingRegistry],
+  optional: [ILayoutRestorer],
+  activate: activateFileBrowser,
+  autoStart: true
+};
+
+/**
+ * Activate the file browser.
+ */
+function activateFileBrowser(
+  app: JupyterFrontEnd,
+  manager: IDocumentManager,
+  factory: IFileBrowserFactory,
+  restorer: ILayoutRestorer | null
+): void {
+  const panel = new DefaultAndDrivesFileBrowser();
+  const addedDrive = new Drive(app.docRegistry);
+  addedDrive.name = 'mydrive1';
+  manager.services.contents.addDrive(addedDrive);
+
+  const defaultBrowser = factory.createFileBrowser('default-browser', {
+    refreshInterval: 300000
+  });
+
+  const driveBrowser = factory.createFileBrowser('drive-browser', {
+    driveName: addedDrive.name,
+    refreshInterval: 300000
+  });
+  panel.addWidget(defaultBrowser);
+  panel.addWidget(driveBrowser);
+
+  panel.title.icon = DriveIcon;
+  panel.title.iconClass = 'jp-SideBar-tabIcon';
+  panel.title.caption = 'Browse Drives';
+
+  panel.id = 'drive-file-browser';
+
+  // Add the file browser widget to the application restorer.
+  if (restorer) {
+    restorer.add(panel, 'drive-browser');
+  }
+
+  app.shell.add(panel, 'left', { rank: 102 });
+}
 
 const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:widget',
@@ -53,6 +113,22 @@ const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
       {
         name: 'CoconutDrive',
         url: '/coconut/url'
+      },
+      {
+        name: 'PeachDrive',
+        url: '/peach/url'
+      },
+      {
+        name: 'WaterMelonDrive',
+        url: '/WaterMelonDrive/url'
+      },
+      {
+        name: 'MangoDrive',
+        url: '/mango/url'
+      },
+      {
+        name: 'KiwiDrive',
+        url: '/kiwi/url'
       },
       {
         name: 'PearDrive',
@@ -100,10 +176,8 @@ const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
     ];
     let model = selectedDrivesModelMap.get(selectedDrives);
 
-    //const model = new DriveListModel(availableDrives, selectedDrives);
-
     commands.addCommand(CommandIDs.openDrivesDialog, {
-      execute: args => {
+      execute: async args => {
         const widget = tracker.currentWidget;
 
         if (!model) {
@@ -117,6 +191,7 @@ const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
           if (model) {
             showDialog({
               body: new DriveListView(model),
+
               buttons: [Dialog.cancelButton()]
             });
           }
@@ -129,5 +204,10 @@ const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
     });
   }
 };
-const plugins: JupyterFrontEndPlugin<any>[] = [plugin, openDriveDialogPlugin];
+const plugins: JupyterFrontEndPlugin<any>[] = [
+  plugin,
+  openDriveDialogPlugin,
+  //defaultFileBrowser
+  driveFileBrowserPlugin
+];
 export default plugins;
