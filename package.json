@@ -15,7 +15,8 @@
     "author": "Jupyter Contribution Team",
     "files": [
         "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
-        "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+        "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+        "schema/*.json"
     ],
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -52,6 +53,8 @@
         "watch:labextension": "jupyter labextension watch ."
     },
     "dependencies": {
+        "@jupyter/react-components": "^0.13.3",
+        "@jupyter/web-components": "^0.13.2",
         "@jupyterlab/application": "^4.0.0",
         "@jupyterlab/coreutils": "^6.0.0",
         "@jupyterlab/services": "^7.0.0"
@@ -104,7 +107,8 @@
             }
         },
         "extension": true,
-        "outputDir": "jupyter_drives/labextension"
+        "outputDir": "jupyter_drives/labextension",
+        "schemaDir": "schema"
     },
     "eslintIgnore": [
         "node_modules",
