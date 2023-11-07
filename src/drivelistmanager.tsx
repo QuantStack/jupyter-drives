@@ -157,7 +157,7 @@ export function DriveListManagerComponent(props: IProps) {
     updatedSelectedDrives = [...props.model.selectedDrives];
     let pickedDrive: IDrive;
     if (isName) {
-      pickedDrive = { name: driveName, url: '' };
+      pickedDrive = { name: item, url: '' };
     } else {
       if (item !== driveUrl) {
         setDriveUrl(item);
