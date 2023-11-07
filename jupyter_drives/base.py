@@ -2,8 +2,6 @@ import entrypoints
 from traitlets import Enum, Unicode, default
 from traitlets.config import Configurable
 
-from s3contents import S3ContentsManager
-
 # Supported third-party services
 MANAGERS = {}
 

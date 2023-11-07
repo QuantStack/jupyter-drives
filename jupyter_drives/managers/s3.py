@@ -5,8 +5,9 @@ from typing import Dict, List, Optional, Tuple, Union
 import traitlets
 from jupyter_server.utils import url_path_join
 from tornado.httputil import url_concat
-# from libcloud.compute.types import Provider
-# from libcloud.compute.providers import get_driver
+from libcloud.compute.types import Provider
+from libcloud.compute.providers import get_driver
+from s3contents import S3ContentsManager
 
 from ..base import DrivesConfig
 from .manager import JupyterDrivesManager
