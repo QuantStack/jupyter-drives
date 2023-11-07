@@ -35,8 +35,6 @@ class S3Manager(JupyterDrivesManager):
     
     async def list_drives(self) -> List[Dict[str, str]]:
         """Get the list of available drives.
-
-        Args:
             
         Returns:
             The list of available drives
@@ -69,7 +67,7 @@ class S3Manager(JupyterDrivesManager):
         method: str = "GET",
         body: Optional[dict] = None,
         params: Optional[Dict[str, str]] = None,
-        media_type: str = "application/json", # TO DO: check type
+        media_type: str = "application/xml", # check type
         has_pagination: bool = True,
     ) -> Union[dict, str]:
         """Call S3 provider

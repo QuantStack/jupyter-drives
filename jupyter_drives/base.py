@@ -6,9 +6,8 @@ from s3contents import S3ContentsManager
 
 # Supported third-party services
 MANAGERS = {}
-# MANAGERS = {S3ContentsManager}
 
-for entry in entrypoints.get_group_all("jupyterlab_drives.manager_v1"):
+for entry in entrypoints.get_group_all("jupyter_drives.manager_v1"):
     MANAGERS[entry.name] = entry
 
 class DrivesConfig(Configurable):
@@ -36,7 +35,7 @@ class DrivesConfig(Configurable):
 
     api_base_url = Unicode(
         config=True,
-        help="Base URL of the versioning service REST API.",
+        help="Base URL of the provider service REST API.",
     )
 
     @default("api_base_url")
@@ -53,5 +52,5 @@ class DrivesConfig(Configurable):
         MANAGERS.keys(),
         default_value="s3",
         config=True,
-        help="The source provider.",
+        help="The source control provider.",
     )

@@ -1,3 +1,6 @@
+"""
+Module with all of the individual handlers, which will return the results to the frontend.
+"""
 import json
 import logging 
 import traceback
@@ -9,7 +12,7 @@ import tornado
 import traitlets
 
 from .base import MANAGERS, DrivesConfig
-from .log import get_logger
+# from .log import get_logger
 from .managers.manager import JupyterDrivesManager
 
 NAMESPACE = "jupyter-drives"
@@ -54,10 +57,13 @@ class ListJupyterDrives(JupyterDrivesAPIHandler):
     """
     Returns list of available drives.
     """
+    # Later on, filters can be added for the listing 
     @tornado.web.authenticated
-    def get(self):
-        # add logic to get all available drives
-        self.finish(json.dumps({"data": "Get available drives"}));
+    async def get(self):
+        self.validate_request() # handler specific validation
+        drives = await self._manager.list_drives()
+        self.finish(json.dumps(drives))
+        self.finish(json.dumps({"data": "Get available drives"}))
 
 default_handlers = [
     ("get-example", ExampleJupyterDrivesHandler),
@@ -88,7 +94,7 @@ def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Co
         (
             url_path_join(base_url, pattern),
             handler,
-            {"logger": log}
+            {"logger": log, "manager": manager}
         )
         for pattern, handler in default_handlers
     ]

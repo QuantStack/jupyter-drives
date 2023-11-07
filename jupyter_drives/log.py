@@ -10,7 +10,7 @@ class _ExtensionLogger:
         if cls._LOGGER is None:
             app = Application.instance()
             cls._LOGGER = logging.getLogger(
-                "{!s}.jupyterlab_drives".format(app.log.name)
+                "{!s}.jupyter_drives".format(app.log.name)
             )
             Application.clear_instance()
 

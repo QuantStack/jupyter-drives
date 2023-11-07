@@ -20,6 +20,13 @@ class JupyterDrivesManager(abc.ABC):
 
     Args:
         config: Server extension configuration object
+    
+    .. note:
+
+    The manager will receive the global server configuration object;
+    so it can add configuration parameters if needed.
+    It needs them to extract the ``DrivesConfig`` from it to pass it to this
+    parent class (see ``S3Manager`` for an example).
     """
     def __init__(self, config: DrivesConfig) -> None:
         self._config = config
@@ -53,23 +60,23 @@ class JupyterDrivesManager(abc.ABC):
         """
         raise NotImplementedError()
     
-    @abc.abstractclassmethod
-    async def mount_drive(self) -> str:
-        """Mount a drive. 
+    # @abc.abstractclassmethod
+    # async def mount_drive(self) -> str:
+    #     """Mount a drive. 
 
-        Returns:
-            The URL for the new drive content.
-        """
-        raise NotImplementedError()
+    #     Returns:
+    #         The URL for the new drive content.
+    #     """
+    #     raise NotImplementedError()
     
-    @abc.abstractclassmethod
-    async def unmount_drive(self, drive_name: str):
-        """Unmount a drive.
+    # @abc.abstractclassmethod
+    # async def unmount_drive(self, drive_name: str):
+    #     """Unmount a drive.
 
-        Args:
-            drive_name: name of drive to unmount
-        """
-        raise NotImplementedError()
+    #     Args:
+    #         drive_name: name of drive to unmount
+    #     """
+    #     raise NotImplementedError()
     
     async def _call_provider(
         self,
