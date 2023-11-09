@@ -2,10 +2,106 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { Signal, ISignal } from '@lumino/signaling';
-
 import { DocumentRegistry } from '@jupyterlab/docregistry';
-
 import { Contents, ServerConnection } from '@jupyterlab/services';
+
+const drive1Contents: Contents.IModel = {
+  name: 'Drive1',
+  path: 'Drive1',
+  last_modified: '2023-10-31T12:39:42.832781Z',
+  created: '2023-10-31T12:39:42.832781Z',
+  content: [
+    {
+      name: 'voila2.ipynb',
+      path: 'Drive1/voila2.ipynb',
+      last_modified: '2022-10-12T21:33:04.798185Z',
+      created: '2022-11-09T12:37:21.020396Z',
+      content: null,
+      format: null,
+      mimetype: null,
+      size: 5377,
+      writable: true,
+      type: 'notebook'
+    },
+    {
+      name: 'Untitled.ipynb',
+      path: 'Drive1/Untitled.ipynb',
+      last_modified: '2023-10-25T08:20:09.395167Z',
+      created: '2023-10-25T08:20:09.395167Z',
+      content: null,
+      format: null,
+      mimetype: null,
+      size: 4772,
+      writable: true,
+      type: 'notebook'
+    },
+    {
+      name: 'voila.ipynb',
+      path: 'Drive1/voila.ipynb',
+      last_modified: '2023-10-31T09:43:05.235448Z',
+      created: '2023-10-31T09:43:05.235448Z',
+      content: null,
+      format: null,
+      mimetype: null,
+      size: 2627,
+      writable: true,
+      type: 'notebook'
+    },
+    {
+      name: 'b.ipynb',
+      path: 'Drive1/b.ipynb',
+      last_modified: '2023-10-26T15:21:06.152419Z',
+      created: '2023-10-26T15:21:06.152419Z',
+      content: null,
+      format: null,
+      mimetype: null,
+      size: 1198,
+      writable: true,
+      type: 'notebook'
+    },
+    {
+      name: '_output',
+      path: '_output',
+      last_modified: '2023-10-31T12:39:41.222780Z',
+      created: '2023-10-31T12:39:41.222780Z',
+      content: null,
+      format: null,
+      mimetype: null,
+      size: null,
+      writable: true,
+      type: 'directory'
+    },
+    {
+      name: 'a.ipynb',
+      path: 'Drive1/a.ipynb',
+      last_modified: '2023-10-25T10:07:09.141206Z',
+      created: '2023-10-25T10:07:09.141206Z',
+      content: null,
+      format: null,
+      mimetype: null,
+      size: 8014,
+      writable: true,
+      type: 'notebook'
+    },
+    {
+      name: 'environment.yml',
+      path: 'Drive1/environment.yml',
+      last_modified: '2023-10-31T09:33:57.415583Z',
+      created: '2023-10-31T09:33:57.415583Z',
+      content: null,
+      format: null,
+      mimetype: null,
+      size: 153,
+      writable: true,
+      type: 'file'
+    }
+  ],
+  format: 'json',
+  mimetype: '',
+  size: undefined,
+  writable: true,
+  type: 'directory'
+};
 
 /**
  * A Contents.IDrive implementation that serves as a read-only
@@ -125,103 +221,7 @@ export class Drive implements Contents.IDrive {
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    return {
-      name: 'Drive1',
-      path: 'Drive1',
-      last_modified: '2023-10-31T12:39:42.832781Z',
-      created: '2023-10-31T12:39:42.832781Z',
-      content: [
-        {
-          name: 'voila2.ipynb',
-          path: 'Drive1/voila2.ipynb',
-          last_modified: '2022-10-12T21:33:04.798185Z',
-          created: '2022-11-09T12:37:21.020396Z',
-          content: null,
-          format: null,
-          mimetype: null,
-          size: 5377,
-          writable: true,
-          type: 'notebook'
-        },
-        {
-          name: 'Untitled.ipynb',
-          path: 'Drive1/Untitled.ipynb',
-          last_modified: '2023-10-25T08:20:09.395167Z',
-          created: '2023-10-25T08:20:09.395167Z',
-          content: null,
-          format: null,
-          mimetype: null,
-          size: 4772,
-          writable: true,
-          type: 'notebook'
-        },
-        {
-          name: 'voila.ipynb',
-          path: 'Drive1/voila.ipynb',
-          last_modified: '2023-10-31T09:43:05.235448Z',
-          created: '2023-10-31T09:43:05.235448Z',
-          content: null,
-          format: null,
-          mimetype: null,
-          size: 2627,
-          writable: true,
-          type: 'notebook'
-        },
-        {
-          name: 'b.ipynb',
-          path: 'Drive1/b.ipynb',
-          last_modified: '2023-10-26T15:21:06.152419Z',
-          created: '2023-10-26T15:21:06.152419Z',
-          content: null,
-          format: null,
-          mimetype: null,
-          size: 1198,
-          writable: true,
-          type: 'notebook'
-        },
-        {
-          name: '_output',
-          path: '_output',
-          last_modified: '2023-10-31T12:39:41.222780Z',
-          created: '2023-10-31T12:39:41.222780Z',
-          content: null,
-          format: null,
-          mimetype: null,
-          size: null,
-          writable: true,
-          type: 'directory'
-        },
-        {
-          name: 'a.ipynb',
-          path: 'Drive1/a.ipynb',
-          last_modified: '2023-10-25T10:07:09.141206Z',
-          created: '2023-10-25T10:07:09.141206Z',
-          content: null,
-          format: null,
-          mimetype: null,
-          size: 8014,
-          writable: true,
-          type: 'notebook'
-        },
-        {
-          name: 'environment.yml',
-          path: 'Drive1/environment.yml',
-          last_modified: '2023-10-31T09:33:57.415583Z',
-          created: '2023-10-31T09:33:57.415583Z',
-          content: null,
-          format: null,
-          mimetype: null,
-          size: 153,
-          writable: true,
-          type: 'file'
-        }
-      ],
-      format: 'json',
-      mimetype: '',
-      size: undefined,
-      writable: true,
-      type: 'directory'
-    };
+    return drive1Contents;
   }
 
   /**
