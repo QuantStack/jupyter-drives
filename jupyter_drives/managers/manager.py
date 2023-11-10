@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import nbformat
 import tornado
 import traitlets
+import httpx
 from jupyter_server.utils import url_path_join
 
 from ..log import get_logger
@@ -30,7 +31,7 @@ class JupyterDrivesManager(abc.ABC):
     """
     def __init__(self, config: DrivesConfig) -> None:
         self._config = config
-        self._client = tornado.httpclient.AsyncHTTPClient()
+        self._client = httpx.AsyncClient()
 
     @property
     def base_api_url(self) -> str:
