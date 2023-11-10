@@ -40,8 +40,7 @@ test = [
     "mock>=4.0.0"
 ]
 
-[tool.entrypoints] 
-[jupyter_drives.manager_v1]
+[project.entry-points."jupyter_drives.manager_v1"]
 s3 = "jupyter_drives:get_s3_manager"
 
 [tool.hatch.version]
