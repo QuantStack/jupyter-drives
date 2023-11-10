@@ -62,7 +62,6 @@ class ListJupyterDrives(JupyterDrivesAPIHandler):
         self.validate_request() # handler specific validation
         drives = await self._manager.list_drives()
         self.finish(json.dumps(drives))
-        self.finish(json.dumps({"data": "Get available drives"}))
 
 default_handlers = [
     ("get-example", ExampleJupyterDrivesHandler),
