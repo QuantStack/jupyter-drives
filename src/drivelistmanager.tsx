@@ -177,6 +177,9 @@ export function DriveListManagerComponent(props: IProps) {
 
     setSelectedDrives(updatedSelectedDrives);
     props.model.setSelectedDrives(updatedSelectedDrives);
+    props.model.stateChanged.connect(() =>
+      console.log('selectedDrive has been changed')
+    );
   };
 
   const getValue = (event: any) => {
