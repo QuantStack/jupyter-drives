@@ -57,9 +57,9 @@ li {
 }
 
 .data-grid-cell {
-  text-align: justify;
+  text-align: left;
   height: 2em;
-  min-width: 200px;
+  /*min-width: 200px;*/
   border-right: 2px;
   border-left: 2px;
   background-color: var(--jp-layout-color2);

@@ -1,4 +1,5 @@
 import * as React from 'react';
+//import { requestAPI } from './handler';
 import { VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
 import {
   Button,
@@ -43,6 +44,7 @@ export function DriveInputComponent(props: IDriveInputProps) {
     </div>
   );
 }
+
 interface ISearchListProps {
   isName: boolean;
   value: string;
@@ -177,9 +179,7 @@ export function DriveListManagerComponent(props: IProps) {
 
     setSelectedDrives(updatedSelectedDrives);
     props.model.setSelectedDrives(updatedSelectedDrives);
-    props.model.stateChanged.connect(() =>
-      console.log('selectedDrive has been changed')
-    );
+    props.model.stateChanged.emit();
   };
 
   const getValue = (event: any) => {
@@ -256,6 +256,27 @@ export class DriveListModel extends VDomModel {
   }
   setSelectedDrives(selectedDrives: IDrive[]) {
     this.selectedDrives = selectedDrives;
+  }
+  async sendConnectionRequest(selectedDrives: IDrive[]): Promise<boolean> {
+    console.log(
+      'Sending a request to connect to drive ',
+      selectedDrives[selectedDrives.length - 1].name
+    );
+    const response = true;
+    /*requestAPI('send_connectionRequest', {
+      method: 'POST'
+    })
+      .then(data => {
+        console.log('data:', data);
+        return data;
+      })
+      .catch(reason => {
+        console.error(
+          `The jupyter_drive server extension appears to be missing.\n${reason}`
+        );
+        return;
+      });*/
+    return response;
   }
 }
 
