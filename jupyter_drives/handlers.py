@@ -64,7 +64,6 @@ class ListJupyterDrives(JupyterDrivesAPIHandler):
         self.finish(json.dumps(drives))
 
 default_handlers = [
-    ("get-example", ExampleJupyterDrivesHandler),
     ("get-listDrives", ListJupyterDrives)
 ]
 
