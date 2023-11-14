@@ -49,7 +49,6 @@ class ListJupyterDrives(JupyterDrivesAPIHandler):
     # Later on, filters can be added for the listing 
     @tornado.web.authenticated
     async def get(self):
-        self.validate_request() # handler specific validation
         drives = await self._manager.list_drives()
         self.finish(json.dumps(drives))
 

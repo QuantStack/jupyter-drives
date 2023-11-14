@@ -40,15 +40,14 @@ class S3Manager(JupyterDrivesManager):
         Returns:
             The list of available drives
         """
-        list_drives_url = "/get-listDrives"
-        results = await self._call_s3(list_drives_url)  
-        # Use the libcloud library to list all available drives
-        # S3Drives = get_driver(Provider.S3)
-        # drives = [S3Drives(self._config.session_token)]
-        # data = []
-        # for drive in drives:
-        #   data += driver.list_nodes()
-
+        # drives_url = "/get-listDrives"
+        # results = await self._call_s3(drives_url)  
+        S3Drives = get_driver(Provider.S3)
+        drives = [S3Drives(self._config.session_token)]
+        results = []
+        for drive in drives:
+          results += drive.list_nodes()
+          
         data = []
         for result in results:
             data.append(
