@@ -19,7 +19,7 @@ import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon } from './icons';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { Drive } from './contents';
-import { DefaultAndDrivesFileBrowser } from './browser';
+import { DrivesFileBrowser } from './browser';
 
 const FILE_BROWSER_FACTORY = 'FileBrowser';
 const FILE_BROWSER_PLUGIN_ID = '@jupyter/drives:widget';
@@ -41,7 +41,7 @@ const availableList1 = [
   },
   {
     name: 'WaterMelonDrive',
-    url: '/WaterMelonDrive/url'
+    url: '/watermelondrive/url'
   },
   {
     name: 'MangoDrive',
@@ -65,7 +65,7 @@ const availableList1 = [
   },
   {
     name: '',
-    url: '/mydrive/url'
+    url: '/apple/url'
   },
   {
     name: 'RaspberryDrive',
@@ -73,26 +73,26 @@ const availableList1 = [
   },
 
   {
-    name: 'PineAppleDrive',
-    url: ''
+    name: 'PineappleDrive',
+    url: '/pineappledrive/url'
   },
 
   { name: 'PomeloDrive', url: '/https://pomelodrive/url' },
   {
     name: 'OrangeDrive',
-    url: ''
+    url: 'orangedrive/url'
   },
   {
     name: 'TomatoDrive',
-    url: ''
+    url: 'tomatodrive/url'
   },
   {
     name: '',
-    url: 'superDrive/url'
+    url: 'plumedrive/url'
   },
   {
     name: 'AvocadoDrive',
-    url: ''
+    url: 'avocadodrive/url'
   }
 ];
 
@@ -142,7 +142,7 @@ export async function activateAddDrivesPlugin(
 
   const trans = translator.load('jupyter_drives');
   /* Add a left panel containing the default filebrowser and a dedicated browser for the selected drive*/
-  const panel = new DefaultAndDrivesFileBrowser();
+  const panel = new DrivesFileBrowser();
   const defaultBrowser = factory.createFileBrowser('default-browser', {
     refreshInterval: 300000
   });
@@ -172,7 +172,7 @@ export async function activateAddDrivesPlugin(
   drive1.name = 'mydrive1';
 
   function addDriveContentsToPanel(
-    panel: DefaultAndDrivesFileBrowser,
+    panel: DrivesFileBrowser,
     addedDrive: Drive
   ) {
     manager.services.contents.addDrive(addedDrive);
@@ -180,6 +180,19 @@ export async function activateAddDrivesPlugin(
       driveName: addedDrive.name,
       refreshInterval: 300000
     });
+
+    if (settingRegistry) {
+      setToolbar(
+        driveBrowser,
+        createToolbarFactory(
+          toolbarRegistry,
+          settingRegistry,
+          FILE_BROWSER_FACTORY,
+          FILE_BROWSER_PLUGIN_ID,
+          translator
+        )
+      );
+    }
 
     panel.addWidget(driveBrowser);
   }
@@ -207,7 +220,7 @@ export async function activateAddDrivesPlugin(
             console.log('response:', response);
             addDriveContentsToPanel(panel, drive1);
           } else {
-            console.log('Error, connection with the drive was not possible');
+            console.warn('Connection with the drive was not possible');
           }
         }
       }

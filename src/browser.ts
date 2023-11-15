@@ -3,9 +3,9 @@
 
 import { SidePanel } from '@jupyterlab/ui-components';
 
-export class DefaultAndDrivesFileBrowser extends SidePanel {
+export class DrivesFileBrowser extends SidePanel {
   constructor() {
     super();
-    this.addClass('jp-DefaultAndDriveBrowser');
+    this.addClass('jp-DriveBrowser');
   }
 }

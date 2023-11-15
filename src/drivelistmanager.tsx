@@ -157,15 +157,20 @@ export function DriveListManagerComponent(props: IProps) {
 
   const updateSelectedDrives = (item: string, isName: boolean) => {
     updatedSelectedDrives = [...props.model.selectedDrives];
-    let pickedDrive: IDrive;
-    if (isName) {
-      pickedDrive = { name: item, url: '' };
-    } else {
-      if (item !== driveUrl) {
-        setDriveUrl(item);
+    let pickedDrive: IDrive = { name: '', url: '' };
+
+    props.model.availableDrives.forEach(drive => {
+      if (isName) {
+        if (item === drive.name) {
+          pickedDrive = drive;
+        }
+      } else {
+        if (item !== driveUrl) {
+          setDriveUrl(item);
+        }
+        pickedDrive = { name: '', url: driveUrl };
       }
-      pickedDrive = { name: '', url: driveUrl };
-    }
+    });
 
     const checkDrive = isDriveAlreadySelected(
       pickedDrive,
@@ -174,7 +179,7 @@ export function DriveListManagerComponent(props: IProps) {
     if (checkDrive === false) {
       updatedSelectedDrives.push(pickedDrive);
     } else {
-      console.log('The selected drive is already in the list');
+      console.warn('The selected drive is already in the list');
     }
 
     setSelectedDrives(updatedSelectedDrives);
