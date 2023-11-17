@@ -20,6 +20,10 @@ import { DriveIcon } from './icons';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { Drive } from './contents';
 import { DrivesFileBrowser } from './browser';
+import { FilterFileBrowserModel } from '@jupyterlab/filebrowser';
+import { DocumentManager } from '@jupyterlab/docmanager';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { ServiceManager } from '@jupyterlab/services';
 
 const FILE_BROWSER_FACTORY = 'FileBrowser';
 const FILE_BROWSER_PLUGIN_ID = '@jupyter/drives:widget';
@@ -135,23 +139,39 @@ export async function activateAddDrivesPlugin(
   toolbarRegistry: IToolbarWidgetRegistry,
   translator: ITranslator,
   restorer: ILayoutRestorer | null
-): Promise<void> {
+) {
   console.log('AddDrives plugin is activated!');
   const { commands } = app;
   //const { tracker } = factory;
+  const services = new ServiceManager();
+  const docRegistry = new DocumentRegistry();
+  const docManager = new DocumentManager({
+    registry: docRegistry,
+    manager: services,
+    opener
+  });
+
+  const fbModel = new FilterFileBrowserModel({
+    manager: docManager
+  });
+  const panel = new DrivesFileBrowser({
+    id: 'drivesfilebrowser',
+    model: fbModel
+  });
 
   const trans = translator.load('jupyter_drives');
   /* Add a left panel containing the default filebrowser and a dedicated browser for the selected drive*/
-  const panel = new DrivesFileBrowser();
-  const defaultBrowser = factory.createFileBrowser('default-browser', {
+  //const panel = new DrivesFileBrowser({ id: 'filebrowser', model: fbModel });
+  /*const defaultBrowser = factory.createFileBrowser('default-browser', {
     refreshInterval: 300000
-  });
-  panel.addWidget(defaultBrowser);
+  });*/
+
+  //panel.addWidget(fbWidget);
   panel.title.icon = DriveIcon;
   panel.title.iconClass = 'jp-SideBar-tabIcon';
   panel.title.caption = 'Browse Drives';
   panel.id = 'panel-file-browser';
-  if (settingRegistry) {
+  /*if (settingRegistry) {
     setToolbar(
       defaultBrowser,
       createToolbarFactory(
@@ -162,7 +182,7 @@ export async function activateAddDrivesPlugin(
         translator
       )
     );
-  }
+  }*/
 
   if (restorer) {
     restorer.add(panel, 'drive-browser');
