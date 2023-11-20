@@ -14,21 +14,21 @@ class DrivesConfig(Configurable):
     """
 
     session_token = Unicode(
-        "",
+        None,
         config=True,
         allow_none=True,
         help="A session access token to authenticate.",
     )
 
     access_key_id = Unicode(
-        "",
+        None,
         config=True,
         allow_none=True,
         help="The id of the access key for the bucket.",
     )
 
     secret_access_key= Unicode(
-        "",
+        None,
         config=True,
         allow_none=True,
         help="The secret access key for the bucket.",
