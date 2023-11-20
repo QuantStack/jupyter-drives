@@ -6,17 +6,26 @@ import tornado
 import os
 
 from moto import mock_s3
+from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
 
 @pytest.fixture(scope="module")
-def aws_credentials():
-    """AWS credentials for testing purposes."""
+def set_s3_base():
+    server = ThreadedMotoServer(port = 0)
+    server.start()
+
+    # AWS credentials for testing purposes
     os.environ["AWS_ACCCESS_KEY_ID"] = "12345"
     os.environ["AWS_SECRET_KEY"] = "123456789"
 
+    print("Server working")
+    yield
+    print("Moto done")
+    server.stop()
+
 @pytest.fixture
-async def test_ListJupyterDrives(jp_fetch, aws_credentials, caplog):
+async def test_ListJupyterDrives(jp_fetch, set_s3_base):
     with mock_s3(): 
         S3Drive = get_driver(Provider.S3)
         drive = S3Drive('access_key', 'secret_key')
