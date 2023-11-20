@@ -7,7 +7,7 @@ pytest_plugins = ("pytest_jupyter.jupyter_server", )
 def jp_server_config(jp_server_config):
     return {
         "ServerApp": {"jpserver_extensions": {"jupyter_drives": True}},
-        "DrivesConfig": {"api_base_url": "https://s3.eu-north-1.amazonaws.com/", "access_key_id": "valid", "secret_access_key_id":"valid"},
+        "DrivesConfig": {"api_base_url": "https://s3.eu-north-1.amazonaws.com/", "access_key_id": "valid", "secret_access_key":"valid"},
     }
 
 
