@@ -1,4 +1,5 @@
 import * as React from 'react';
+//import { requestAPI } from './handler';
 import { VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
 import {
   Button,
@@ -43,6 +44,7 @@ export function DriveInputComponent(props: IDriveInputProps) {
     </div>
   );
 }
+
 interface ISearchListProps {
   isName: boolean;
   value: string;
@@ -155,15 +157,20 @@ export function DriveListManagerComponent(props: IProps) {
 
   const updateSelectedDrives = (item: string, isName: boolean) => {
     updatedSelectedDrives = [...props.model.selectedDrives];
-    let pickedDrive: IDrive;
-    if (isName) {
-      pickedDrive = { name: item, url: '' };
-    } else {
-      if (item !== driveUrl) {
-        setDriveUrl(item);
+    let pickedDrive: IDrive = { name: '', url: '' };
+
+    props.model.availableDrives.forEach(drive => {
+      if (isName) {
+        if (item === drive.name) {
+          pickedDrive = drive;
+        }
+      } else {
+        if (item !== driveUrl) {
+          setDriveUrl(item);
+        }
+        pickedDrive = { name: '', url: driveUrl };
       }
-      pickedDrive = { name: '', url: driveUrl };
-    }
+    });
 
     const checkDrive = isDriveAlreadySelected(
       pickedDrive,
@@ -172,11 +179,12 @@ export function DriveListManagerComponent(props: IProps) {
     if (checkDrive === false) {
       updatedSelectedDrives.push(pickedDrive);
     } else {
-      console.log('The selected drive is already in the list');
+      console.warn('The selected drive is already in the list');
     }
 
     setSelectedDrives(updatedSelectedDrives);
     props.model.setSelectedDrives(updatedSelectedDrives);
+    props.model.stateChanged.emit();
   };
 
   const getValue = (event: any) => {
@@ -253,6 +261,27 @@ export class DriveListModel extends VDomModel {
   }
   setSelectedDrives(selectedDrives: IDrive[]) {
     this.selectedDrives = selectedDrives;
+  }
+  async sendConnectionRequest(selectedDrives: IDrive[]): Promise<boolean> {
+    console.log(
+      'Sending a request to connect to drive ',
+      selectedDrives[selectedDrives.length - 1].name
+    );
+    const response = true;
+    /*requestAPI('send_connectionRequest', {
+      method: 'POST'
+    })
+      .then(data => {
+        console.log('data:', data);
+        return data;
+      })
+      .catch(reason => {
+        console.error(
+          `The jupyter_drive server extension appears to be missing.\n${reason}`
+        );
+        return;
+      });*/
+    return response;
   }
 }
 
