@@ -51,10 +51,10 @@ class ListJupyterDrives(JupyterDrivesAPIHandler):
     async def get(self):
         drives, error = await self._manager.list_drives()
         self.finish(json.dumps(drives))
-        logging.debug(error)
+        get_logger().debug(error)
 
 default_handlers = [
-    ("get-listDrives", ListJupyterDrives)
+    ("drives", ListJupyterDrives)
 ]
 
 def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Config, log: Optional[logging.Logger] = None):

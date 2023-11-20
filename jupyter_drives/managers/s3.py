@@ -53,7 +53,6 @@ class S3Manager(JupyterDrivesManager):
             results = []
             for drive in drives:
                 results += drive.list_containers()
-                print(drive.list_containers())
         
             for result in results:
                 data.append(
