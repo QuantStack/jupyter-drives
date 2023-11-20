@@ -16,8 +16,8 @@ def set_s3_base():
     server.start()
 
     # AWS credentials for testing purposes
-    os.environ["AWS_ACCCESS_KEY_ID"] = "12345"
-    os.environ["AWS_SECRET_KEY"] = "123456789"
+    os.environ["access_key_id"] = "12345"
+    os.environ["secret_access_key"] = "123456789"
 
     print("Server working")
     yield
