@@ -8,8 +8,6 @@ from tornado.httputil import url_concat
 
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
-from libcloud.storage.drivers.s3 import S3StorageDriver
-from libcloud.test import MockHttp
 from s3contents import S3ContentsManager
 
 from ..base import DrivesConfig
