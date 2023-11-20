@@ -46,12 +46,15 @@ class ListJupyterDrives(JupyterDrivesAPIHandler):
     """
     Returns list of available drives.
     """
+    def initialize(self, logger: logging.Logger, manager: JupyterDrivesManager):
+        return super().initialize(logger, manager)
+    
     # Later on, filters can be added for the listing 
     @tornado.web.authenticated
     async def get(self):
         drives, error = await self._manager.list_drives()
         self.finish(json.dumps(drives))
-        get_logger().debug(error)
+        self._jp_log.debug(error)
 
 default_handlers = [
     ("drives", ListJupyterDrives)
