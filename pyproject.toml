@@ -37,7 +37,8 @@ test = [
     "pytest-asyncio",
     "pytest-cov",
     "pytest-jupyter[server]>=0.6.0",
-    "mock>=4.0.0"
+    "mock>=4.0.0",
+    "moto>=4.2.8"
 ]
 
 [project.entry-points."jupyter_drives.manager_v1"]

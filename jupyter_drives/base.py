@@ -16,21 +16,30 @@ class DrivesConfig(Configurable):
     session_token = Unicode(
         "",
         config=True,
+        allow_none=True,
         help="A session access token to authenticate.",
     )
 
     access_key_id = Unicode(
         "",
         config=True,
+        allow_none=True,
         help="The id of the access key for the bucket.",
     )
 
     secret_access_key= Unicode(
         "",
         config=True,
+        allow_none=True,
         help="The secret access key for the bucket.",
     )
 
+    region_name = Unicode(
+        "eu-north-1",
+        config = True, 
+        help = "Region name.",
+    )
+    
     api_base_url = Unicode(
         config=True,
         help="Base URL of the provider service REST API.",

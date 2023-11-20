@@ -5,8 +5,11 @@ from typing import Dict, List, Optional, Tuple, Union
 import traitlets
 from jupyter_server.utils import url_path_join
 from tornado.httputil import url_concat
-from libcloud.compute.types import Provider
-from libcloud.compute.providers import get_driver
+
+from libcloud.storage.types import Provider
+from libcloud.storage.providers import get_driver
+from libcloud.storage.drivers.s3 import S3StorageDriver
+from libcloud.test import MockHttp
 from s3contents import S3ContentsManager
 
 from ..base import DrivesConfig
@@ -42,23 +45,32 @@ class S3Manager(JupyterDrivesManager):
         """
         # drives_url = "/get-listDrives"
         # results = await self._call_s3(drives_url)  
-        S3Drives = get_driver(Provider.S3)
-        drives = [S3Drives(self._config.session_token)]
-        results = []
-        for drive in drives:
-          results += drive.list_nodes()
-          
+        
         data = []
-        for result in results:
-            data.append(
-                {
-                    "name": result["name"],
-                    "status": result["status"], 
-                    "provider": result["provider"]
-                }
-            )
+        error = ""
+        if (self._config.access_key_id and self._config.secret_access_key):
+            S3Drive = get_driver(Provider.S3)
+            drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key)]
 
-        return data
+            results = []
+            for drive in drives:
+                results += drive.list_containers()
+                print(drive.list_containers())
+        
+            for result in results:
+                data.append(
+                    {
+                        "name": result.name,
+                        "region": result.driver.region,
+                        "creation_date": result.extra["creation_date"],
+                        "status": "inactive",
+                        "provider": "S3"
+                    }
+                )
+        else:
+            error = "No AWS credentials provided."
+
+        return data, error
     
     async def _call_s3(
         self,
