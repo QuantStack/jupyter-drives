@@ -4,101 +4,24 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
-import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
-import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator } from '@jupyterlab/translation';
 import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
-import {
-  createToolbarFactory,
-  Dialog,
-  IToolbarWidgetRegistry,
-  setToolbar,
-  showDialog
-} from '@jupyterlab/apputils';
-import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
+import { Dialog, showDialog } from '@jupyterlab/apputils';
+import { DriveListModel, DriveListView } from './drivelistmanager';
 import { DriveIcon } from './icons';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { Drive } from './contents';
-import { DrivesFileBrowser } from './browser';
+import { MultiDrivesFileBrowser } from './browser';
 import { FilterFileBrowserModel } from '@jupyterlab/filebrowser';
-import { DocumentManager } from '@jupyterlab/docmanager';
-import { DocumentRegistry } from '@jupyterlab/docregistry';
-import { ServiceManager } from '@jupyterlab/services';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import {
+  createToolbarFactory,
+  IToolbarWidgetRegistry,
+  setToolbar
+} from '@jupyterlab/apputils';
 
 const FILE_BROWSER_FACTORY = 'FileBrowser';
 const FILE_BROWSER_PLUGIN_ID = '@jupyter/drives:widget';
-const selectedList1 = [
-  {
-    name: 'CoconutDrive',
-    url: '/coconut/url'
-  }
-];
-
-const availableList1 = [
-  {
-    name: 'CoconutDrive',
-    url: '/coconut/url'
-  },
-  {
-    name: 'PeachDrive',
-    url: '/peach/url'
-  },
-  {
-    name: 'WaterMelonDrive',
-    url: '/watermelondrive/url'
-  },
-  {
-    name: 'MangoDrive',
-    url: '/mango/url'
-  },
-  {
-    name: 'KiwiDrive',
-    url: '/kiwi/url'
-  },
-  {
-    name: 'PearDrive',
-    url: '/pear/url'
-  },
-  {
-    name: 'StrawberryDrive',
-    url: '/strawberrydrive/url'
-  },
-  {
-    name: 'BlueberryDrive',
-    url: '/blueberrydrive/url'
-  },
-  {
-    name: '',
-    url: '/apple/url'
-  },
-  {
-    name: 'RaspberryDrive',
-    url: '/raspberrydrive/url'
-  },
-
-  {
-    name: 'PineappleDrive',
-    url: '/pineappledrive/url'
-  },
-
-  { name: 'PomeloDrive', url: '/https://pomelodrive/url' },
-  {
-    name: 'OrangeDrive',
-    url: 'orangedrive/url'
-  },
-  {
-    name: 'TomatoDrive',
-    url: 'tomatodrive/url'
-  },
-  {
-    name: '',
-    url: 'plumedrive/url'
-  },
-  {
-    name: 'AvocadoDrive',
-    url: 'avocadodrive/url'
-  }
-];
 
 namespace CommandIDs {
   export const openDrivesDialog = 'drives:open-drives-dialog';
@@ -120,12 +43,11 @@ const AddDrivesPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:add-drives',
   description: 'Open a dialog to select drives to be added in the filebrowser.',
   requires: [
-    ISettingRegistry,
-    IFileBrowserFactory,
     IDocumentManager,
     IToolbarWidgetRegistry,
     ITranslator,
-    ILayoutRestorer
+    ILayoutRestorer,
+    ISettingRegistry
   ],
   autoStart: true,
   activate: activateAddDrivesPlugin
@@ -133,95 +55,113 @@ const AddDrivesPlugin: JupyterFrontEndPlugin<void> = {
 
 export async function activateAddDrivesPlugin(
   app: JupyterFrontEnd,
-  settingRegistry: ISettingRegistry | null,
-  factory: IFileBrowserFactory,
   manager: IDocumentManager,
   toolbarRegistry: IToolbarWidgetRegistry,
   translator: ITranslator,
-  restorer: ILayoutRestorer | null
+  restorer: ILayoutRestorer | null,
+  settingRegistry: ISettingRegistry
 ) {
   console.log('AddDrives plugin is activated!');
   const { commands } = app;
-  //const { tracker } = factory;
-  const services = new ServiceManager();
-  const docRegistry = new DocumentRegistry();
-  const docManager = new DocumentManager({
-    registry: docRegistry,
-    manager: services,
-    opener
-  });
+  const cocoDrive = new Drive(app.docRegistry);
+  cocoDrive.name = 'coconutDrive';
+  cocoDrive.baseUrl = '/coconut/url';
+  cocoDrive.region = '';
+  cocoDrive.status = 'active';
+  cocoDrive.provider = '';
+  const peachDrive = new Drive(app.docRegistry);
+  peachDrive.baseUrl = '/peach/url';
+  peachDrive.name = 'peachDrive';
+  const mangoDrive = new Drive(app.docRegistry);
+  mangoDrive.baseUrl = '/mango/url';
+  mangoDrive.name = 'mangoDrive';
+  const kiwiDrive = new Drive(app.docRegistry);
+  kiwiDrive.baseUrl = '/kiwi/url';
+  kiwiDrive.name = 'kiwiDrive';
+  const pearDrive = new Drive(app.docRegistry);
+  pearDrive.baseUrl = '/pear/url';
+  pearDrive.name = 'pearDrive';
+  const customDrive = new Drive(app.docRegistry);
+  customDrive.baseUrl = '/customDrive/url';
+  const tomatoDrive = new Drive(app.docRegistry);
+  tomatoDrive.baseUrl = '/tomato/url';
+  tomatoDrive.name = 'tomatoDrive';
+  const avocadoDrive = new Drive(app.docRegistry);
+  avocadoDrive.baseUrl = '/avocado/url';
+  avocadoDrive.name = 'avocadoDrive';
 
-  const fbModel = new FilterFileBrowserModel({
-    manager: docManager
-  });
-  const panel = new DrivesFileBrowser({
-    id: 'drivesfilebrowser',
-    model: fbModel
-  });
+  const selectedList1: Drive[] = [cocoDrive];
+  const availableList1: Drive[] = [
+    avocadoDrive,
+    cocoDrive,
+    customDrive,
+    kiwiDrive,
+    mangoDrive,
+    peachDrive,
+    pearDrive,
+    tomatoDrive
+  ];
+  function buildInitialBrowserModelList() {
+    const modelList: FilterFileBrowserModel[] = [];
+    const drive1 = new Drive(app.docRegistry);
+    drive1.name = 'Drive1';
+    manager.services.contents.addDrive(drive1);
+    const drive1Model = new FilterFileBrowserModel({
+      manager: manager,
+      driveName: drive1.name
+    });
 
+    const drive2 = new Drive(app.docRegistry);
+    drive2.name = 'SuperCoolDrive2';
+    manager.services.contents.addDrive(drive2);
+    const drive2Model = new FilterFileBrowserModel({
+      manager: manager,
+      driveName: drive2.name
+    });
+
+    const localDriveModel = new FilterFileBrowserModel({ manager: manager });
+    modelList.push(localDriveModel);
+    modelList.push(drive1Model);
+    modelList.push(drive2Model);
+
+    return modelList;
+  }
+  const browserModelList = buildInitialBrowserModelList();
   const trans = translator.load('jupyter_drives');
-  /* Add a left panel containing the default filebrowser and a dedicated browser for the selected drive*/
-  //const panel = new DrivesFileBrowser({ id: 'filebrowser', model: fbModel });
-  /*const defaultBrowser = factory.createFileBrowser('default-browser', {
-    refreshInterval: 300000
-  });*/
-
-  //panel.addWidget(fbWidget);
+  const panel = new MultiDrivesFileBrowser({
+    modelList: browserModelList,
+    id: '',
+    manager
+  });
   panel.title.icon = DriveIcon;
   panel.title.iconClass = 'jp-SideBar-tabIcon';
   panel.title.caption = 'Browse Drives';
   panel.id = 'panel-file-browser';
-  /*if (settingRegistry) {
-    setToolbar(
-      defaultBrowser,
-      createToolbarFactory(
-        toolbarRegistry,
-        settingRegistry,
-        FILE_BROWSER_FACTORY,
-        FILE_BROWSER_PLUGIN_ID,
-        translator
-      )
-    );
-  }*/
-
   if (restorer) {
     restorer.add(panel, 'drive-browser');
   }
   app.shell.add(panel, 'left', { rank: 102 });
-  const drive1 = new Drive(app.docRegistry);
-  drive1.name = 'mydrive1';
 
-  function addDriveContentsToPanel(
-    panel: DrivesFileBrowser,
-    addedDrive: Drive
-  ) {
+  setToolbar(
+    panel,
+    createToolbarFactory(
+      toolbarRegistry,
+      settingRegistry,
+      FILE_BROWSER_FACTORY,
+      FILE_BROWSER_PLUGIN_ID,
+      translator
+    )
+  );
+
+  function addDriveContentsToPanel(addedDrive: Drive) {
     manager.services.contents.addDrive(addedDrive);
-    const driveBrowser = factory.createFileBrowser('drive-browser', {
-      driveName: addedDrive.name,
-      refreshInterval: 300000
-    });
-
-    if (settingRegistry) {
-      setToolbar(
-        driveBrowser,
-        createToolbarFactory(
-          toolbarRegistry,
-          settingRegistry,
-          FILE_BROWSER_FACTORY,
-          FILE_BROWSER_PLUGIN_ID,
-          translator
-        )
-      );
-    }
-
-    panel.addWidget(driveBrowser);
   }
 
   /* Dialog to select the drive */
   addJupyterLabThemeChangeListener();
-  const selectedDrivesModelMap = new Map<IDrive[], DriveListModel>();
-  let selectedDrives: IDrive[] = selectedList1;
-  const availableDrives: IDrive[] = availableList1;
+  const selectedDrivesModelMap = new Map<Drive[], DriveListModel>();
+  let selectedDrives: Drive[] = selectedList1;
+  const availableDrives: Drive[] = availableList1;
   let model = selectedDrivesModelMap.get(selectedDrives);
 
   commands.addCommand(CommandIDs.openDrivesDialog, {
@@ -233,22 +173,20 @@ export async function activateAddDrivesPlugin(
         selectedDrives = model.selectedDrives;
         selectedDrivesModelMap.set(selectedDrives, model);
       }
-      async function onDriveAdded(selectedDrives: IDrive[]) {
+      async function onDriveAdded(selectedDrives: Drive[]) {
         if (model) {
           const response = model.sendConnectionRequest(selectedDrives);
           if ((await response) === true) {
-            console.log('response:', response);
-            addDriveContentsToPanel(panel, drive1);
+            addDriveContentsToPanel(selectedDrives[selectedDrives.length - 1]);
           } else {
             console.warn('Connection with the drive was not possible');
           }
         }
       }
 
-      //if (defaultBrowser && tracker.currentWidget) {
       if (model) {
         showDialog({
-          body: new DriveListView(model),
+          body: new DriveListView(model, app.docRegistry),
           buttons: [Dialog.cancelButton()]
         });
       }

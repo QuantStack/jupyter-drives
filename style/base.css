@@ -69,3 +69,27 @@ li {
   width: 800px;
   height: 800px;
 }
+.jp-DirListing-header {
+  display: none;
+}
+
+.lm-SplitPanel-handle {
+  display: none;
+}
+
+.lm-AccordionPanel .jp-AccordionPanel-title {
+  box-sizing: border-box;
+  line-height: 24px;
+  max-height: 24px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  color: var(--jp-ui-font-color1);
+  border-bottom: var(--jp-border-width) solid var(--jp-toolbar-border-color);
+  box-shadow: var(--jp-toolbar-box-shadow);
+  font-size: var(--jp-ui-font-size0);
+}
+
+.jp-FileBrowser .lm-AccordionPanel > h3:first-child {
+  display: flex;
+}
