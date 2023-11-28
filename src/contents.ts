@@ -2,8 +2,8 @@
 // Distributed under the terms of the Modified BSD License.
 
 import { Signal, ISignal } from '@lumino/signaling';
-import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Contents, ServerConnection } from '@jupyterlab/services';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
 
 const drive1Contents: Contents.IModel = {
   name: 'Drive1',
@@ -157,16 +157,42 @@ export class Drive implements Contents.IDrive {
   }
 
   /**
-   * The Drive is Active getter
+   * The Drive status getter (if it is active or not)
    */
-  get isActive(): boolean {
-    return this._isActive;
+  get status(): string {
+    return this._status;
   }
 
   /**
-   * The Drive isActive provider setter */
-  set isActive(isActive: boolean) {
-    this._isActive = isActive;
+   * The Drive status setter */
+  set status(status: string) {
+    this._status = status;
+  }
+
+  /**
+   * The Drive region getter
+   */
+  get region(): string {
+    return this._region;
+  }
+
+  /**
+   * The Drive region setter */
+  set region(region: string) {
+    this._region = region;
+  }
+
+  /**
+   * The Drive creationDate getter
+   */
+  get creationDate(): string {
+    return this._creationDate;
+  }
+
+  /**
+   * The Drive region setter */
+  set creationDate(date: string) {
+    this._creationDate = date;
   }
 
   /**
@@ -346,7 +372,9 @@ export class Drive implements Contents.IDrive {
   private _name: string = '';
   private _provider: string = '';
   private _baseUrl: string = '';
-  private _isActive: boolean = false;
+  private _status: string = 'active' || 'inactive';
+  private _region: string = '';
+  private _creationDate: string = '';
   private _fileChanged = new Signal<this, Contents.IChangedArgs>(this);
   private _isDisposed: boolean = false;
 }
