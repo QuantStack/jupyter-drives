@@ -12,8 +12,8 @@ import { ITranslator } from '@jupyterlab/translation';
  */
 const CRUMBS_CLASS = 'jp-FileBrowser-crumbs';
 
-export class DriveListing extends DirListing {
-  constructor(options: DriveListing.IOptions) {
+export class DriveBrowser extends DirListing {
+  constructor(options: DriveBrowser.IOptions) {
     super({
       model: options.model,
       translator: options.translator,
@@ -35,7 +35,7 @@ export class DriveListing extends DirListing {
   private _breadcrumbs: BreadCrumbs;
 }
 
-export namespace DriveListing {
+export namespace DriveBrowser {
   /**
    * An options object for initializing DrivesListing widget.
    */
