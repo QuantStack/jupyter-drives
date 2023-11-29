@@ -29,6 +29,7 @@ namespace CommandIDs {
   export const openPath = 'filebrowser:open-path';
 }
 
+
 /**
  * Initialization data for the @jupyter/drives extension.
  */

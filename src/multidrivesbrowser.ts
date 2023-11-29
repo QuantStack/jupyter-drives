@@ -69,29 +69,30 @@ export class MultiDrivesFileBrowser extends SidePanel {
     );
 
     const renderer = options.renderer;
-
+    console.log('modelList:', modelList);
     modelList.forEach(model => {
-      let driveName = model.driveName;
-      if (model.driveName === '') {
-        driveName = 'Local Drive';
-      }
-      console.log('driveName:', driveName);
-      const listing = new DriveBrowser({
-        model: model,
-        translator: translator,
-        renderer: renderer,
-        breadCrumbs: new BreadCrumbs({
+      if (model) {
+        let driveName = model.driveName;
+        if (model.driveName === '') {
+          driveName = 'Local Drive';
+        }
+        const listing = new DriveBrowser({
           model: model,
-          translator: translator
-        }),
-        driveName: driveName
-      });
+          translator: translator,
+          renderer: renderer,
+          breadCrumbs: new BreadCrumbs({
+            model: model,
+            translator: translator
+          }),
+          driveName: driveName
+        });
 
-      listing.addClass(LISTING_CLASS);
-      this.addWidget(listing);
+        listing.addClass(LISTING_CLASS);
+        this.addWidget(listing);
 
-      if (options.restore !== false) {
-        void model.restore(this.id);
+        if (options.restore !== false) {
+          void model.restore(this.id);
+        }
       }
     });
   }
