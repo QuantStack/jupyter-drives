@@ -2,14 +2,22 @@
 Module with all of the individual handlers, which will return the results to the frontend.
 """
 import json
+import os
+import functools
 import logging 
 import traceback
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 from jupyter_server.base.handlers import APIHandler
-from jupyter_server.utils import url_path_join
+from jupyter_server.services.contents.manager import ContentsManager
+from jupyter_server.utils import url2path, url_path_join
 import tornado
 import traitlets
+
+try: 
+    import hybridcontents
+except ImportError:
+    hybridcontents = None
 
 from .base import MANAGERS, DrivesConfig
 from .managers.manager import JupyterDrivesManager
@@ -42,7 +50,28 @@ class JupyterDrivesAPIHandler(APIHandler):
                 reply["error"] = "".join(traceback.format_exception(*exc_info))
         self.finish(json.dumps(reply))
 
-class ListJupyterDrives(JupyterDrivesAPIHandler):
+    
+    @functools.lru_cache()
+    def url2localpath(
+        self, path: str, with_contents_manager: bool = False
+    ) -> Union[str, Tuple[str, ContentsManager]]:
+        """
+        Get the local path from a JupyterLab server path.
+
+        Optionally it can also return the contents manager for that path.
+        """
+        cm = self.contents_manager
+
+        # Handle local manager of hybridcontents.HybridContentsManager
+        if hybridcontents is not None and isinstance(
+            cm, hybridcontents.HybridContentsManager
+        ):
+            _, cm, path = hybridcontents.hybridmanager._resolve_path(path, cm.managers)
+        
+        local_path = os.path.join(os.path.expanduser(cm.root_dir), url2path(path))
+        return (local_path, cm) if with_contents_manager else local_path
+
+class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     """
     Returns list of available drives.
     """
@@ -52,12 +81,28 @@ class ListJupyterDrives(JupyterDrivesAPIHandler):
     # Later on, filters can be added for the listing 
     @tornado.web.authenticated
     async def get(self):
-        drives, error = await self._manager.list_drives()
+        drives = await self._manager.list_drives()
         self.finish(json.dumps(drives))
-        self._jp_log.debug(error)
+
+class MountJupyterDriveHandler(JupyterDrivesAPIHandler):
+    """
+    Mounts a drive. Makes content accessible to user.
+    """
+    def initialize(self, logger: logging.Logger, manager: JupyterDrivesManager):
+        return super().initialize(logger, manager)
+    
+    @tornado.web.authenticated
+    async def post(self, path: str =""):
+        body = self.get_json_body()
+        drive_name = body["drive_name"]
+        local_path = self.url2localpath(path)
+
+        result = await self._manager.mount_drive(drive_name, local_path)
+        self.finish(json.dump(result))
 
 default_handlers = [
-    ("drives", ListJupyterDrives)
+    ("drives", ListJupyterDrivesHandler),
+    ("mount-drive", MountJupyterDriveHandler)
 ]
 
 def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Config, log: Optional[logging.Logger] = None):

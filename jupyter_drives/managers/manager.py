@@ -15,6 +15,8 @@ from ..base import DrivesConfig
 
 import re
 
+from s3contents import S3ContentsManager
+
 class JupyterDrivesManager(abc.ABC):
     """
     Abstract base class for jupyter-drives manager.
@@ -61,23 +63,23 @@ class JupyterDrivesManager(abc.ABC):
         """
         raise NotImplementedError()
     
-    # @abc.abstractclassmethod
-    # async def mount_drive(self) -> str:
-    #     """Mount a drive. 
+    @abc.abstractclassmethod
+    async def mount_drive(self, drive_name, path) -> S3ContentsManager:
+        """Mount a drive. 
 
-    #     Returns:
-    #         The URL for the new drive content.
-    #     """
-    #     raise NotImplementedError()
+        Returns:
+            The content manager for the drive.
+        """
+        raise NotImplementedError()
     
-    # @abc.abstractclassmethod
-    # async def unmount_drive(self, drive_name: str):
-    #     """Unmount a drive.
+    @abc.abstractclassmethod
+    async def unmount_drive(self, drive_name: str):
+        """Unmount a drive.
 
-    #     Args:
-    #         drive_name: name of drive to unmount
-    #     """
-    #     raise NotImplementedError()
+        Args:
+            drive_name: name of drive to unmount
+        """
+        raise NotImplementedError()
     
     async def _call_provider(
         self,
@@ -110,19 +112,19 @@ class JupyterDrivesManager(abc.ABC):
         """
         if not self._config.session_token:
             raise tornado.web.HTTPError(
-                status_code=http.HTTPStatus.BAD_REQUEST,
+                status_code= httpx.codes.BAD_REQUEST,
                 reason="No session token specified. Please set DriversConfig.session_token in your user jupyter_server_config file.",
             )
         
         if not self._config.access_key_id:
             raise tornado.web.HTTPError(
-                status_code=http.HTTPStatus.BAD_REQUEST,
+                status_code= httpx.codes.BAD_REQUEST,
                 reason="No access key id specified. Please set DriversConfig.access_key_id in your user jupyter_server_config file.",
             )
         
         if not self._config.secret_access_key:
             raise tornado.web.HTTPError(
-                status_code=http.HTTPStatus.BAD_REQUEST,
+                status_code= httpx.codes.BAD_REQUEST,
                 reason="No secret access key specified. Please set DriversConfig.secret_access_key in your user jupyter_server_config file.",
             )
 

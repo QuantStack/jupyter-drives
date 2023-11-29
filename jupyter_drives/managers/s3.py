@@ -1,4 +1,5 @@
-import json
+import tornado
+import httpx
 from itertools import chain
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -20,6 +21,7 @@ class S3Manager(JupyterDrivesManager):
     def __init__(self, config: traitlets.config.Config) -> None:
         super().__init__(DrivesConfig(config=config))
         self._drives_cache = {}
+        self.s3_content_managers = {}
 
     @property
     def base_api_url(self):
@@ -41,11 +43,7 @@ class S3Manager(JupyterDrivesManager):
         Returns:
             The list of available drives
         """
-        # drives_url = "/get-listDrives"
-        # results = await self._call_s3(drives_url)  
-        
         data = []
-        error = ""
         if (self._config.access_key_id and self._config.secret_access_key):
             S3Drive = get_driver(Provider.S3)
             drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key)]
@@ -65,9 +63,50 @@ class S3Manager(JupyterDrivesManager):
                     }
                 )
         else:
-            error = "No AWS credentials provided."
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason="No AWS credentials specified. Please set them in your user jupyter_server_config file.",
+            )
 
-        return data, error
+        return data
+    
+    async def mount_drive(self, drive_name, path) -> S3ContentsManager:
+        '''
+        Mount a drive by creating an S3ContentsManager for it.
+
+        Params: 
+            drive_name: name of drive to mount
+            path: endpoint_url for the S3ContentsManager
+        
+        Args:
+            S3ContentsManager
+        '''
+        s3_contents_manager = S3ContentsManager(
+            access_key = self._config.access_key_id,
+            secret_access_key = self._config.secret_access_key,
+            endpoint_url = path,
+            bucket = drive_name
+        )
+
+        self.s3_content_managers[drive_name] = s3_contents_manager
+
+        return s3_contents_manager
+    
+    async def unmount_drive(self, drive_name):
+        '''
+        Unmount a drive.
+
+        Argss:
+        drive_name: name of drive to unmount
+        '''
+        if drive_name in self.s3_content_managers:
+            self.s3_content_managers.pop(drive_name, None)
+        
+        else:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason="Drive is not mounted or doesn't exist.",
+            )
     
     async def _call_s3(
         self,

@@ -26,7 +26,8 @@ dependencies = [
     "s3contents>=0.11.1,<0.12.0",
     "apache-libcloud>=3.8.0, <4",
     "entrypoints>=0.4, <0.5",
-    "httpx>=0.25.1, <0.26"
+    "httpx>=0.25.1, <0.26",
+    "hybridcontents>=0.4.0, <0.5"
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
