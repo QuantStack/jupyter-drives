@@ -11,14 +11,15 @@ import { DriveListModel, DriveListView } from './drivelistmanager';
 import { DriveIcon } from './icons';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { Drive } from './contents';
-import { MultiDrivesFileBrowser } from './browser';
-import { FilterFileBrowserModel } from '@jupyterlab/filebrowser';
+import { MultiDrivesFileBrowser } from './multidrivesbrowser';
+import { BreadCrumbs, FilterFileBrowserModel } from '@jupyterlab/filebrowser';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   createToolbarFactory,
   IToolbarWidgetRegistry,
   setToolbar
 } from '@jupyterlab/apputils';
+import { DriveBrowser } from './drivebrowser';
 
 const FILE_BROWSER_FACTORY = 'FileBrowser';
 const FILE_BROWSER_PLUGIN_ID = '@jupyter/drives:widget';
@@ -100,7 +101,7 @@ export async function activateAddDrivesPlugin(
   avocadoDrive.baseUrl = '/avocado/url';
   avocadoDrive.name = 'avocadoDrive';
 
-  const selectedList1: Drive[] = [cocoDrive];
+  const selectedList1: Drive[] = [];
   const availableList1: Drive[] = [
     avocadoDrive,
     cocoDrive,
@@ -111,32 +112,25 @@ export async function activateAddDrivesPlugin(
     pearDrive,
     tomatoDrive
   ];
-  function buildInitialBrowserModelList() {
-    const modelList: FilterFileBrowserModel[] = [];
-    const drive1 = new Drive(app.docRegistry);
-    drive1.name = 'Drive1';
-    manager.services.contents.addDrive(drive1);
-    const drive1Model = new FilterFileBrowserModel({
+
+  function createFilterFileBrowserModel(
+    manager: IDocumentManager,
+    drive?: Drive
+  ): FilterFileBrowserModel {
+    const driveModel = new FilterFileBrowserModel({
       manager: manager,
-      driveName: drive1.name
+      driveName: drive?.name
     });
 
-    const drive2 = new Drive(app.docRegistry);
-    drive2.name = 'SuperCoolDrive2';
-    manager.services.contents.addDrive(drive2);
-    const drive2Model = new FilterFileBrowserModel({
-      manager: manager,
-      driveName: drive2.name
-    });
-
-    const localDriveModel = new FilterFileBrowserModel({ manager: manager });
-    modelList.push(localDriveModel);
-    modelList.push(drive1Model);
-    modelList.push(drive2Model);
-
-    return modelList;
+    return driveModel;
   }
-  const browserModelList = buildInitialBrowserModelList();
+  function buildInitialBrowserModelList(selectedDrives: Drive[]) {
+    const browserModelList: FilterFileBrowserModel[] = [];
+    const localDriveModel = createFilterFileBrowserModel(manager);
+    browserModelList.push(localDriveModel);
+    return browserModelList;
+  }
+  const browserModelList = buildInitialBrowserModelList(selectedList1);
   const trans = translator.load('jupyter_drives');
   const panel = new MultiDrivesFileBrowser({
     modelList: browserModelList,
@@ -162,9 +156,28 @@ export async function activateAddDrivesPlugin(
       translator
     )
   );
-
-  function addDriveContentsToPanel(addedDrive: Drive) {
+  function addToBrowserModelList(
+    browserModelList: FilterFileBrowserModel[],
+    addedDrive: Drive
+  ) {
+    const addedDriveModel = createFilterFileBrowserModel(manager, addedDrive);
+    browserModelList.push(addedDriveModel);
+    return browserModelList;
+  }
+  function addDriveContentsToPanel(
+    browserModelList: FilterFileBrowserModel[],
+    addedDrive: Drive,
+    panel: MultiDrivesFileBrowser
+  ) {
+    const addedDriveModel = createFilterFileBrowserModel(manager, addedDrive);
+    browserModelList = addToBrowserModelList(browserModelList, addedDrive);
     manager.services.contents.addDrive(addedDrive);
+    const AddedDriveBrowser = new DriveBrowser({
+      model: addedDriveModel,
+      breadCrumbs: new BreadCrumbs({ model: addedDriveModel }),
+      driveName: addedDrive.name
+    });
+    panel.addWidget(AddedDriveBrowser);
   }
 
   /* Dialog to select the drive */
@@ -172,38 +185,42 @@ export async function activateAddDrivesPlugin(
   const selectedDrivesModelMap = new Map<Drive[], DriveListModel>();
   let selectedDrives: Drive[] = selectedList1;
   const availableDrives: Drive[] = availableList1;
-  let model = selectedDrivesModelMap.get(selectedDrives);
+  let driveListModel = selectedDrivesModelMap.get(selectedDrives);
 
   commands.addCommand(CommandIDs.openDrivesDialog, {
     execute: async args => {
-      if (!model) {
-        model = new DriveListModel(availableDrives, selectedDrives);
-        selectedDrivesModelMap.set(selectedDrives, model);
+      if (!driveListModel) {
+        driveListModel = new DriveListModel(availableDrives, selectedDrives);
+        selectedDrivesModelMap.set(selectedDrives, driveListModel);
       } else {
-        selectedDrives = model.selectedDrives;
-        selectedDrivesModelMap.set(selectedDrives, model);
+        selectedDrives = driveListModel.selectedDrives;
+        selectedDrivesModelMap.set(selectedDrives, driveListModel);
       }
       async function onDriveAdded(selectedDrives: Drive[]) {
-        if (model) {
-          const response = model.sendConnectionRequest(selectedDrives);
+        if (driveListModel) {
+          const response = driveListModel.sendConnectionRequest(selectedDrives);
           if ((await response) === true) {
-            addDriveContentsToPanel(selectedDrives[selectedDrives.length - 1]);
+            addDriveContentsToPanel(
+              browserModelList,
+              selectedDrives[selectedDrives.length - 1],
+              panel
+            );
           } else {
             console.warn('Connection with the drive was not possible');
           }
         }
       }
 
-      if (model) {
+      if (driveListModel) {
         showDialog({
-          body: new DriveListView(model, app.docRegistry),
+          body: new DriveListView(driveListModel, app.docRegistry),
           buttons: [Dialog.cancelButton()]
         });
       }
 
-      model.stateChanged.connect(async () => {
-        if (model) {
-          onDriveAdded(model.selectedDrives);
+      driveListModel.stateChanged.connect(async () => {
+        if (driveListModel) {
+          onDriveAdded(driveListModel.selectedDrives);
         }
       });
     },
