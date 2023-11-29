@@ -13,7 +13,7 @@ import {
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { AccordionPanel } from '@lumino/widgets';
 import { BreadCrumbsLayout } from './crumbslayout';
-import { DriveListing } from './drivelisting';
+import { DriveBrowser } from './drivebrowser';
 
 /*
  * The class name added to file browsers.
@@ -76,7 +76,7 @@ export class MultiDrivesFileBrowser extends SidePanel {
         driveName = 'Local Drive';
       }
       console.log('driveName:', driveName);
-      const listing = new DriveListing({
+      const listing = new DriveBrowser({
         model: model,
         translator: translator,
         renderer: renderer,
@@ -103,8 +103,8 @@ export class MultiDrivesFileBrowser extends SidePanel {
    *
    * @returns The created DirListing instance.
    */
-  protected createDriveListing(options: DriveListing.IOptions): DriveListing {
-    return new DriveListing(options);
+  protected createDriveBrowser(options: DriveBrowser.IOptions): DriveBrowser {
+    return new DriveBrowser(options);
   }
 
   /**
@@ -112,13 +112,13 @@ export class MultiDrivesFileBrowser extends SidePanel {
    *
    * @returns A promise that resolves with the new name of the item.
    */
-  rename(listing: DriveListing): Promise<string> {
+  rename(listing: DriveBrowser): Promise<string> {
     return listing.rename();
   }
 
   private async _createNew(
     options: Contents.ICreateOptions,
-    listing: DriveListing
+    listing: DriveBrowser
   ): Promise<Contents.IModel> {
     try {
       const model = await this.manager.newUntitled(options);
@@ -137,7 +137,7 @@ export class MultiDrivesFileBrowser extends SidePanel {
    */
   async createNewDirectory(
     model: FilterFileBrowserModel,
-    listing: DriveListing
+    listing: DriveBrowser
   ): Promise<Contents.IModel> {
     if (this._directoryPending) {
       return this._directoryPending;
@@ -162,7 +162,7 @@ export class MultiDrivesFileBrowser extends SidePanel {
   async createNewFile(
     options: MultiDrivesFileBrowser.IFileOptions,
     model: FilterFileBrowserModel,
-    listing: DriveListing
+    listing: DriveBrowser
   ): Promise<Contents.IModel> {
     if (this._filePending) {
       return this._filePending;
