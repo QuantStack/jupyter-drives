@@ -10,7 +10,7 @@ import {
 } from '@lumino/widgets';
 import { caretDownIcon } from '@jupyterlab/ui-components';
 import { BreadCrumbs } from '@jupyterlab/filebrowser';
-import { DriveListing } from './drivelisting';
+import { DriveBrowser } from './drivebrowser';
 
 /**
  * Accordion panel layout that adds a breadcrumb in widget title if present.
@@ -31,7 +31,7 @@ export class BreadCrumbsLayout extends AccordionLayout {
    * #### Undefined Behavior
    * An `index` which is non-integral.
    */
-  insertWidget(index: number, widget: DriveListing): void {
+  insertWidget(index: number, widget: DriveBrowser): void {
     if (widget.breadcrumbs) {
       this._breadcrumbs.set(widget, widget.breadcrumbs);
       widget.breadcrumbs.addClass('jp-AccordionPanel-breadcrumbs');
