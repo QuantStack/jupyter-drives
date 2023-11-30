@@ -93,7 +93,25 @@ async def test_MountJupyterDriveHandler(jp_fetch, jp_root_dir, set_s3_base):
         drive.create_container(test_bucket_name_1)
 
         # When
-        body = {"drive_name": "jupyter-drives-test-bucket-1" }
+        body = {"drive_name": "jupyter-drives-test-bucket-1", "mount_drive": "true" }
+        response = await jp_fetch("jupyter-drives", local_path, "mount-drive", body = json.dumps(body), method = "POST")
+
+        assert response.code == 200
+
+@pytest.fixture
+async def test_UnmountJupyterDriveHandler(jp_fetch, jp_root_dir, set_s3_base):
+    with mock_s3():
+        local_path = jp_root_dir / "test_path"
+
+        S3Drive = get_driver(Provider.S3)
+        drive = S3Drive('access_key', 'secret_key')
+
+        # Create test container to mount
+        test_bucket_name_1 = "jupyter-drives-test-bucket-1"
+        drive.create_container(test_bucket_name_1)
+
+        # When
+        body = {"drive_name": "jupyter-drives-test-bucket-1", "mount_drive": "false" }
         response = await jp_fetch("jupyter-drives", local_path, "mount-drive", body = json.dumps(body), method = "POST")
 
         assert response.code == 200

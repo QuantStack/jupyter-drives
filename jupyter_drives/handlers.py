@@ -95,9 +95,14 @@ class MountJupyterDriveHandler(JupyterDrivesAPIHandler):
     async def post(self, path: str =""):
         body = self.get_json_body()
         drive_name = body["drive_name"]
+        mount_drive = body["mount_drive"]
         local_path = self.url2localpath(path)
 
-        result = await self._manager.mount_drive(drive_name, local_path)
+        if mount_drive: 
+            result = await self._manager.mount_drive(drive_name, local_path)
+        
+        else:
+            result = await self._manager.unmount_drive(drive_name, local_path)
         self.finish(json.dump(result))
 
 default_handlers = [
