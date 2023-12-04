@@ -14,11 +14,6 @@ from jupyter_server.utils import url2path, url_path_join
 import tornado
 import traitlets
 
-try: 
-    import hybridcontents
-except ImportError:
-    hybridcontents = None
-
 from .base import MANAGERS, DrivesConfig
 from .managers.manager import JupyterDrivesManager
 
@@ -51,25 +46,6 @@ class JupyterDrivesAPIHandler(APIHandler):
         self.finish(json.dumps(reply))
 
     
-    @functools.lru_cache()
-    def url2localpath(
-        self, path: str, with_contents_manager: bool = False
-    ) -> Union[str, Tuple[str, ContentsManager]]:
-        """
-        Get the local path from a JupyterLab server path.
-
-        Optionally it can also return the contents manager for that path.
-        """
-        cm = self.contents_manager
-
-        # Handle local manager of hybridcontents.HybridContentsManager
-        if hybridcontents is not None and isinstance(
-            cm, hybridcontents.HybridContentsManager
-        ):
-            _, cm, path = hybridcontents.hybridmanager._resolve_path(path, cm.managers)
-        
-        local_path = os.path.join(os.path.expanduser(cm.root_dir), url2path(path))
-        return (local_path, cm) if with_contents_manager else local_path
 
 class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     """
