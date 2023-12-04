@@ -9,6 +9,7 @@ import tornado
 import traitlets
 import httpx
 from jupyter_server.utils import url_path_join
+from jupyter_server.services.contents.manager import ContentsManager
 
 from ..log import get_logger
 from ..base import DrivesConfig
