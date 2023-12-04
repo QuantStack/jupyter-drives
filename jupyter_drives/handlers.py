@@ -59,31 +59,21 @@ class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     async def get(self):
         drives = await self._manager.list_drives()
         self.finish(json.dumps(drives))
-
-class MountJupyterDriveHandler(JupyterDrivesAPIHandler):
-    """
-    Mounts a drive. Makes content accessible to user.
-    """
-    def initialize(self, logger: logging.Logger, manager: JupyterDrivesManager):
-        return super().initialize(logger, manager)
     
     @tornado.web.authenticated
     async def post(self):
         body = self.get_json_body()
-        drive_name = body["drive_name"]
         mount_drive = body["mount_drive"]
-        local_path = self.url2localpath(path)
 
         if mount_drive: 
-            result = await self._manager.mount_drive(drive_name, local_path)
+            result = await self._manager.mount_drive(**body)
         
         else:
-            result = await self._manager.unmount_drive(drive_name, local_path)
-        self.finish(json.dump(result))
+            result = await self._manager.unmount_drive(**body)
+        self.finish(json.dump(result))   
 
 default_handlers = [
-    ("drives", ListJupyterDrivesHandler),
-    ("mount-drive", MountJupyterDriveHandler)
+    ("drives", ListJupyterDrivesHandler)
 ]
 
 def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Config, log: Optional[logging.Logger] = None):
