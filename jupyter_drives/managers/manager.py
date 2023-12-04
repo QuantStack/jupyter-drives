@@ -64,7 +64,7 @@ class JupyterDrivesManager(abc.ABC):
         raise NotImplementedError()
     
     @abc.abstractclassmethod
-    async def mount_drive(self, drive_name, path) -> S3ContentsManager:
+    async def mount_drive(self, drive_name, **kwargs) -> ContentsManager:
         """Mount a drive. 
 
         Returns:

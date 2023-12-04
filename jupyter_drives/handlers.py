@@ -68,7 +68,7 @@ class MountJupyterDriveHandler(JupyterDrivesAPIHandler):
         return super().initialize(logger, manager)
     
     @tornado.web.authenticated
-    async def post(self, path: str =""):
+    async def post(self):
         body = self.get_json_body()
         drive_name = body["drive_name"]
         mount_drive = body["mount_drive"]
