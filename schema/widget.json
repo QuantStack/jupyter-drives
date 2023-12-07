@@ -12,7 +12,8 @@
         "name": "drive",
         "command": "drives:open-drives-dialog",
         "rank": 35
-      }
+      },
+      { "name": "fileNameSearcher", "rank": 40 }
     ]
   },
   "title": "'@jupyter/drives",
