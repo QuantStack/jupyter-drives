@@ -3,7 +3,10 @@
 
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
-import { DocumentRegistry } from '@jupyterlab/docregistry';
+//import { PathExt } from '@jupyterlab/coreutils';
+
+/*export const DRIVE_NAME = 'Drive1';
+const DRIVE_PREFIX = `${DRIVE_NAME}:`;*/
 
 const drive1Contents: Contents.IModel = {
   name: 'Drive1',
@@ -94,8 +97,45 @@ const drive1Contents: Contents.IModel = {
       size: 153,
       writable: true,
       type: 'file'
+    },
+    {
+      name: 'untitled.txt',
+      path: 'Drive1/untitled.txt',
+      last_modified: '2023-10-25T08:20:09.395167Z',
+      created: '2023-10-25T08:20:09.395167Z',
+      content: null,
+      format: null,
+      mimetype: 'text/plain',
+      size: 4772,
+      writable: true,
+      type: 'txt'
+    },
+    {
+      name: 'untitled1.txt',
+      path: 'Drive1/untitled1.txt',
+      last_modified: '2023-10-25T08:20:09.395167Z',
+      created: '2023-10-25T08:20:09.395167Z',
+      content: null,
+      format: null,
+      mimetype: 'text/plain',
+      size: 4772,
+      writable: true,
+      type: 'txt'
+    },
+    {
+      name: 'Untitled Folder',
+      path: 'Drive1/Untitled Folder',
+      last_modified: '2023-10-25T08:20:09.395167Z',
+      created: '2023-10-25T08:20:09.395167Z',
+      content: [],
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
     }
   ],
+
   format: 'json',
   mimetype: '',
   size: undefined,
@@ -103,18 +143,13 @@ const drive1Contents: Contents.IModel = {
   type: 'directory'
 };
 
-/**
- * A Contents.IDrive implementation that serves as a read-only
- * view onto the drive repositories.
- */
-
 export class Drive implements Contents.IDrive {
   /**
    * Construct a new drive object.
    *
    * @param options - The options used to initialize the object.
    */
-  constructor(registry: DocumentRegistry) {
+  constructor(options: Drive.IOptions = {}) {
     this._serverSettings = ServerConnection.makeSettings();
   }
   /**
@@ -239,7 +274,6 @@ export class Drive implements Contents.IDrive {
    */
   getDownloadUrl(path: string): Promise<string> {
     // Parse the path into user/repo/path
-    console.log('Path is:', path);
     return Promise.reject('Empty getDownloadUrl method');
   }
 
@@ -258,8 +292,141 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the created file content when the
    *    file is created.
    */
-  newUntitled(options: Contents.ICreateOptions = {}): Promise<Contents.IModel> {
-    return Promise.reject('Repository is read only');
+
+  /*async newUntitled(
+    options: Contents.ICreateOptions = {}
+  ): Promise<Contents.IModel> {
+    return Promise.reject('Empty Untitled method');
+  }*/
+
+  async newUntitled(
+    options: Contents.ICreateOptions = {}
+  ): Promise<Contents.IModel> {
+    /*let body = '{}';
+    if (options) {
+      if (options.ext) {
+        options.ext = Private.normalizeExtension(options.ext);
+      }
+      body = JSON.stringify(options);
+    }
+
+    const settings = this.serverSettings;
+    const url = this._getUrl(options.path ?? '');
+    const init = {
+      method: 'POST',
+      body
+    };
+    const response = await ServerConnection.makeRequest(url, init, settings);
+    if (response.status !== 201) {
+      const err = await ServerConnection.ResponseError.create(response);
+      throw err;
+    }
+    const data = await response.json();*/
+    let data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: null,
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
+
+    if (options.type !== undefined) {
+      if (options.type !== 'directory') {
+        const name = this.incrementName(drive1Contents, options);
+        data = {
+          name: name,
+          path: options.path + '/' + name + '.' + options.ext,
+          last_modified: '2023-12-06T10:37:42.089566Z',
+          created: '2023-12-06T10:37:42.089566Z',
+          content: null,
+          format: null,
+          mimetype: '',
+          size: 0,
+          writable: true,
+          type: options.type
+        };
+      } else {
+        const name = this.incrementName(drive1Contents, options);
+        data = {
+          name: name,
+          path: options.path + '/' + name,
+          last_modified: '2023-12-06T10:37:42.089566Z',
+          created: '2023-12-06T10:37:42.089566Z',
+          content: [],
+          format: 'json',
+          mimetype: '',
+          size: undefined,
+          writable: true,
+          type: options.type
+        };
+      }
+    } else {
+      console.warn('Type of new element is undefined');
+    }
+
+    drive1Contents.content.push(data);
+
+    Contents.validateContentsModel(data);
+    this._fileChanged.emit({
+      type: 'new',
+      oldValue: null,
+      newValue: data
+    });
+
+    return data;
+  }
+
+  incrementName(
+    contents: Contents.IModel,
+    options: Contents.ICreateOptions
+  ): string {
+    const content: Array<Contents.IModel> = contents.content;
+    let name: string = '';
+    let countText = 0;
+    let countDir = 0;
+    let countNotebook = 0;
+
+    content.forEach(item => {
+      if (options.ext !== undefined) {
+        if (item.name.includes('untitled') && item.name.includes('.txt')) {
+          countText = countText + 1;
+        } else if (
+          item.name.includes('Untitled') &&
+          item.name.includes('.ipynb')
+        ) {
+          countNotebook = countNotebook + 1;
+        }
+      } else if (item.name.includes('Untitled Folder')) {
+        countDir = countDir + 1;
+      }
+    });
+
+    if (options.ext === 'txt') {
+      if (countText === 0) {
+        name = 'untitled' + '.' + options.ext;
+      } else {
+        name = 'untitled' + countText + '.' + options.ext;
+      }
+    }
+    if (options.ext === 'ipynb') {
+      if (countNotebook === 0) {
+        name = 'Untitled' + '.' + options.ext;
+      } else {
+        name = 'Untitled' + countNotebook + '.' + options.ext;
+      }
+    } else if (options.type === 'directory') {
+      if (countDir === 0) {
+        name = 'Untitled Folder';
+      } else {
+        name = 'Untitled Folder ' + countDir;
+      }
+    }
+    return name;
   }
 
   /**
@@ -269,8 +436,27 @@ export class Drive implements Contents.IDrive {
    *
    * @returns A promise which resolves when the file is deleted.
    */
-  delete(path: string): Promise<void> {
+  /*delete(path: string): Promise<void> {
     return Promise.reject('Repository is read only');
+  }*/
+
+  async delete(localPath: string): Promise<void> {
+    /*const url = this._getUrl(localPath);
+    const settings = this.serverSettings;
+    const init = { method: 'DELETE' };
+    const response = await ServerConnection.makeRequest(url, init, settings);
+    // TODO: update IPEP27 to specify errors more precisely, so
+    // that error types can be detected here with certainty.
+    if (response.status !== 204) {
+      const err = await ServerConnection.ResponseError.create(response);
+      throw err;
+    }*/
+
+    this._fileChanged.emit({
+      type: 'delete',
+      oldValue: { path: localPath },
+      newValue: null
+    });
   }
 
   /**
@@ -286,7 +472,6 @@ export class Drive implements Contents.IDrive {
   rename(path: string, newPath: string): Promise<Contents.IModel> {
     return Promise.reject('Repository is read only');
   }
-
   /**
    * Save a file.
    *
@@ -368,6 +553,13 @@ export class Drive implements Contents.IDrive {
     return Promise.reject('Read only');
   }
 
+  /*private cleanPath(path: string): string {
+    if (path.includes(DRIVE_PREFIX)) {
+      return path.replace(DRIVE_PREFIX, '');
+    }
+    return path;
+  }*/
+
   private _serverSettings: ServerConnection.ISettings;
   private _name: string = '';
   private _provider: string = '';
@@ -378,3 +570,42 @@ export class Drive implements Contents.IDrive {
   private _fileChanged = new Signal<this, Contents.IChangedArgs>(this);
   private _isDisposed: boolean = false;
 }
+
+export namespace Drive {
+  /**
+   * The options used to initialize a `Drive`.
+   */
+  export interface IOptions {
+    /**
+     * The name for the `Drive`, which is used in file
+     * paths to disambiguate it from other drives.
+     */
+    name?: string;
+
+    /**
+     * The server settings for the server.
+     */
+    serverSettings?: ServerConnection.ISettings;
+
+    /**
+     * A REST endpoint for drive requests.
+     * If not given, defaults to the Jupyter
+     * REST API given by [Jupyter Notebook API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/contents).
+     */
+    apiEndpoint?: string;
+  }
+}
+
+/*namespace Private {
+  /**
+   * Normalize a file extension to be of the type `'.foo'`.
+   *
+   * Adds a leading dot if not present and converts to lower case.
+   */
+/*export function normalizeExtension(extension: string): string {
+    if (extension.length > 0 && extension.indexOf('.') !== 0) {
+      extension = `.${extension}`;
+    }
+    return extension;
+  }
+}*/
