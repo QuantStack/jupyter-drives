@@ -452,6 +452,17 @@ export class Drive implements Contents.IDrive {
       throw err;
     }*/
 
+    const content: Array<Contents.IModel> = drive1Contents.content;
+
+    content.forEach(item => {
+      if (item.path === localPath) {
+        const index = content.indexOf(item);
+        if (index !== -1) {
+          content.splice(index, 1);
+        }
+      }
+    });
+
     this._fileChanged.emit({
       type: 'delete',
       oldValue: { path: localPath },
