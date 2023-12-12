@@ -340,7 +340,7 @@ export class Drive implements Contents.IDrive {
         const name = this.incrementName(drive1Contents, options);
         data = {
           name: name,
-          path: options.path + '/' + name + '.' + options.ext,
+          path: options.path + '/' + name,
           last_modified: '2023-12-06T10:37:42.089566Z',
           created: '2023-12-06T10:37:42.089566Z',
           content: null,
@@ -473,15 +473,66 @@ export class Drive implements Contents.IDrive {
   /**
    * Rename a file or directory.
    *
-   * @param path - The original file path.
+   * @param oldLocalPath - The original file path.
    *
-   * @param newPath - The new file path.
+   * @param newLocalPath - The new file path.
    *
    * @returns A promise which resolves with the new file contents model when
    *   the file is renamed.
+   *
+   * #### Notes
+   * Uses the [Jupyter Notebook API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/contents) and validates the response model.
    */
-  rename(path: string, newPath: string): Promise<Contents.IModel> {
-    return Promise.reject('Repository is read only');
+  async rename(
+    oldLocalPath: string,
+    newLocalPath: string,
+    options: Contents.ICreateOptions = {}
+  ): Promise<Contents.IModel> {
+    /*const settings = this.serverSettings;
+    const url = this._getUrl(oldLocalPath);
+    const init = {
+      method: 'PATCH',
+      body: JSON.stringify({ path: newLocalPath })
+    };
+    const response = await ServerConnection.makeRequest(url, init, settings);
+    if (response.status !== 200) {
+      const err = await ServerConnection.ResponseError.create(response);
+      throw err;
+    }
+    const data = await response.json();*/
+
+    const data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: null,
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
+
+    const content: Array<Contents.IModel> = drive1Contents.content;
+    content.forEach(item => {
+      if (item.name === oldLocalPath) {
+        const index = content.indexOf(item);
+        const oldData = content[index];
+        const { ...newData } = oldData;
+        newData.name = newLocalPath;
+        newData.path = oldData.path.replace(oldData.name, newData.name);
+        content.splice(index, 1);
+        content.push(newData);
+      }
+    });
+    this._fileChanged.emit({
+      type: 'rename',
+      oldValue: { path: oldLocalPath },
+      newValue: { path: newLocalPath }
+    });
+    Contents.validateContentsModel(data);
+    return data;
   }
   /**
    * Save a file.
@@ -563,13 +614,6 @@ export class Drive implements Contents.IDrive {
   deleteCheckpoint(path: string, checkpointID: string): Promise<void> {
     return Promise.reject('Read only');
   }
-
-  /*private cleanPath(path: string): string {
-    if (path.includes(DRIVE_PREFIX)) {
-      return path.replace(DRIVE_PREFIX, '');
-    }
-    return path;
-  }*/
 
   private _serverSettings: ServerConnection.ISettings;
   private _name: string = '';
