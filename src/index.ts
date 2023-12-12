@@ -99,7 +99,7 @@ export async function activateAddDrivesPlugin(
     id: drive.name + '-browser',
     model: driveModel
   });*/
-    console.log('factory', factory);
+    //console.log('factory', factory);
 
     const driveBrowser = factory.createFileBrowser('drive-browser', {
       driveName: drive.name
