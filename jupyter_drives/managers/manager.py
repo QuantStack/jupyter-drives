@@ -16,8 +16,6 @@ from ..base import DrivesConfig
 
 import re
 
-from s3contents import S3ContentsManager
-
 class JupyterDrivesManager(abc.ABC):
     """
     Abstract base class for jupyter-drives manager.

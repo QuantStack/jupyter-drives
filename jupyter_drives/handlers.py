@@ -63,13 +63,7 @@ class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     @tornado.web.authenticated
     async def post(self):
         body = self.get_json_body()
-        mount_drive = body["mount_drive"]
-
-        if mount_drive: 
-            result = await self._manager.mount_drive(**body)
-        
-        else:
-            result = await self._manager.unmount_drive(**body)
+        result = await self._manager.mount_drive(**body)
         self.finish(json.dump(result))   
 
 default_handlers = [

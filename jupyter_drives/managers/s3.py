@@ -70,13 +70,12 @@ class S3Manager(JupyterDrivesManager):
 
         return data
     
-    async def mount_drive(self, drive_name, path) -> S3ContentsManager:
+    async def mount_drive(self, drive_name) -> S3ContentsManager:
         '''
         Mount a drive by creating an S3ContentsManager for it.
 
         Params: 
             drive_name: name of drive to mount
-            path: endpoint_url for the S3ContentsManager
         
         Args:
             S3ContentsManager
@@ -84,7 +83,7 @@ class S3Manager(JupyterDrivesManager):
         s3_contents_manager = S3ContentsManager(
             access_key = self._config.access_key_id,
             secret_access_key = self._config.secret_access_key,
-            endpoint_url = path,
+            endpoint_url = self._config.api_base_url,
             bucket = drive_name
         )
 
@@ -115,7 +114,7 @@ class S3Manager(JupyterDrivesManager):
         method: str = "GET",
         body: Optional[dict] = None,
         params: Optional[Dict[str, str]] = None,
-        media_type: str = "application/xml", # check type
+        media_type: str = "application/xml",
         has_pagination: bool = True,
     ) -> Union[dict, str]:
         """Call S3 provider
