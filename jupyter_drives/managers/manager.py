@@ -2,7 +2,7 @@ import abc
 import http 
 import json
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 import nbformat
 import tornado
@@ -64,7 +64,10 @@ class JupyterDrivesManager(abc.ABC):
     
     @abc.abstractclassmethod
     async def mount_drive(self, drive_name, **kwargs) -> ContentsManager:
-        """Mount a drive. 
+        """Mount a drive.
+
+        Args:
+            drive_name: name of drive to mount
 
         Returns:
             The content manager for the drive.
@@ -72,11 +75,20 @@ class JupyterDrivesManager(abc.ABC):
         raise NotImplementedError()
     
     @abc.abstractclassmethod
-    async def unmount_drive(self, drive_name: str):
+    async def unmount_drive(self, drive_name: str, **kwargs):
         """Unmount a drive.
 
         Args:
             drive_name: name of drive to unmount
+        """
+        raise NotImplementedError()
+    
+    @abc.abstractclassmethod
+    async def get_contents(self, drive_name, **kwargs) ->  List[Dict[str, Any]]:
+        """Get contents of a file or directory.
+
+        Args:
+            drive_name: name of drive to get the contents of
         """
         raise NotImplementedError()
     

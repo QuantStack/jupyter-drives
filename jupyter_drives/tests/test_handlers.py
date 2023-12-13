@@ -14,8 +14,8 @@ from libcloud.storage.providers import get_driver
 @pytest.fixture(scope="module")
 def s3_base():
     # AWS credentials for testing purposes
-    os.environ["AWS_ACCESS_KEY_ID"] = 'access_key'
-    os.environ["AWS_SECRET_ACCESS_KEY"] = 'secret_key'
+    os.environ["access_key_id"] = 'access_key'
+    os.environ["secret_access_key"] = 'secret_key'
 
     with mock_s3():
         S3Drive = get_driver(Provider.S3)
@@ -23,7 +23,7 @@ def s3_base():
 
         yield drive
 
-@pytest.mark.skip(reason="FIXME")
+@pytest.mark.skip(reason="FIX")
 async def test_ListJupyterDrives_s3_success(jp_fetch, s3_base):
     with mock_s3(): 
         # extract S3 drive
@@ -58,7 +58,7 @@ async def test_ListJupyterDrives_s3_empty_list(jp_fetch, s3_base):
         payload = json.loads(response.body)
         assert len(payload) == 0 
 
-@pytest.mark.skip(reason="FIXME")
+@pytest.mark.skip(reason="FIX")
 async def test_ListJupyterDrives_s3_missing_credentials(jp_fetch, s3_base):
     with mock_s3(): 
         # When
@@ -68,7 +68,7 @@ async def test_ListJupyterDrives_s3_missing_credentials(jp_fetch, s3_base):
         # Then
         assert exc_info.value.reason == "No AWS credentials specified. Please set them in your user jupyter_server_config file."
 
-@pytest.mark.skip(reason="FIXME")
+@pytest.mark.skip(reason="FIX")
 async def test_MountJupyterDriveHandler(jp_fetch, s3_base):
     with mock_s3():
         drive = s3_base
@@ -83,7 +83,7 @@ async def test_MountJupyterDriveHandler(jp_fetch, s3_base):
 
         assert response.code == 200
 
-@pytest.mark.skip(reason="FIXME")
+@pytest.mark.skip(reason="ToBeImplemented")
 async def test_UnmountJupyterDriveHandler(jp_fetch, s3_base):
     with mock_s3():
         # extract S3 drive

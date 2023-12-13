@@ -1,7 +1,7 @@
 import tornado
 import httpx
 from itertools import chain
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 import traitlets
 from jupyter_server.utils import url_path_join
@@ -71,8 +71,7 @@ class S3Manager(JupyterDrivesManager):
         return data
     
     async def mount_drive(self, drive_name) -> S3ContentsManager:
-        '''
-        Mount a drive by creating an S3ContentsManager for it.
+        '''Mount a drive by creating an S3ContentsManager for it.
 
         Params: 
             drive_name: name of drive to mount
@@ -92,11 +91,10 @@ class S3Manager(JupyterDrivesManager):
         return s3_contents_manager
     
     async def unmount_drive(self, drive_name):
-        '''
-        Unmount a drive.
+        '''Unmount a drive.
 
-        Argss:
-        drive_name: name of drive to unmount
+        Args:
+            drive_name: name of drive to unmount
         '''
         if drive_name in self.s3_content_managers:
             self.s3_content_managers.pop(drive_name, None)
@@ -106,6 +104,20 @@ class S3Manager(JupyterDrivesManager):
             status_code= httpx.codes.BAD_REQUEST,
             reason="Drive is not mounted or doesn't exist.",
             )
+        
+    async def get_contents(self, drive_name, path ="") ->  List[Dict[str, Any]]:
+        '''Get contents of an S3 drive.
+
+        Args: 
+            drive_name: name of drive to get contents of
+            path: path of file or directory to retrieve the contents of
+
+        Returns:
+            contents: contents of file or directory
+        '''
+        contents = self.s3_content_managers[drive_name].fs.ls(path)
+
+        return contents
     
     async def _call_s3(
         self,
