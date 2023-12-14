@@ -3,10 +3,25 @@
 
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
-//import { PathExt } from '@jupyterlab/coreutils';
+//import { URLExt } from '@jupyterlab/coreutils';
 
-/*export const DRIVE_NAME = 'Drive1';
-const DRIVE_PREFIX = `${DRIVE_NAME}:`;*/
+/*
+ * The url for the default drive service.
+ */
+//const SERVICE_DRIVE_URL = 'api/contents';
+
+let data: Contents.IModel = {
+  name: '',
+  path: '',
+  last_modified: '',
+  created: '',
+  content: null,
+  format: null,
+  mimetype: '',
+  size: 0,
+  writable: true,
+  type: ''
+};
 
 const drive1Contents: Contents.IModel = {
   name: 'Drive1',
@@ -151,6 +166,7 @@ export class Drive implements Contents.IDrive {
    */
   constructor(options: Drive.IOptions = {}) {
     this._serverSettings = ServerConnection.makeSettings();
+    //this._apiEndpoint = options.apiEndpoint ?? SERVICE_DRIVE_URL;
   }
   /**
    * The Drive base URL
@@ -277,11 +293,44 @@ export class Drive implements Contents.IDrive {
     return Promise.reject('Empty getDownloadUrl method');
   }
 
+  /**
+   * Get a file or directory.
+   *
+   * @param localPath: The path to the file.
+   *
+   * @param options: The options used to fetch the file.
+   *
+   * @returns A promise which resolves with the file content.
+   *
+   * Uses the [Jupyter Notebook API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/contents) and validates the response model.
+   */
   async get(
     path: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    return drive1Contents;
+    /*
+    let url = this._getUrl(localPath);
+    if (options) {
+      // The notebook type cannot take an format option.
+      if (options.type === 'notebook') {
+        delete options['format'];
+      }
+      const content = options.content ? '1' : '0';
+      const params: PartialJSONObject = { ...options, content };
+      url += URLExt.objectToQueryString(params);
+    }
+
+    const settings = this.serverSettings;
+    const response = await ServerConnection.makeRequest(url, {}, settings);
+    if (response.status !== 200) {
+      const err = await ServerConnection.ResponseError.create(response);
+      throw err;
+    }
+    const data = await response.json();*/
+
+    const data = drive1Contents;
+    Contents.validateContentsModel(data);
+    return data;
   }
 
   /**
@@ -292,12 +341,6 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the created file content when the
    *    file is created.
    */
-
-  /*async newUntitled(
-    options: Contents.ICreateOptions = {}
-  ): Promise<Contents.IModel> {
-    return Promise.reject('Empty Untitled method');
-  }*/
 
   async newUntitled(
     options: Contents.ICreateOptions = {}
@@ -322,22 +365,10 @@ export class Drive implements Contents.IDrive {
       throw err;
     }
     const data = await response.json();*/
-    let data: Contents.IModel = {
-      name: '',
-      path: '',
-      last_modified: '',
-      created: '',
-      content: null,
-      format: null,
-      mimetype: '',
-      size: 0,
-      writable: true,
-      type: ''
-    };
 
     if (options.type !== undefined) {
       if (options.type !== 'directory') {
-        const name = this.incrementName(drive1Contents, options);
+        const name = this.incrementUntitledName(drive1Contents, options);
         data = {
           name: name,
           path: options.path + '/' + name,
@@ -351,7 +382,7 @@ export class Drive implements Contents.IDrive {
           type: options.type
         };
       } else {
-        const name = this.incrementName(drive1Contents, options);
+        const name = this.incrementUntitledName(drive1Contents, options);
         data = {
           name: name,
           path: options.path + '/' + name,
@@ -381,7 +412,7 @@ export class Drive implements Contents.IDrive {
     return data;
   }
 
-  incrementName(
+  incrementUntitledName(
     contents: Contents.IModel,
     options: Contents.ICreateOptions
   ): string {
@@ -501,19 +532,6 @@ export class Drive implements Contents.IDrive {
     }
     const data = await response.json();*/
 
-    const data: Contents.IModel = {
-      name: '',
-      path: '',
-      last_modified: '',
-      created: '',
-      content: null,
-      format: null,
-      mimetype: '',
-      size: 0,
-      writable: true,
-      type: ''
-    };
-
     const content: Array<Contents.IModel> = drive1Contents.content;
     content.forEach(item => {
       if (item.name === oldLocalPath) {
@@ -537,18 +555,43 @@ export class Drive implements Contents.IDrive {
   /**
    * Save a file.
    *
-   * @param path - The desired file path.
+   * @param localPath - The desired file path.
    *
    * @param options - Optional overrides to the model.
    *
    * @returns A promise which resolves with the file content model when the
    *   file is saved.
+   *
+   * #### Notes
+   * Ensure that `model.content` is populated for the file.
+   *
+   * Uses the [Jupyter Notebook API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/contents) and validates the response model.
    */
-  save(
-    path: string,
-    options: Partial<Contents.IModel>
+  async save(
+    localPath: string,
+    options: Partial<Contents.IModel> = {}
   ): Promise<Contents.IModel> {
-    return Promise.reject('Repository is read only');
+    /*const settings = this.serverSettings;
+    const url = this._getUrl(localPath);
+    const init = {
+      method: 'PUT',
+      body: JSON.stringify(options)
+    };
+    const response = await ServerConnection.makeRequest(url, init, settings);
+    // will return 200 for an existing file and 201 for a new file
+    if (response.status !== 200 && response.status !== 201) {
+      const err = await ServerConnection.ResponseError.create(response);
+      throw err;
+    }
+    const data = await response.json();*/
+
+    Contents.validateContentsModel(data);
+    this._fileChanged.emit({
+      type: 'save',
+      oldValue: null,
+      newValue: data
+    });
+    return data;
   }
 
   /**
@@ -561,8 +604,99 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the new contents model when the
    *  file is copied.
    */
-  copy(fromFile: string, toDir: string): Promise<Contents.IModel> {
-    return Promise.reject('Repository is read only');
+
+  incrementCopyName(contents: Contents.IModel, copiedItemPath: string): string {
+    const content: Array<Contents.IModel> = contents.content;
+    let name: string = '';
+    let countText = 0;
+    let countDir = 0;
+    let countNotebook = 0;
+    let ext = undefined;
+    const list1 = copiedItemPath.split('/');
+    const copiedItemName = list1[list1.length - 1];
+
+    const list2 = copiedItemName.split('.');
+    let rootName = list2[0];
+
+    content.forEach(item => {
+      if (item.name.includes(rootName) && item.name.includes('.txt')) {
+        ext = '.txt';
+        if (rootName.includes('-Copy')) {
+          const list3 = rootName.split('-Copy');
+          countText = parseInt(list3[1]) + 1;
+          rootName = list3[0];
+        } else {
+          countText = countText + 1;
+        }
+      }
+      if (item.name.includes(rootName) && item.name.includes('.ipynb')) {
+        ext = '.ipynb';
+        if (rootName.includes('-Copy')) {
+          const list3 = rootName.split('-Copy');
+          countNotebook = parseInt(list3[1]) + 1;
+          rootName = list3[0];
+        } else {
+          countNotebook = countNotebook + 1;
+        }
+      } else if (item.name.includes(rootName)) {
+        if (rootName.includes('-Copy')) {
+          const list3 = rootName.split('-Copy');
+          countDir = parseInt(list3[1]) + 1;
+          rootName = list3[0];
+        } else {
+          countDir = countDir + 1;
+        }
+      }
+    });
+
+    if (ext === '.txt') {
+      name = rootName + '-Copy' + countText + ext;
+    }
+    if (ext === 'ipynb') {
+      name = rootName + '-Copy' + countText + ext;
+    } else if (ext === undefined) {
+      name = rootName + '-Copy' + countDir;
+    }
+
+    return name;
+  }
+  async copy(
+    fromFile: string,
+    toDir: string,
+    options: Contents.ICreateOptions = {}
+  ): Promise<Contents.IModel> {
+    /*const settings = this.serverSettings;
+    const url = this._getUrl(toDir);
+    const init = {
+      method: 'POST',
+      body: JSON.stringify({ copy_from: fromFile })
+    };
+    const response = await ServerConnection.makeRequest(url, init, settings);
+    if (response.status !== 201) {
+      const err = await ServerConnection.ResponseError.create(response);
+      throw err;
+    }
+    const data = await response.json();*/
+
+    const content: Array<Contents.IModel> = drive1Contents.content;
+    content.forEach(item => {
+      if (item.path === fromFile) {
+        const index = content.indexOf(item);
+        const oldData = content[index];
+        const { ...newData } = oldData;
+        newData.name = this.incrementCopyName(drive1Contents, fromFile);
+        newData.path = oldData.path.replace(oldData.name, newData.name);
+        content.push(newData);
+      }
+    });
+
+    this._fileChanged.emit({
+      type: 'new',
+      oldValue: null,
+      newValue: data
+    });
+    Contents.validateContentsModel(data);
+    return data;
   }
 
   /**
@@ -615,6 +749,16 @@ export class Drive implements Contents.IDrive {
     return Promise.reject('Read only');
   }
 
+  /**
+   * Get a REST url for a file given a path.
+   */
+  /*private _getUrl(...args: string[]): string {
+    const parts = args.map(path => URLExt.encodeParts(path));
+    const baseUrl = this.serverSettings.baseUrl;
+    return URLExt.join(baseUrl, this._apiEndpoint, ...parts);
+  }*/
+
+  // private _apiEndpoint: string;
   private _serverSettings: ServerConnection.ISettings;
   private _name: string = '';
   private _provider: string = '';
