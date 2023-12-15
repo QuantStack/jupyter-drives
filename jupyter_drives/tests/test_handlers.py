@@ -42,8 +42,8 @@ async def test_ListJupyterDrives_s3_success(jp_fetch, s3_base):
         # Then
         assert response.code == 200
         payload = json.loads(response.body)
-        assert "jupyter-drives-test-bucket-1" in payload
-        assert "jupyter-drives-test-bucket-2" in payload
+        assert "jupyter-drives-test-bucket-1" in payload["data"]
+        assert "jupyter-drives-test-bucket-2" in payload["data"]
 
 async def test_ListJupyterDrives_s3_empty_list(jp_fetch, s3_base):
     with mock_s3(): 
@@ -81,7 +81,7 @@ async def test_MountJupyterDriveHandler(jp_fetch, s3_base):
         body = {"drive_name": test_bucket_name_1}
         response = await jp_fetch("jupyter-drives", "drives", body = json.dumps(body), method = "POST")
 
-        assert response.code == 200
+        assert response["code"] == 201
 
 @pytest.mark.skip(reason="ToBeImplemented")
 async def test_UnmountJupyterDriveHandler(jp_fetch, s3_base):
@@ -97,4 +97,4 @@ async def test_UnmountJupyterDriveHandler(jp_fetch, s3_base):
         body = {"drive_name": "jupyter-drives-test-bucket-1", "mount_drive": "false" }
         response = await jp_fetch("jupyter-drives", "drives", body = json.dumps(body), method = "POST")
 
-        assert response.code == 200
+        assert response["code"] == 204
