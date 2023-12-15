@@ -54,7 +54,7 @@ class JupyterDrivesManager(abc.ABC):
         return None
     
     @abc.abstractclassmethod
-    async def list_drives(self) -> list: 
+    async def list_drives(self): 
         """Get list of available drives.
 
         Returns: 
@@ -63,7 +63,7 @@ class JupyterDrivesManager(abc.ABC):
         raise NotImplementedError()
     
     @abc.abstractclassmethod
-    async def mount_drive(self, drive_name, **kwargs) -> ContentsManager:
+    async def mount_drive(self, drive_name, **kwargs):
         """Mount a drive.
 
         Args:
@@ -84,11 +84,32 @@ class JupyterDrivesManager(abc.ABC):
         raise NotImplementedError()
     
     @abc.abstractclassmethod
-    async def get_contents(self, drive_name, **kwargs) ->  List[Dict[str, Any]]:
+    async def get_contents(self, drive_name, path, **kwargs):
         """Get contents of a file or directory.
 
         Args:
             drive_name: name of drive to get the contents of
+            path: path to file or directory
+        """
+        raise NotImplementedError()
+    
+    @abc.abstractclassmethod
+    async def new_file(self, drive_name, path, **kwargs):
+        """Create a new file or directory at the given path.
+        
+        Args:
+            drive_name: name of drive where the new content is created
+            path: path where new content should be created
+        """
+        raise NotImplementedError()
+    
+    @abc.abstractclassmethod
+    async def rename_file(self, drive_name, path, **kwargs):
+        """Rename a file.
+        
+        Args:
+            drive_name: name of drive where file is located
+            path: path of file
         """
         raise NotImplementedError()
     
