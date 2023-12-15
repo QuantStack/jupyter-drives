@@ -33,7 +33,8 @@ const FILE_BROWSER_FACTORY = 'FileBrowser';
 const FILE_BROWSER_PLUGIN_ID = '@jupyter/drives:widget';
 
 namespace CommandIDs {
-  export const removeDriveBrowser = 'drives:remove-drive';
+  export const addDriveBrowser = 'drives:add-drive-browser';
+  export const removeDriveBrowser = 'drives:remove-drive-browser';
 }
 
 /**
@@ -95,53 +96,61 @@ export async function activateAddDrivesPlugin(
     return name;
   }
 
-  function createSidePanel(driveName: string) {
-    const panel = new SidePanel();
-    panel.title.icon = DriveIcon;
-    panel.title.iconClass = 'jp-SideBar-tabIcon';
-    panel.title.caption = 'Browse Drives';
-    panel.id = camelCaseToDashedCase(driveName) + '-file-browser';
-    app.shell.add(panel, 'left', { rank: 102 });
-    if (restorer) {
-      restorer.add(panel, driveName + '-browser');
-    }
-    app.contextMenu.addItem({
-      command: CommandIDs.removeDriveBrowser,
-      selector: `.jp-SideBar.lm-TabBar .lm-TabBar-tab[data-id=${panel.id}]`,
-      rank: 0
-    });
+  app.commands.addCommand(CommandIDs.addDriveBrowser, {
+    execute: args => {
+      function createSidePanel(driveName: string) {
+        const panel = new SidePanel();
+        panel.title.icon = DriveIcon;
+        panel.title.iconClass = 'jp-SideBar-tabIcon';
+        panel.title.caption = 'Browse Drives';
+        panel.id = camelCaseToDashedCase(driveName) + '-file-browser';
+        app.shell.add(panel, 'left', { rank: 102 });
+        if (restorer) {
+          restorer.add(panel, driveName + '-browser');
+        }
+        app.contextMenu.addItem({
+          command: CommandIDs.removeDriveBrowser,
+          selector: `.jp-SideBar.lm-TabBar .lm-TabBar-tab[data-id=${panel.id}]`,
+          rank: 0
+        });
 
-    return panel;
-  }
-  const PanelDriveBrowserMap = new Map<FileBrowser, SidePanel>();
-  function addDriveToPanel(
-    drive: Drive,
-    factory: IFileBrowserFactory
-  ): Map<FileBrowser, SidePanel> {
-    const driveBrowser = factory.createFileBrowser('drive-browser', {
-      driveName: drive.name
-    });
-    const panel = createSidePanel(drive.name);
-    PanelDriveBrowserMap.set(driveBrowser, panel);
-    panel.addWidget(driveBrowser);
-    factory.tracker.add(driveBrowser);
+        return panel;
+      }
+      const PanelDriveBrowserMap = new Map<FileBrowser, SidePanel>();
+      function addDriveToPanel(
+        drive: Drive,
+        factory: IFileBrowserFactory
+      ): Map<FileBrowser, SidePanel> {
+        const driveBrowser = factory.createFileBrowser('drive-browser', {
+          driveName: drive.name
+        });
+        const panel = createSidePanel(drive.name);
+        PanelDriveBrowserMap.set(driveBrowser, panel);
+        panel.addWidget(driveBrowser);
+        factory.tracker.add(driveBrowser);
 
-    setToolbar(
-      panel,
-      createToolbarFactory(
-        toolbarRegistry,
-        settingRegistry,
-        FILE_BROWSER_FACTORY,
-        FILE_BROWSER_PLUGIN_ID,
-        translator
-      )
-    );
-    return PanelDriveBrowserMap;
-  }
+        setToolbar(
+          panel,
+          createToolbarFactory(
+            toolbarRegistry,
+            settingRegistry,
+            FILE_BROWSER_FACTORY,
+            FILE_BROWSER_PLUGIN_ID,
+            translator
+          )
+        );
+        return PanelDriveBrowserMap;
+      }
 
-  driveList.forEach(drive => {
-    addDriveToPanel(drive, factory);
+      driveList.forEach(drive => {
+        addDriveToPanel(drive, factory);
+      });
+    },
+    caption: trans.__('Add drive filebrowser.'),
+    label: trans.__('Add Drive Filebrowser')
   });
+
+  app.commands.execute('drives:add-drive-browser');
 
   function test(node: HTMLElement): boolean {
     return node.title === 'Browse Drives';
