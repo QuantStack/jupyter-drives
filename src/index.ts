@@ -9,8 +9,8 @@ import { DriveIcon } from './icons';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { Drive } from './contents';
 import {
-  /*FileBrowser,
-  FilterFileBrowserModel,*/
+  FileBrowser,
+  /*FilterFileBrowserModel,*/
   IFileBrowserFactory
 } from '@jupyterlab/filebrowser';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -31,6 +31,10 @@ import {
 
 const FILE_BROWSER_FACTORY = 'FileBrowser';
 const FILE_BROWSER_PLUGIN_ID = '@jupyter/drives:widget';
+
+namespace CommandIDs {
+  export const removeDriveBrowser = 'drives:remove-drive';
+}
 
 /**
  * Initialization data for the @jupyter/drives extension.
@@ -68,8 +72,7 @@ export async function activateAddDrivesPlugin(
   factory: IFileBrowserFactory
 ) {
   console.log('AddDrives plugin is activated!');
-  //const { commands } = app;
-  //const trans = translator.load('jupyter-drives');
+  const trans = translator.load('jupyter-drives');
   const cocoDrive = new Drive();
   cocoDrive.name = 'coconutDrive';
   cocoDrive.baseUrl = '/coconut/url';
@@ -84,39 +87,44 @@ export async function activateAddDrivesPlugin(
   bananaDrive.status = 'active';
   bananaDrive.provider = '';
   manager.services.contents.addDrive(bananaDrive);
+  const driveList: Drive[] = [cocoDrive, bananaDrive];
+  function camelCaseToDashedCase(name: string) {
+    if (name !== name.toLowerCase()) {
+      name = name.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+    }
+    return name;
+  }
 
-  const DriveList: Drive[] = [cocoDrive, bananaDrive];
-
-  function addNewDriveToPanel(drive: Drive, factory: IFileBrowserFactory) {
+  function createSidePanel(driveName: string) {
     const panel = new SidePanel();
-    //const drive = bananaDrive;
-    /*const driveModel = new FilterFileBrowserModel({
-    manager: manager,
-    driveName: drive.name
-  });
-
-  const driveBrowser = new FileBrowser({
-    id: drive.name + '-browser',
-    model: driveModel
-  });*/
-    //console.log('factory', factory);
-
-    const driveBrowser = factory.createFileBrowser('drive-browser', {
-      driveName: drive.name
-    });
-
-    factory.tracker.add(driveBrowser);
-    panel.addWidget(driveBrowser);
     panel.title.icon = DriveIcon;
     panel.title.iconClass = 'jp-SideBar-tabIcon';
     panel.title.caption = 'Browse Drives';
-
-    panel.id = drive.name + '-file-browser';
-
-    if (restorer) {
-      restorer.add(panel, drive.name + '-browser');
-    }
+    panel.id = camelCaseToDashedCase(driveName) + '-file-browser';
     app.shell.add(panel, 'left', { rank: 102 });
+    if (restorer) {
+      restorer.add(panel, driveName + '-browser');
+    }
+    app.contextMenu.addItem({
+      command: CommandIDs.removeDriveBrowser,
+      selector: `.jp-SideBar.lm-TabBar .lm-TabBar-tab[data-id=${panel.id}]`,
+      rank: 0
+    });
+
+    return panel;
+  }
+  const PanelDriveBrowserMap = new Map<FileBrowser, SidePanel>();
+  function addDriveToPanel(
+    drive: Drive,
+    factory: IFileBrowserFactory
+  ): Map<FileBrowser, SidePanel> {
+    const driveBrowser = factory.createFileBrowser('drive-browser', {
+      driveName: drive.name
+    });
+    const panel = createSidePanel(drive.name);
+    PanelDriveBrowserMap.set(driveBrowser, panel);
+    panel.addWidget(driveBrowser);
+    factory.tracker.add(driveBrowser);
 
     setToolbar(
       panel,
@@ -128,11 +136,28 @@ export async function activateAddDrivesPlugin(
         translator
       )
     );
+    return PanelDriveBrowserMap;
   }
 
-  DriveList.forEach(drive => {
-    console.log(drive.name);
-    addNewDriveToPanel(bananaDrive, factory);
+  driveList.forEach(drive => {
+    addDriveToPanel(drive, factory);
+  });
+
+  function test(node: HTMLElement): boolean {
+    return node.title === 'Browse Drives';
+  }
+  app.commands.addCommand(CommandIDs.removeDriveBrowser, {
+    execute: args => {
+      if (test !== undefined) {
+        const node = app.contextMenuHitTest(test);
+        const panelToDispose = Array.from(app.shell.widgets('left')).find(
+          widget => widget.id === node?.dataset.id
+        );
+        panelToDispose?.dispose();
+      }
+    },
+    caption: trans.__('Remove drive filebrowser.'),
+    label: trans.__('Remove Drive Filebrowser')
   });
 }
 
