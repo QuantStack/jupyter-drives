@@ -98,7 +98,8 @@ class S3Manager(JupyterDrivesManager):
 
                 response = {
                     "s3_contents_manager": s3_contents_manager,
-                    "code": 201
+                    "code": 201,
+                    "message": "Drive successfully mounted."
                 }
             else:
                 response = {"code": 409, "message": "Drive already mounted."}
