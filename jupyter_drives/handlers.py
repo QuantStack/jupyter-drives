@@ -2,15 +2,12 @@
 Module with all of the individual handlers, which will return the results to the frontend.
 """
 import json
-import os
-import functools
 import logging 
 import traceback
 from typing import Optional, Tuple, Union
 
 from jupyter_server.base.handlers import APIHandler, path_regex
-from jupyter_server.services.contents.manager import ContentsManager
-from jupyter_server.utils import url2path, url_path_join
+from jupyter_server.utils import url_path_join
 import tornado
 import traitlets
 
