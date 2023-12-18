@@ -92,14 +92,19 @@ class S3Manager(JupyterDrivesManager):
                 bucket = drive_name
             )
 
-            self.s3_content_managers[drive_name] = s3_contents_manager
+            # checking if the drive wasn't mounted already
+            if self.s3_content_managers[drive_name] is None:
+                self.s3_content_managers[drive_name] = s3_contents_manager
 
-            response = {
-                "s3_contents_manager": s3_contents_manager,
-                "code": 201
-            }
+                response = {
+                    "s3_contents_manager": s3_contents_manager,
+                    "code": 201
+                }
+            else:
+                response = {"code": 409, "message": "Drive already mounted."}
+
         except Exception as e:
-            response = {"code": 400}
+            response = {"code": 400, "message": e}
 
         return response
     
