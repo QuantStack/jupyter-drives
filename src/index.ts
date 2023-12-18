@@ -89,11 +89,28 @@ export async function activateAddDrivesPlugin(
   bananaDrive.provider = '';
   manager.services.contents.addDrive(bananaDrive);
   const driveList: Drive[] = [cocoDrive, bananaDrive];
+
   function camelCaseToDashedCase(name: string) {
     if (name !== name.toLowerCase()) {
       name = name.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
     }
     return name;
+  }
+
+  function restoreDriveName(id: string) {
+    const list1 = id.split('-file-');
+    let driveName = list1[0];
+    console.log('driveName:', driveName);
+    for (let i = 0; i < driveName.length; i++) {
+      if (driveName[i] === '-') {
+        const index = i;
+        const char = driveName.charAt(index + 1).toUpperCase();
+        console.log('char:', char);
+        driveName = driveName.replace(driveName.charAt(index + 1), char);
+        driveName = driveName.replace(driveName.charAt(index), '');
+      }
+    }
+    return driveName;
   }
 
   app.commands.addCommand(CommandIDs.addDriveBrowser, {
@@ -104,6 +121,7 @@ export async function activateAddDrivesPlugin(
         panel.title.iconClass = 'jp-SideBar-tabIcon';
         panel.title.caption = 'Browse Drives';
         panel.id = camelCaseToDashedCase(driveName) + '-file-browser';
+
         app.shell.add(panel, 'left', { rank: 102 });
         if (restorer) {
           restorer.add(panel, driveName + '-browser');
@@ -159,6 +177,14 @@ export async function activateAddDrivesPlugin(
     execute: args => {
       if (test !== undefined) {
         const node = app.contextMenuHitTest(test);
+        if (node?.dataset.id) {
+          const driveName = restoreDriveName(node?.dataset.id);
+          driveList.forEach(drive => {
+            if (drive.name === driveName) {
+              drive.dispose();
+            }
+          });
+        }
         const panelToDispose = Array.from(app.shell.widgets('left')).find(
           widget => widget.id === node?.dataset.id
         );
