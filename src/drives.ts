@@ -29,7 +29,7 @@ export async function requestAPI<T>(
   endPoint = '',
   method = 'GET',
   body: Partial<ReadonlyJSONObject> | null = null,
-  namespace = 'git'
+  namespace = 'jupyter-drives'
 ): Promise<T> {
   // Make request to Jupyter API
   const settings = ServerConnection.makeSettings();
