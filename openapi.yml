@@ -59,6 +59,16 @@ paths:
                   reason:
                     type: string
                     description: Explanation of error reason
+        409:
+          description: Drive already mounted
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                    description: Explanation of error reason
   /api/drives/{drive}/{path}:
     parameters:
       - $ref: "#/components/parameters/path"
