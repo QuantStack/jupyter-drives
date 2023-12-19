@@ -9,7 +9,7 @@ import { DriveIcon } from './icons';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { Drive } from './contents';
 import {
-  FileBrowser,
+  /*FileBrowser,*/
   /*FilterFileBrowserModel,*/
   IFileBrowserFactory
 } from '@jupyterlab/filebrowser';
@@ -100,12 +100,10 @@ export async function activateAddDrivesPlugin(
   function restoreDriveName(id: string) {
     const list1 = id.split('-file-');
     let driveName = list1[0];
-    console.log('driveName:', driveName);
     for (let i = 0; i < driveName.length; i++) {
       if (driveName[i] === '-') {
         const index = i;
         const char = driveName.charAt(index + 1).toUpperCase();
-        console.log('char:', char);
         driveName = driveName.replace(driveName.charAt(index + 1), char);
         driveName = driveName.replace(driveName.charAt(index), '');
       }
@@ -134,16 +132,17 @@ export async function activateAddDrivesPlugin(
 
         return panel;
       }
-      const PanelDriveBrowserMap = new Map<FileBrowser, SidePanel>();
       function addDriveToPanel(
         drive: Drive,
         factory: IFileBrowserFactory
-      ): Map<FileBrowser, SidePanel> {
+      ): void {
         const driveBrowser = factory.createFileBrowser('drive-browser', {
           driveName: drive.name
         });
         const panel = createSidePanel(drive.name);
-        PanelDriveBrowserMap.set(driveBrowser, panel);
+        drive.disposed.connect(() => {
+          panel.dispose();
+        });
         panel.addWidget(driveBrowser);
         factory.tracker.add(driveBrowser);
 
@@ -157,7 +156,6 @@ export async function activateAddDrivesPlugin(
             translator
           )
         );
-        return PanelDriveBrowserMap;
       }
 
       driveList.forEach(drive => {
@@ -179,16 +177,9 @@ export async function activateAddDrivesPlugin(
         const node = app.contextMenuHitTest(test);
         if (node?.dataset.id) {
           const driveName = restoreDriveName(node?.dataset.id);
-          driveList.forEach(drive => {
-            if (drive.name === driveName) {
-              drive.dispose();
-            }
-          });
+          const drive = driveList.find(drive => drive.name === driveName);
+          drive?.dispose();
         }
-        const panelToDispose = Array.from(app.shell.widgets('left')).find(
-          widget => widget.id === node?.dataset.id
-        );
-        panelToDispose?.dispose();
       }
     },
     caption: trans.__('Remove drive filebrowser.'),

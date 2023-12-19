@@ -268,6 +268,13 @@ export class Drive implements Contents.IDrive {
   }
 
   /**
+   * A signal emitted when the drive is disposed.
+   */
+  get disposed(): ISignal<this, void> {
+    return this._disposed;
+  }
+
+  /**
    * Dispose of the resources held by the manager.
    */
   dispose(): void {
@@ -275,6 +282,7 @@ export class Drive implements Contents.IDrive {
       return;
     }
     this._isDisposed = true;
+    this._disposed.emit();
     Signal.clearData(this);
   }
 
@@ -768,6 +776,7 @@ export class Drive implements Contents.IDrive {
   private _creationDate: string = '';
   private _fileChanged = new Signal<this, Contents.IChangedArgs>(this);
   private _isDisposed: boolean = false;
+  private _disposed = new Signal<this, void>(this);
 }
 
 export namespace Drive {
