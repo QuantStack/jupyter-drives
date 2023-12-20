@@ -27,6 +27,7 @@ class DrivesConfig(Configurable):
         help="The id of the access key for the bucket.",
     )
 
+
     secret_access_key= Unicode(
         None,
         config=True,
@@ -34,12 +35,13 @@ class DrivesConfig(Configurable):
         help="The secret access key for the bucket.",
     )
 
+
     region_name = Unicode(
         "eu-north-1",
-        config = True, 
+        config = True,
         help = "Region name.",
     )
-    
+
     api_base_url = Unicode(
         config=True,
         help="Base URL of the provider service REST API.",
@@ -50,10 +52,10 @@ class DrivesConfig(Configurable):
         # for AWS S3 drives
         if self.provider == "s3":
             return "https://s3.amazonaws.com/" # region? https://s3.<region>.amazonaws.com/
-        
+
         # for Google Cloud Storage drives
         elif self.provider == "gcs":
-            return "https://www.googleapis.com/"   
+            return "https://www.googleapis.com/"
 
     provider = Enum(
         MANAGERS.keys(),

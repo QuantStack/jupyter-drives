@@ -34,16 +34,16 @@ class S3Manager(JupyterDrivesManager):
             None: the provider does not support pagination
         """
         return ("per_page", 100)
-    
+
     async def list_drives(self) -> List[Dict[str, str]]:
         """Get the list of available drives.
-            
+
         Returns:
             The list of available drives
         """
         # drives_url = "/get-listDrives"
-        # results = await self._call_s3(drives_url)  
-        
+        # results = await self._call_s3(drives_url)
+
         data = []
         error = ""
         if (self._config.access_key_id and self._config.secret_access_key):
@@ -53,7 +53,7 @@ class S3Manager(JupyterDrivesManager):
             results = []
             for drive in drives:
                 results += drive.list_containers()
-        
+
             for result in results:
                 data.append(
                     {
@@ -68,7 +68,7 @@ class S3Manager(JupyterDrivesManager):
             error = "No AWS credentials provided."
 
         return data, error
-    
+
     async def _call_s3(
         self,
         url: str,
@@ -102,6 +102,7 @@ class S3Manager(JupyterDrivesManager):
             "Accept": media_type,
             "Authorization": f"session-token {self._config.session_token_token} access-key-id {self._config.access_key_id} secret-access-key {self._config.secret_access_key}",
         }
+
 
         return await super()._call_provider(
             url,
