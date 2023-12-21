@@ -1,0 +1,278 @@
+openapi: "3.0.3"
+info:
+  title: Jupyter Drives API
+  version: "1"
+  contact:
+    name: Jupyter Contribution Project
+    url: https://github.com/QuantStack/jupyter-drives
+
+
+paths:
+  /api/drives:
+    get:
+      summary: Get available drives
+      responses:
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+        200:
+          description: List of drives
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Drives"
+    post:
+      summary: Mount a drive
+      requestBody:
+          description: Name of drive to mount
+          content:
+            'application/json':
+              schema:
+                type: object
+      responses:
+        201:
+          description: Drive mounted
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Drive"
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+        409:
+          description: Drive already mounted
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+  /api/drives/{drive}/{path}:
+    parameters:
+      - $ref: "#/components/parameters/path"
+      - $ref: "#/components/parameters/drive"
+    get:
+      summary: Get contents of file or directory
+      description: "Retrieving contents of a drive, file or directory. If path is left empty the contents of the entire drive is retrived."
+      responses:
+        404:
+          description: No item found
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+        200:
+          description: Contents of file or directory
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Contents"
+        500:
+          description: Model key error
+    post:
+      summary: Create a new file in the specified drive
+      description: "A POST to /api/drives/drive/path creates a New untitled, empty file or directory."
+      requestBody:
+          description: Name of drive where new content should be created and type of content.
+          content: 
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  drive_name:
+                    type: string
+                  type:
+                    type: string
+          required: true
+      responses:
+        201:
+          description: File created
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Contents"
+        404:
+          description: No item found
+        400:
+          description: Bad request
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+    patch:
+      summary: Rename a file or directory
+      requestBody:
+        required: true
+        description: New path for file or directory.
+        content:
+          'application/json':
+            schema:
+              type: object
+              properties:
+                drive_name:
+                  type: string
+                  description: Name of drive where renaming is taking place
+                new_file_name: 
+                  type: string
+                  description: New name of file
+                path:
+                  type: string
+                  format: path
+                  description: New path for file or directory
+      responses:
+        200:
+          description: Path updated
+          headers:
+            Location:
+              description: Updated URL for the file or directory
+              schema:
+                type: string
+                format: url
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Contents"
+        404:
+          description: No item found
+        400:
+          description: No data provided
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error condition
+                  reason:
+                    type: string
+                    description: Explanation of error reason
+
+components:
+  parameters:
+    drive:
+      name: drive
+      required: true
+      in: path
+      description: Drive name
+      schema:
+        type: string
+    path:
+      name: path
+      required: true
+      in: path
+      description: file path
+      schema:
+        type: string
+    permissions:
+      name: permissions
+      schema:
+        type: string
+      required: false
+      in: query
+      description: |
+        JSON-serialized dictionary of `{"resource": ["action",]}`
+        (dict of lists of strings) to check.
+        The same dictionary structure will be returned,
+        containing only the actions for which the user is authorized.
+  
+  schemas:
+    Contents:
+      description: "A contents object.  The content and format keys may be null if content is not contained.  If type is 'file', then the mimetype will be null."
+      type: object
+      required:
+        - type
+        - name
+        - path
+        - writable
+        - created
+        - last_modified
+        - mimetype
+        - format
+        - content
+      properties:
+        name:
+          type: string
+          description: "Name of file or directory, equivalent to the last part of the path"
+        path:
+          type: string
+          description: Full path for file or directory
+        drive:
+          type: string
+          description: Drive name for file or directory
+        type:
+          type: string
+          description: Type of content
+          enum:
+            - directory
+            - file
+            - notebook
+        writable:
+          type: boolean
+          description: indicates whether the requester has permission to edit the file
+        created:
+          type: string
+          description: Creation timestamp
+          format: dateTime
+        last_modified:
+          type: string
+          description: Last modified timestamp
+          format: dateTime
+        size:
+          type: integer
+          description: "The size of the file or notebook in bytes. If no size is provided, defaults to null."
+        mimetype:
+          type: string
+          description: "The mimetype of a file.  If content is not null, and type is 'file', this will contain the mimetype of the file, otherwise this will be null."
+        content:
+          type: string
+          description: "The content, if requested (otherwise null).  Will be an array if type is 'directory'"
+        format:
+          type: string
+          description: Format of content (one of null, 'text', 'base64', 'json')
+    Drive:
+      description: A drive object.
+      type: object
+    Drives:
+      description: A list of drives.
+      type: array
+      items:
+        $ref: "#/components/schemas/Drive"

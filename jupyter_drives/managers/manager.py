@@ -2,7 +2,7 @@ import abc
 import http 
 import json
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 import nbformat
 import tornado
@@ -53,7 +53,7 @@ class JupyterDrivesManager(abc.ABC):
         return None
     
     @abc.abstractclassmethod
-    async def list_drives(self) -> list: 
+    async def list_drives(self): 
         """Get list of available drives.
 
         Returns: 
@@ -61,23 +61,56 @@ class JupyterDrivesManager(abc.ABC):
         """
         raise NotImplementedError()
     
-    # @abc.abstractclassmethod
-    # async def mount_drive(self) -> str:
-    #     """Mount a drive. 
+    @abc.abstractclassmethod
+    async def mount_drive(self, drive_name, **kwargs):
+        """Mount a drive.
 
-    #     Returns:
-    #         The URL for the new drive content.
-    #     """
-    #     raise NotImplementedError()
+        Args:
+            drive_name: name of drive to mount
+
+        Returns:
+            The content manager for the drive.
+        """
+        raise NotImplementedError()
     
-    # @abc.abstractclassmethod
-    # async def unmount_drive(self, drive_name: str):
-    #     """Unmount a drive.
+    @abc.abstractclassmethod
+    async def unmount_drive(self, drive_name: str, **kwargs):
+        """Unmount a drive.
 
-    #     Args:
-    #         drive_name: name of drive to unmount
-    #     """
-    #     raise NotImplementedError()
+        Args:
+            drive_name: name of drive to unmount
+        """
+        raise NotImplementedError()
+    
+    @abc.abstractclassmethod
+    async def get_contents(self, drive_name, path, **kwargs):
+        """Get contents of a file or directory.
+
+        Args:
+            drive_name: name of drive to get the contents of
+            path: path to file or directory
+        """
+        raise NotImplementedError()
+    
+    @abc.abstractclassmethod
+    async def new_file(self, drive_name, path, **kwargs):
+        """Create a new file or directory at the given path.
+        
+        Args:
+            drive_name: name of drive where the new content is created
+            path: path where new content should be created
+        """
+        raise NotImplementedError()
+    
+    @abc.abstractclassmethod
+    async def rename_file(self, drive_name, path, **kwargs):
+        """Rename a file.
+        
+        Args:
+            drive_name: name of drive where file is located
+            path: path of file
+        """
+        raise NotImplementedError()
     
     async def _call_provider(
         self,
@@ -110,19 +143,19 @@ class JupyterDrivesManager(abc.ABC):
         """
         if not self._config.session_token:
             raise tornado.web.HTTPError(
-                status_code=http.HTTPStatus.BAD_REQUEST,
+                status_code= httpx.codes.BAD_REQUEST,
                 reason="No session token specified. Please set DriversConfig.session_token in your user jupyter_server_config file.",
             )
         
         if not self._config.access_key_id:
             raise tornado.web.HTTPError(
-                status_code=http.HTTPStatus.BAD_REQUEST,
+                status_code= httpx.codes.BAD_REQUEST,
                 reason="No access key id specified. Please set DriversConfig.access_key_id in your user jupyter_server_config file.",
             )
         
         if not self._config.secret_access_key:
             raise tornado.web.HTTPError(
-                status_code=http.HTTPStatus.BAD_REQUEST,
+                status_code= httpx.codes.BAD_REQUEST,
                 reason="No secret access key specified. Please set DriversConfig.secret_access_key in your user jupyter_server_config file.",
             )
 

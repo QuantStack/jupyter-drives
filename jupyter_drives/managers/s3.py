@@ -1,6 +1,7 @@
-import json
+import tornado
+import httpx
 from itertools import chain
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 import traitlets
 from jupyter_server.utils import url_path_join
@@ -20,6 +21,7 @@ class S3Manager(JupyterDrivesManager):
     def __init__(self, config: traitlets.config.Config) -> None:
         super().__init__(DrivesConfig(config=config))
         self._drives_cache = {}
+        self.s3_content_managers = {}
 
     @property
     def base_api_url(self):
@@ -35,17 +37,13 @@ class S3Manager(JupyterDrivesManager):
         """
         return ("per_page", 100)
     
-    async def list_drives(self) -> List[Dict[str, str]]:
+    async def list_drives(self):
         """Get the list of available drives.
             
         Returns:
             The list of available drives
         """
-        # drives_url = "/get-listDrives"
-        # results = await self._call_s3(drives_url)  
-        
         data = []
-        error = ""
         if (self._config.access_key_id and self._config.secret_access_key):
             S3Drive = get_driver(Provider.S3)
             drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key)]
@@ -64,10 +62,143 @@ class S3Manager(JupyterDrivesManager):
                         "provider": "S3"
                     }
                 )
+            response = {
+                "data": data,
+                "code": 200
+            }
         else:
-            error = "No AWS credentials provided."
+            response = {"code": 400}
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason="No AWS credentials specified. Please set them in your user jupyter_server_config file.",
+            )
 
-        return data, error
+        return response
+    
+    async def mount_drive(self, drive_name):
+        '''Mount a drive by creating an S3ContentsManager for it.
+
+        Params: 
+            drive_name: name of drive to mount
+        
+        Args:
+            S3ContentsManager
+        '''
+        try :
+            s3_contents_manager = S3ContentsManager(
+                access_key = self._config.access_key_id,
+                secret_access_key = self._config.secret_access_key,
+                endpoint_url = self._config.api_base_url,
+                bucket = drive_name
+            )
+
+            # checking if the drive wasn't mounted already
+            if self.s3_content_managers[drive_name] is None:
+                self.s3_content_managers[drive_name] = s3_contents_manager
+
+                response = {
+                    "s3_contents_manager": s3_contents_manager,
+                    "code": 201,
+                    "message": "Drive successfully mounted."
+                }
+            else:
+                response = {"code": 409, "message": "Drive already mounted."}
+
+        except Exception as e:
+            response = {"code": 400, "message": e}
+
+        return response
+    
+    async def unmount_drive(self, drive_name):
+        '''Unmount a drive.
+
+        Args:
+            drive_name: name of drive to unmount
+        '''
+        if drive_name in self.s3_content_managers:
+            self.s3_content_managers.pop(drive_name, None)
+            response = {"code": 204}
+        
+        else:
+            response = {"code": 404}
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason="Drive is not mounted or doesn't exist.",
+            )
+        
+    async def get_contents(self, drive_name, path = ""):
+        '''Get contents of an S3 drive.
+
+        Args: 
+            drive_name: name of drive to get contents of
+            path: path of file or directory to retrieve the contents of
+
+        Returns:
+            contents: contents of file or directory
+        '''
+        response = {}
+        try:
+            if drive_name in self.s3_content_managers:
+                contents = self.s3_content_managers[drive_name].fs.ls(path)
+                code = 200
+                response["contents"] = contents
+            else:
+                code = 404
+                response["message"] = "Drive doesn't exist or is not mounted."
+        except Exception as e:
+            code = 400
+            response["message"] = e
+            
+        response["code"] = code
+        return response
+    
+    async def new_file(self, drive_name, type = "notebook", path = ""):
+        '''Create a new file or directory from an S3 drive.
+
+        Args:
+            type: type of content to be created (notebook or directory)
+            drive_name: name of drive where new content should be created
+            path: path where new content should be created
+        '''
+        response = {}
+        try:
+            if drive_name in self.s3_content_managers:
+                new_content = self.s3_content_managers[drive_name].new_untitled(type)
+                code = 201
+                response["file_name"] = new_content["name"]
+            else:
+                code = 404
+                response["message"] = "Drive doesn't exist or is not mounted."
+        except Exception as e:
+            code = 400
+            response["message"] = e
+            
+        response["code"] = code
+        return response
+    
+    async def rename_file(self, new_file_name, drive_name, path = ""):
+        '''Rename a file from an S3 drive.
+
+        Args:
+            new_file_name: new name of file
+            drive_name: name of drive where new content should be created
+            path: path where new content should be created
+        '''
+        response = {}
+        try:
+            if drive_name in self.s3_content_managers:
+                new_file_path = url_path_join(path, new_file_name)
+                self.s3_content_managers[drive_name].rename_file(new_path = new_file_path, old_path = path)
+                code = 201
+            else:
+                code = 404
+                response["message"] = "Drive doesn't exist or is not mounted."
+        except Exception as e:
+            code = 400
+            response["message"] = e
+            
+        response["code"] = code
+        return response
     
     async def _call_s3(
         self,
@@ -76,7 +207,7 @@ class S3Manager(JupyterDrivesManager):
         method: str = "GET",
         body: Optional[dict] = None,
         params: Optional[Dict[str, str]] = None,
-        media_type: str = "application/xml", # check type
+        media_type: str = "application/xml",
         has_pagination: bool = True,
     ) -> Union[dict, str]:
         """Call S3 provider

@@ -4,9 +4,9 @@ Module with all of the individual handlers, which will return the results to the
 import json
 import logging 
 import traceback
-from typing import Optional
+from typing import Optional, Tuple, Union
 
-from jupyter_server.base.handlers import APIHandler
+from jupyter_server.base.handlers import APIHandler, path_regex
 from jupyter_server.utils import url_path_join
 import tornado
 import traitlets
@@ -42,9 +42,9 @@ class JupyterDrivesAPIHandler(APIHandler):
                 reply["error"] = "".join(traceback.format_exception(*exc_info))
         self.finish(json.dumps(reply))
 
-class ListJupyterDrives(JupyterDrivesAPIHandler):
+class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     """
-    Returns list of available drives.
+    List available drives. Mounts drives.
     """
     def initialize(self, logger: logging.Logger, manager: JupyterDrivesManager):
         return super().initialize(logger, manager)
@@ -52,17 +52,46 @@ class ListJupyterDrives(JupyterDrivesAPIHandler):
     # Later on, filters can be added for the listing 
     @tornado.web.authenticated
     async def get(self):
-        drives, error = await self._manager.list_drives()
-        self.finish(json.dumps(drives))
-        self._jp_log.debug(error)
+        result = await self._manager.list_drives()
+        self.finish(json.dumps(result))
+    
+    @tornado.web.authenticated
+    async def post(self):
+        body = self.get_json_body()
+        result = await self._manager.mount_drive(**body)
+        self.finish(json.dump(result.message))
 
-default_handlers = [
-    ("drives", ListJupyterDrives)
+class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
+    """
+    Deals with contents of a drive.
+    """
+    @tornado.web.authenticated
+    async def get(self, path: str = "", drive: str = ""):
+        result = await self._manager.get_contents(drive, path)
+        self.finish(json.dump(result))
+
+    @tornado.web.authenticated
+    async def post(self, path: str = "", drive: str = ""):
+        result = await self._manager.new_file(drive, path)
+        self.finish(json.dump(result))
+
+    @tornado.web.authenticated
+    async def patch(self, path: str = "", drive: str = ""):
+        body = self.get_json_body()
+        result = await self._manager.rename_file(drive, path, **body)
+        self.finish(json.dump(result))
+
+handlers = [
+    ("drives", ListJupyterDrivesHandler)
+]
+
+handlers_with_path = [
+    ("drives", ContentsJupyterDrivesHandler)
 ]
 
 def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Config, log: Optional[logging.Logger] = None):
     host_pattern = ".*$"
-    base_url = url_path_join(web_app.settings["base_url"], NAMESPACE)
+    base_url = web_app.settings["base_url"]
 
     log = log or logging.getLogger(__name__)
 
@@ -80,15 +109,26 @@ def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Co
         logging.error("JupyterDrives Manager Exception", exc_info=1)
         raise err
 
-    handlers = [
-        (
-            url_path_join(base_url, pattern),
-            handler,
-            {"logger": log, "manager": manager}
-        )
-        for pattern, handler in default_handlers
-    ]
+    drives_handlers = (
+        [
+            (
+                url_path_join(base_url, NAMESPACE, pattern),
+                handler,
+                {"logger": log, "manager": manager}
+            )
+            for pattern, handler in handlers
+        ] 
+        + [
+            (
+                url_path_join(
+                    base_url, NAMESPACE, pattern, r"(?P<drive>\w+)", path_regex 
+                ),
+                handler,
+            )
+            for pattern, handler in handlers_with_path
+        ]
+    )
 
-    log.debug(f"Jupyter-Drives Handlers: {handlers}")
+    log.debug(f"Jupyter-Drives Handlers: {drives_handlers}")
 
-    web_app.add_handlers(host_pattern, handlers)
+    web_app.add_handlers(host_pattern, drives_handlers)

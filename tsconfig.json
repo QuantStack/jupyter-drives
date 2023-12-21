@@ -15,8 +15,6 @@
     "resolveJsonModule": true,
     "outDir": "lib",
     "rootDir": "src",
-    // "sourceMap": true,
-    // "sourceRoot": "./@jupyter/drives/src",
     "strict": true,
     "strictNullChecks": true,
     "target": "ES2018"
