@@ -24,6 +24,8 @@ import {
   /*FilenameSearcher, IScore, */ SidePanel
 } from '@jupyterlab/ui-components';
 
+import { IBucket } from './s3requests';
+
 /**
  * The class name added to the filebrowser filterbox node.
  */
@@ -48,6 +50,46 @@ namespace CommandIDs {
     console.log('JupyterLab extension @jupyter/drives is activated!');
   }
 };*/
+
+async function createDrivesList(manager: IDocumentManager) {
+  /*const s3BucketsList: IBucket[] = await getDrivesList();*/
+  const s3BucketsList: IBucket[] = [
+    {
+      creation_date: '2023-12-15T13:27:57.000Z',
+      name: 'jupyter-drive-bucket1',
+      provider: 'S3',
+      region: 'us-east-1',
+      status: 'active'
+    },
+    {
+      creation_date: '2023-12-19T08:57:29.000Z',
+      name: 'jupyter-drive-bucket2',
+      provider: 'S3',
+      region: 'us-east-1',
+      status: 'inactive'
+    },
+    {
+      creation_date: '2023-12-19T09:07:29.000Z',
+      name: 'jupyter-drive-bucket3',
+      provider: 'S3',
+      region: 'us-east-1',
+      status: 'active'
+    }
+  ];
+
+  const availableS3Buckets: Drive[] = [];
+  s3BucketsList.forEach(item => {
+    const drive = new Drive();
+    drive.name = item.name;
+    drive.baseUrl = '';
+    drive.region = item.region;
+    drive.status = item.status;
+    drive.provider = item.provider;
+    manager.services.contents.addDrive(drive);
+    availableS3Buckets.push(drive);
+  });
+  return availableS3Buckets;
+}
 const AddDrivesPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:add-drives',
   description: 'Open a dialog to select drives to be added in the filebrowser.',
@@ -74,21 +116,7 @@ export async function activateAddDrivesPlugin(
 ) {
   console.log('AddDrives plugin is activated!');
   const trans = translator.load('jupyter-drives');
-  const cocoDrive = new Drive();
-  cocoDrive.name = 'coconutDrive';
-  cocoDrive.baseUrl = '/coconut/url';
-  cocoDrive.region = '';
-  cocoDrive.status = 'active';
-  cocoDrive.provider = '';
-  manager.services.contents.addDrive(cocoDrive);
-  const bananaDrive = new Drive();
-  bananaDrive.name = 'bananaDrive';
-  bananaDrive.baseUrl = '/banana/url';
-  bananaDrive.region = '';
-  bananaDrive.status = 'active';
-  bananaDrive.provider = '';
-  manager.services.contents.addDrive(bananaDrive);
-  const driveList: Drive[] = [cocoDrive, bananaDrive];
+  const driveList: Drive[] = await createDrivesList(manager);
 
   function camelCaseToDashedCase(name: string) {
     if (name !== name.toLowerCase()) {
@@ -112,7 +140,7 @@ export async function activateAddDrivesPlugin(
   }
 
   app.commands.addCommand(CommandIDs.addDriveBrowser, {
-    execute: args => {
+    execute: async args => {
       function createSidePanel(driveName: string) {
         const panel = new SidePanel();
         panel.title.icon = DriveIcon;
@@ -158,9 +186,9 @@ export async function activateAddDrivesPlugin(
         );
       }
 
-      driveList.forEach(drive => {
+      /*driveList.forEach(drive => {
         addDriveToPanel(drive, factory);
-      });
+      });*/
     },
     caption: trans.__('Add drive filebrowser.'),
     label: trans.__('Add Drive Filebrowser')
