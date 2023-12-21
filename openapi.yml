@@ -274,3 +274,5 @@ components:
     Drives:
       description: A list of drives.
       type: array
+      items:
+        $ref: "#/components/schemas/Drive"
