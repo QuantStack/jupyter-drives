@@ -7,9 +7,9 @@ import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { ITranslator } from '@jupyterlab/translation';
 import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
-import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
+import { DriveListModel, DriveListView } from './drivelistmanager';
 import { DriveIcon } from './icons';
-//import { IDocumentManager } from '@jupyterlab/docmanager';
+import { IDocumentManager } from '@jupyterlab/docmanager';
 import { IBucket /*, getDrivesList */ } from './s3requests';
 import { Drive } from './contents';
 
@@ -17,7 +17,7 @@ namespace CommandIDs {
   export const openDrivesDialog = 'drives:open-drives-dialog';
 }
 
-/*async */ function createDrives() {
+/*async */ function createDrives(manager: IDocumentManager) {
   /*const s3BucketsList: IBucket[] = await getDrivesList();*/
   const s3BucketsList: IBucket[] = [
     {
@@ -49,8 +49,8 @@ namespace CommandIDs {
   });
   return availableS3Buckets;
 }
-const drivesList = createDrives();
-console.log(drivesList);
+/*const drivesList = createDrives();
+console.log(drivesList);*/
 
 /**
  * Initialization data for the @jupyter/drives extension.
@@ -67,96 +67,39 @@ const plugin: JupyterFrontEndPlugin<void> = {
 const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:widget',
   description: 'Open a dialog to select drives to be added in the filebrowser.',
-  requires: [IFileBrowserFactory, ITranslator],
+  requires: [IFileBrowserFactory, ITranslator, IDocumentManager],
   autoStart: true,
   activate: (
     app: JupyterFrontEnd,
     factory: IFileBrowserFactory,
-    translator: ITranslator
+    translator: ITranslator,
+    manager: IDocumentManager
   ): void => {
     addJupyterLabThemeChangeListener();
     const { commands } = app;
-    const { tracker } = factory;
     const trans = translator.load('jupyter_drives');
-    const selectedDrivesModelMap = new Map<IDrive[], DriveListModel>();
-
-    let selectedDrives: IDrive[] = [
-      {
-        name: 'CoconutDrive',
-        url: '/coconut/url'
-      }
-    ];
-
-    const availableDrives: IDrive[] = [
-      {
-        name: 'CoconutDrive',
-        url: '/coconut/url'
-      },
-      {
-        name: 'PearDrive',
-        url: '/pear/url'
-      },
-      {
-        name: 'StrawberryDrive',
-        url: '/strawberrydrive/url'
-      },
-      {
-        name: 'BlueberryDrive',
-        url: '/blueberrydrive/url'
-      },
-      {
-        name: '',
-        url: '/mydrive/url'
-      },
-      {
-        name: 'RaspberryDrive',
-        url: '/raspberrydrive/url'
-      },
-
-      {
-        name: 'PineAppleDrive',
-        url: ''
-      },
-
-      { name: 'PomeloDrive', url: '/https://pomelodrive/url' },
-      {
-        name: 'OrangeDrive',
-        url: ''
-      },
-      {
-        name: 'TomatoDrive',
-        url: ''
-      },
-      {
-        name: '',
-        url: 'superDrive/url'
-      },
-      {
-        name: 'AvocadoDrive',
-        url: ''
-      }
-    ];
-    let model = selectedDrivesModelMap.get(selectedDrives);
+    const availableDrives = createDrives(manager);
+    let selectedDrives: Drive[] = [];
+    const selectedDrivesModelMap = new Map<Drive[], DriveListModel>();
+    let driveListModel = selectedDrivesModelMap.get(selectedDrives);
 
     commands.addCommand(CommandIDs.openDrivesDialog, {
-      execute: async args => {
-        const widget = tracker.currentWidget;
-        //const listOfDrives = await createDrives(docmanager);
-        //console.log('listOfDrives:', listOfDrives);
-        if (!model) {
-          model = new DriveListModel(availableDrives, selectedDrives);
-          selectedDrivesModelMap.set(selectedDrives, model);
+      execute: async () => {
+        if (!driveListModel) {
+          driveListModel = new DriveListModel(
+            await availableDrives,
+            selectedDrives
+          );
+          selectedDrivesModelMap.set(selectedDrives, driveListModel);
         } else {
-          selectedDrives = model.selectedDrives;
-          selectedDrivesModelMap.set(selectedDrives, model);
+          selectedDrives = driveListModel.selectedDrives;
+          selectedDrivesModelMap.set(selectedDrives, driveListModel);
         }
-        if (widget) {
-          if (model) {
-            showDialog({
-              body: new DriveListView(model),
-              buttons: [Dialog.cancelButton()]
-            });
-          }
+        if (driveListModel) {
+          showDialog({
+            body: new DriveListView(driveListModel, app.docRegistry),
+            buttons: [Dialog.cancelButton()]
+          });
         }
       },
 
