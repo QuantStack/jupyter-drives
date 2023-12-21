@@ -9,10 +9,48 @@ import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
 import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon } from './icons';
+//import { IDocumentManager } from '@jupyterlab/docmanager';
+import { IBucket /*, getDrivesList */ } from './s3requests';
+import { Drive } from './contents';
 
 namespace CommandIDs {
   export const openDrivesDialog = 'drives:open-drives-dialog';
 }
+
+/*async */ function createDrives() {
+  /*const s3BucketsList: IBucket[] = await getDrivesList();*/
+  const s3BucketsList: IBucket[] = [
+    {
+      creation_date: '2023-12-15T13:27:57.000Z',
+      name: 'jupyter-drive-bucket1',
+      provider: 'S3',
+      region: 'us-east-1',
+      status: 'active'
+    },
+    {
+      creation_date: '2023-12-19T08:57:29.000Z',
+      name: 'jupyter-drive-bucket2',
+      provider: 'S3',
+      region: 'us-east-1',
+      status: 'inactive'
+    }
+  ];
+
+  const availableS3Buckets: Drive[] = [];
+  s3BucketsList.forEach(item => {
+    const drive = new Drive();
+    drive.name = item.name;
+    drive.baseUrl = '';
+    drive.region = item.region;
+    drive.status = item.status;
+    drive.provider = item.provider;
+    //manager.services.contents.addDrive(drive);
+    availableS3Buckets.push(drive);
+  });
+  return availableS3Buckets;
+}
+const drivesList = createDrives();
+console.log(drivesList);
 
 /**
  * Initialization data for the @jupyter/drives extension.
@@ -100,12 +138,11 @@ const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
     ];
     let model = selectedDrivesModelMap.get(selectedDrives);
 
-    //const model = new DriveListModel(availableDrives, selectedDrives);
-
     commands.addCommand(CommandIDs.openDrivesDialog, {
-      execute: args => {
+      execute: async args => {
         const widget = tracker.currentWidget;
-
+        //const listOfDrives = await createDrives(docmanager);
+        //console.log('listOfDrives:', listOfDrives);
         if (!model) {
           model = new DriveListModel(availableDrives, selectedDrives);
           selectedDrivesModelMap.set(selectedDrives, model);
