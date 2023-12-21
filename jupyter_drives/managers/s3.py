@@ -152,7 +152,7 @@ class S3Manager(JupyterDrivesManager):
         response["code"] = code
         return response
     
-    async def new_file(self, type, drive_name, path = ""):
+    async def new_file(self, drive_name, type = "notebook", path = ""):
         '''Create a new file or directory from an S3 drive.
 
         Args:
@@ -163,8 +163,9 @@ class S3Manager(JupyterDrivesManager):
         response = {}
         try:
             if drive_name in self.s3_content_managers:
-                self.s3_content_managers[drive_name].new_untitled(type)
+                new_content = self.s3_content_managers[drive_name].new_untitled(type)
                 code = 201
+                response["file_name"] = new_content["name"]
             else:
                 code = 404
                 response["message"] = "Drive doesn't exist or is not mounted."

@@ -78,8 +78,7 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
     @tornado.web.authenticated
     async def patch(self, path: str = "", drive: str = ""):
         body = self.get_json_body()
-        new_file_name = body["new_file_name"]
-        result = await self._manager.rename_file(new_file_name, drive, path)
+        result = await self._manager.rename_file(**body, drive, path)
         self.finish(json.dump(result))
 
 handlers = [
