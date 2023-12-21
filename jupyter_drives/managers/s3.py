@@ -187,7 +187,6 @@ class S3Manager(JupyterDrivesManager):
         response = {}
         try:
             if drive_name in self.s3_content_managers:
-                # function from s3contents is implement in a way that actually moves a file or directory
                 self.s3_content_managers[drive_name].rename_file(name = new_file_name, new_path = path, old_path = path)
                 code = 201
             else:
