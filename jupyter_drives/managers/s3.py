@@ -187,7 +187,8 @@ class S3Manager(JupyterDrivesManager):
         response = {}
         try:
             if drive_name in self.s3_content_managers:
-                self.s3_content_managers[drive_name].rename_file(name = new_file_name, new_path = path, old_path = path)
+                new_file_path = url_path_join(path, new_file_name)
+                self.s3_content_managers[drive_name].rename_file(new_path = new_file_path, old_path = path)
                 code = 201
             else:
                 code = 404
