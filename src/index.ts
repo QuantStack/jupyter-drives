@@ -9,9 +9,8 @@ import { DriveIcon } from './icons';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { Drive } from './contents';
 import {
-  /*FileBrowser,*/
-  /*FilterFileBrowserModel,*/
   IFileBrowserFactory
+  //Uploader
 } from '@jupyterlab/filebrowser';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
@@ -25,6 +24,9 @@ import {
 } from '@jupyterlab/ui-components';
 
 import { IBucket } from './s3requests';
+import { Dialog, showDialog } from '@jupyterlab/apputils';
+import { DriveListModel, DriveListView } from './drivelistmanager';
+import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
 
 /**
  * The class name added to the filebrowser filterbox node.
@@ -35,6 +37,7 @@ const FILE_BROWSER_FACTORY = 'FileBrowser';
 const FILE_BROWSER_PLUGIN_ID = '@jupyter/drives:widget';
 
 namespace CommandIDs {
+  export const openDrivesDialog = 'drives:open-drives-dialog';
   export const addDriveBrowser = 'drives:add-drive-browser';
   export const removeDriveBrowser = 'drives:remove-drive-browser';
 }
@@ -42,16 +45,16 @@ namespace CommandIDs {
 /**
  * Initialization data for the @jupyter/drives extension.
  */
-/*const plugin: JupyterFrontEndPlugin<void> = {
+const plugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:plugin',
   description: 'A Jupyter extension to support drives in the backend.',
   autoStart: true,
   activate: (app: JupyterFrontEnd) => {
     console.log('JupyterLab extension @jupyter/drives is activated!');
   }
-};*/
+};
 
-async function createDrivesList(manager: IDocumentManager) {
+/*async*/ function createDrivesList(manager: IDocumentManager) {
   /*const s3BucketsList: IBucket[] = await getDrivesList();*/
   const s3BucketsList: IBucket[] = [
     {
@@ -74,6 +77,13 @@ async function createDrivesList(manager: IDocumentManager) {
       provider: 'S3',
       region: 'us-east-1',
       status: 'active'
+    },
+    {
+      creation_date: '2023-12-19T09:07:29.000Z',
+      name: 'jupyter-drive-bucket4',
+      provider: 'S3',
+      region: 'us-east-1',
+      status: 'inactive'
     }
   ];
 
@@ -90,6 +100,46 @@ async function createDrivesList(manager: IDocumentManager) {
   });
   return availableS3Buckets;
 }
+function camelCaseToDashedCase(name: string) {
+  if (name !== name.toLowerCase()) {
+    name = name.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+  }
+  return name;
+}
+
+function restoreDriveName(id: string) {
+  const list1 = id.split('-file-');
+  let driveName = list1[0];
+  for (let i = 0; i < driveName.length; i++) {
+    if (driveName[i] === '-') {
+      const index = i;
+      const char = driveName.charAt(index + 1).toUpperCase();
+      driveName = driveName.replace(driveName.charAt(index + 1), char);
+      driveName = driveName.replace(driveName.charAt(index), '');
+    }
+  }
+  return driveName;
+}
+
+function createSidePanel(driveName: string, app: JupyterFrontEnd) {
+  const panel = new SidePanel();
+  panel.title.icon = DriveIcon;
+  panel.title.iconClass = 'jp-SideBar-tabIcon';
+  panel.title.caption = 'Browse Drives';
+  panel.id = camelCaseToDashedCase(driveName) + '-file-browser';
+  app.shell.add(panel, 'left', { rank: 102 });
+  /*if (restorer) {
+    restorer.add(panel, driveName + '-browser');
+  }*/
+  app.contextMenu.addItem({
+    command: CommandIDs.removeDriveBrowser,
+    selector: `.jp-SideBar.lm-TabBar .lm-TabBar-tab[data-id=${panel.id}]`,
+    rank: 0
+  });
+
+  return panel;
+}
+
 const AddDrivesPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:add-drives',
   description: 'Open a dialog to select drives to be added in the filebrowser.',
@@ -105,7 +155,7 @@ const AddDrivesPlugin: JupyterFrontEndPlugin<void> = {
   activate: activateAddDrivesPlugin
 };
 
-export async function activateAddDrivesPlugin(
+export /*async */ function activateAddDrivesPlugin(
   app: JupyterFrontEnd,
   manager: IDocumentManager,
   toolbarRegistry: IToolbarWidgetRegistry,
@@ -114,87 +164,114 @@ export async function activateAddDrivesPlugin(
   settingRegistry: ISettingRegistry,
   factory: IFileBrowserFactory
 ) {
+  addJupyterLabThemeChangeListener();
+  const availableDrives = createDrivesList(manager);
+  let selectedDrives: Drive[] = [];
+  const selectedDrivesModelMap = new Map<Drive[], DriveListModel>();
+  let driveListModel = selectedDrivesModelMap.get(selectedDrives);
   console.log('AddDrives plugin is activated!');
   const trans = translator.load('jupyter-drives');
-  const driveList: Drive[] = await createDrivesList(manager);
+  const driveList: Drive[] = /*await*/ createDrivesList(manager);
 
-  function camelCaseToDashedCase(name: string) {
-    if (name !== name.toLowerCase()) {
-      name = name.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
-    }
-    return name;
+  function createFileBrowser(drive: Drive) {
+    const driveBrowser = factory.createFileBrowser('drive-browser', {
+      driveName: drive.name
+    });
+
+    console.log('model:', driveBrowser.model);
+    const panel = createSidePanel(drive.name, app);
+    drive?.disposed.connect(() => {
+      panel.dispose();
+    });
+
+    factory.tracker.add(driveBrowser);
+
+    setToolbar(
+      panel,
+      createToolbarFactory(
+        toolbarRegistry,
+        settingRegistry,
+        FILE_BROWSER_FACTORY,
+        FILE_BROWSER_PLUGIN_ID,
+        translator
+      )
+    );
+    driveListModel?.addPanel(drive, panel, driveBrowser, app, restorer);
   }
+  driveList.forEach(drive => {
+    createFileBrowser(drive);
+  });
 
-  function restoreDriveName(id: string) {
-    const list1 = id.split('-file-');
-    let driveName = list1[0];
-    for (let i = 0; i < driveName.length; i++) {
-      if (driveName[i] === '-') {
-        const index = i;
-        const char = driveName.charAt(index + 1).toUpperCase();
-        driveName = driveName.replace(driveName.charAt(index + 1), char);
-        driveName = driveName.replace(driveName.charAt(index), '');
+  app.commands.addCommand(CommandIDs.openDrivesDialog, {
+    execute: /*async*/ () => {
+      if (!driveListModel) {
+        driveListModel = new DriveListModel(
+          /*await*/ availableDrives,
+          selectedDrives
+        );
+        selectedDrivesModelMap.set(selectedDrives, driveListModel);
+      } else {
+        selectedDrives = driveListModel.selectedDrives;
+        selectedDrivesModelMap.set(selectedDrives, driveListModel);
       }
-    }
-    return driveName;
-  }
 
-  app.commands.addCommand(CommandIDs.addDriveBrowser, {
-    execute: async args => {
-      function createSidePanel(driveName: string) {
-        const panel = new SidePanel();
-        panel.title.icon = DriveIcon;
-        panel.title.iconClass = 'jp-SideBar-tabIcon';
-        panel.title.caption = 'Browse Drives';
-        panel.id = camelCaseToDashedCase(driveName) + '-file-browser';
-
-        app.shell.add(panel, 'left', { rank: 102 });
-        if (restorer) {
-          restorer.add(panel, driveName + '-browser');
+      async function onDriveAdded(selectedDrives: Drive[]) {
+        if (driveListModel) {
+          const response = driveListModel.sendConnectionRequest(selectedDrives);
+          if ((await response) === true) {
+            console.log('A drive needs to be added');
+            createFileBrowser(selectedDrives[length - 1]);
+          } else {
+            console.warn('Connection with the drive was not possible');
+          }
         }
-        app.contextMenu.addItem({
-          command: CommandIDs.removeDriveBrowser,
-          selector: `.jp-SideBar.lm-TabBar .lm-TabBar-tab[data-id=${panel.id}]`,
-          rank: 0
-        });
-
-        return panel;
       }
-      function addDriveToPanel(
-        drive: Drive,
-        factory: IFileBrowserFactory
-      ): void {
-        const driveBrowser = factory.createFileBrowser('drive-browser', {
-          driveName: drive.name
+      if (driveListModel) {
+        showDialog({
+          body: new DriveListView(driveListModel, app.docRegistry),
+          buttons: [Dialog.cancelButton()]
         });
-        const panel = createSidePanel(drive.name);
-        drive.disposed.connect(() => {
+      }
+      driveListModel.stateChanged.connect(async () => {
+        if (driveListModel) {
+          onDriveAdded(driveListModel.selectedDrives);
+        }
+      });
+    },
+
+    icon: DriveIcon.bindprops({ stylesheet: 'menuItem' }),
+    caption: trans.__('Add drives to filebrowser.'),
+    label: trans.__('Add Drives To Filebrowser')
+  });
+
+  /*app.commands.addCommand(CommandIDs.addDriveBrowser, {
+    execute: args => {
+      const drive = new Drive();
+      const driveBrowser = factory.createFileBrowser('drive-browser', {
+        driveName: drive.name
+      });
+      const panel = createSidePanel(drive.name, app);
+      drive?.disposed.connect(() => {
           panel.dispose();
         });
-        panel.addWidget(driveBrowser);
-        factory.tracker.add(driveBrowser);
 
-        setToolbar(
-          panel,
-          createToolbarFactory(
-            toolbarRegistry,
-            settingRegistry,
-            FILE_BROWSER_FACTORY,
-            FILE_BROWSER_PLUGIN_ID,
-            translator
-          )
-        );
-      }
+      factory.tracker.add(driveBrowser);
 
-      /*driveList.forEach(drive => {
-        addDriveToPanel(drive, factory);
-      });*/
+      setToolbar(
+        panel,
+        createToolbarFactory(
+          toolbarRegistry,
+          settingRegistry,
+          FILE_BROWSER_FACTORY,
+          FILE_BROWSER_PLUGIN_ID,
+          translator
+        )
+      );
+      driveListModel?.addPanel(drive, panel, driveBrowser, app, restorer);
     },
     caption: trans.__('Add drive filebrowser.'),
     label: trans.__('Add Drive Filebrowser')
-  });
-
-  app.commands.execute('drives:add-drive-browser');
+  });*/
 
   function test(node: HTMLElement): boolean {
     return node.title === 'Browse Drives';
@@ -215,5 +292,5 @@ export async function activateAddDrivesPlugin(
   });
 }
 
-const plugins: JupyterFrontEndPlugin<any>[] = [/*plugin,*/ AddDrivesPlugin];
+const plugins: JupyterFrontEndPlugin<any>[] = [plugin, AddDrivesPlugin];
 export default plugins;

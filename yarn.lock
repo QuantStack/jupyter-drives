@@ -2066,7 +2066,6 @@ __metadata:
     "@types/json-schema": ^7.0.11
     "@types/react": ^18.0.26
     "@types/react-addons-linked-state-mixin": ^0.14.22
-    "@types/wicg-file-system-access": ^2020.9.5
     "@typescript-eslint/eslint-plugin": ^6.1.0
     "@typescript-eslint/parser": ^6.1.0
     css-loader: ^6.7.1
@@ -3470,13 +3469,6 @@ __metadata:
     "@types/source-list-map": "*"
     source-map: ^0.6.1
   checksum: 75342659a9889478969f7bb7360b998aa084ba11ab523c172ded6a807dac43ab2a9e1212078ef8bbf0f33e4fadd2c8a91b75d38184d8030d96a32fe819c9bb57
-  languageName: node
-  linkType: hard
-
-"@types/wicg-file-system-access@npm:^2020.9.5":
-  version: 2020.9.8
-  resolution: "@types/wicg-file-system-access@npm:2020.9.8"
-  checksum: 08ef73d68e9a5596d0d17f0f9651745cb9edf98afdee3f9fe852c44123e7b5254ede38c151ebea5127e4a4a59fcd850ce762e56b1278079afff3aadf53dc0776
   languageName: node
   linkType: hard
 
