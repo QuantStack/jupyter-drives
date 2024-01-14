@@ -73,7 +73,7 @@ class DrivesConfig(Configurable):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.load_credentials()
+        self._load_credentials()
     
     def _load_credentials(self):
         # check if credentials were already set in jupyter_notebook_config.py
