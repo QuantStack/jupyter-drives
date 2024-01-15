@@ -25,9 +25,10 @@ To begin using the extension and gain access to your drives, you need to configu
 
 For those working with `S3` drives using the `AWS` CLI, the credentials will be automatically extracted from `~/.aws/credentials`. There is nothing that needs to be done on your side.
 
->Note: This is only applicable for Linux or macOS `AWS` [CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html) users. In case you are using the `AWS` CLI from Windows, you can use the custom file path configuration with `C:\Users\USERNAME\.aws\credentials`. You can read more about this [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
+> Note: This is only applicable for Linux or macOS `AWS` [CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html) users. In case you are using the `AWS` CLI from Windows, you can use the custom file path configuration with `C:\Users\USERNAME\.aws\credentials`. You can read more about this [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
 
 ### Configuration file
+
 Otherwise, you can add your credentials to the server configuration file. Create a `jupyter_notebook_config.py` file in one of the
 [Jupyter config directories](https://jupyter.readthedocs.io/en/latest/use/jupyter-directories.html#id1),
 for example: `~/.jupyter/jupyter_notebook_config.py`, and specify your long-term or short-term credentials.
@@ -41,6 +42,7 @@ c.DrivesConfig.session_token = "<AWS Session Token / IAM Session Token>"
 ```
 
 ### Custom file path containig credentials
+
 You can also just specify the location of a local file which contains your credentials. The `acccess_key`, `secret_access_key` and if applicable the `session_token` will be automatically extracted from there.
 
 ```python
