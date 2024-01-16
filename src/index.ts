@@ -8,10 +8,7 @@ import { ITranslator } from '@jupyterlab/translation';
 import { DriveIcon } from './icons';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { Drive } from './contents';
-import {
-  IFileBrowserFactory
-  //Uploader
-} from '@jupyterlab/filebrowser';
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   createToolbarFactory,
@@ -19,12 +16,10 @@ import {
   setToolbar
 } from '@jupyterlab/apputils';
 
-import {
-  /*FilenameSearcher, IScore, */ SidePanel
-} from '@jupyterlab/ui-components';
+import { SidePanel } from '@jupyterlab/ui-components';
 
 import { IBucket } from './s3requests';
-import { Dialog, showDialog } from '@jupyterlab/apputils';
+import { Dialog, ICommandPalette, showDialog } from '@jupyterlab/apputils';
 import { DriveListModel, DriveListView } from './drivelistmanager';
 import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
 
@@ -33,12 +28,57 @@ import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
  */
 //const FILTERBOX_CLASS = 'jp-FileBrowser-filterBox';
 
-const FILE_BROWSER_FACTORY = 'FileBrowser';
+const FILE_BROWSER_FACTORY = 'DrivePanel';
 const FILE_BROWSER_PLUGIN_ID = '@jupyter/drives:widget';
+
+function buildMountedDriveNameList(driveList: Drive[]): string[] {
+  const driveNameList: string[] = [];
+  driveList.forEach(drive => {
+    driveNameList.push(drive.name);
+  });
+  return driveNameList;
+}
+
+const s3AvailableBuckets: IBucket[] = [
+  {
+    creation_date: '2023-12-15T13:27:57.000Z',
+    name: 'jupyterDriveBucket1',
+    provider: 'S3',
+    region: 'us-east-1',
+    status: 'active'
+  },
+  {
+    creation_date: '2023-12-19T08:57:29.000Z',
+    name: 'jupyterDriveBucket2',
+    provider: 'S3',
+    region: 'us-east-1',
+    status: 'inactive'
+  },
+  {
+    creation_date: '2023-12-19T09:07:29.000Z',
+    name: 'jupyterDriveBucket3',
+    provider: 'S3',
+    region: 'us-east-1',
+    status: 'inactive'
+  },
+  {
+    creation_date: '2023-12-19T09:07:29.000Z',
+    name: 'jupyterDriveBucket4',
+    provider: 'S3',
+    region: 'us-east-1',
+    status: 'active'
+  },
+  {
+    creation_date: '2024-01-12T09:07:29.000Z',
+    name: 'jupyterDriveBucket5',
+    provider: 'S3',
+    region: 'us-east-1',
+    status: 'active'
+  }
+];
 
 namespace CommandIDs {
   export const openDrivesDialog = 'drives:open-drives-dialog';
-  export const addDriveBrowser = 'drives:add-drive-browser';
   export const removeDriveBrowser = 'drives:remove-drive-browser';
 }
 
@@ -53,53 +93,21 @@ const plugin: JupyterFrontEndPlugin<void> = {
     console.log('JupyterLab extension @jupyter/drives is activated!');
   }
 };
-
-/*async*/ function createDrivesList(manager: IDocumentManager) {
-  /*const s3BucketsList: IBucket[] = await getDrivesList();*/
-  const s3BucketsList: IBucket[] = [
-    {
-      creation_date: '2023-12-15T13:27:57.000Z',
-      name: 'jupyter-drive-bucket1',
-      provider: 'S3',
-      region: 'us-east-1',
-      status: 'active'
-    },
-    {
-      creation_date: '2023-12-19T08:57:29.000Z',
-      name: 'jupyter-drive-bucket2',
-      provider: 'S3',
-      region: 'us-east-1',
-      status: 'inactive'
-    },
-    {
-      creation_date: '2023-12-19T09:07:29.000Z',
-      name: 'jupyter-drive-bucket3',
-      provider: 'S3',
-      region: 'us-east-1',
-      status: 'active'
-    },
-    {
-      creation_date: '2023-12-19T09:07:29.000Z',
-      name: 'jupyter-drive-bucket4',
-      provider: 'S3',
-      region: 'us-east-1',
-      status: 'inactive'
-    }
-  ];
-
-  const availableS3Buckets: Drive[] = [];
-  s3BucketsList.forEach(item => {
+/*const s3BucketsList: IBucket[] = await getDrivesList();*/
+/*async*/ function createDrivesList(bucketList: IBucket[]) {
+  const S3Drives: Drive[] = [];
+  bucketList.forEach(item => {
     const drive = new Drive();
     drive.name = item.name;
     drive.baseUrl = '';
     drive.region = item.region;
     drive.status = item.status;
     drive.provider = item.provider;
-    manager.services.contents.addDrive(drive);
-    availableS3Buckets.push(drive);
+    S3Drives.push(drive);
   });
-  return availableS3Buckets;
+  return S3Drives;
 }
+
 function camelCaseToDashedCase(name: string) {
   if (name !== name.toLowerCase()) {
     name = name.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
@@ -121,22 +129,20 @@ function restoreDriveName(id: string) {
   return driveName;
 }
 
-function createSidePanel(driveName: string, app: JupyterFrontEnd) {
+function createSidePanel(
+  driveName: string,
+  app: JupyterFrontEnd,
+  restorer: ILayoutRestorer
+) {
   const panel = new SidePanel();
   panel.title.icon = DriveIcon;
   panel.title.iconClass = 'jp-SideBar-tabIcon';
   panel.title.caption = 'Browse Drives';
   panel.id = camelCaseToDashedCase(driveName) + '-file-browser';
-  app.shell.add(panel, 'left', { rank: 102 });
-  /*if (restorer) {
+  app.shell.add(panel, 'left', { rank: 102, type: 'DrivePanel' });
+  if (restorer) {
     restorer.add(panel, driveName + '-browser');
-  }*/
-  app.contextMenu.addItem({
-    command: CommandIDs.removeDriveBrowser,
-    selector: `.jp-SideBar.lm-TabBar .lm-TabBar-tab[data-id=${panel.id}]`,
-    rank: 0
-  });
-
+  }
   return panel;
 }
 
@@ -144,6 +150,7 @@ const AddDrivesPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:add-drives',
   description: 'Open a dialog to select drives to be added in the filebrowser.',
   requires: [
+    ICommandPalette,
     IDocumentManager,
     IToolbarWidgetRegistry,
     ITranslator,
@@ -157,34 +164,39 @@ const AddDrivesPlugin: JupyterFrontEndPlugin<void> = {
 
 export /*async */ function activateAddDrivesPlugin(
   app: JupyterFrontEnd,
+  palette: ICommandPalette,
   manager: IDocumentManager,
   toolbarRegistry: IToolbarWidgetRegistry,
   translator: ITranslator,
-  restorer: ILayoutRestorer | null,
+  restorer: ILayoutRestorer,
   settingRegistry: ISettingRegistry,
   factory: IFileBrowserFactory
 ) {
   addJupyterLabThemeChangeListener();
-  const availableDrives = createDrivesList(manager);
-  let selectedDrives: Drive[] = [];
   const selectedDrivesModelMap = new Map<Drive[], DriveListModel>();
+  let selectedDrives: Drive[] = [];
+  const availableDrives = createDrivesList(s3AvailableBuckets);
   let driveListModel = selectedDrivesModelMap.get(selectedDrives);
+  const mountedDriveNameList: string[] =
+    buildMountedDriveNameList(selectedDrives);
   console.log('AddDrives plugin is activated!');
   const trans = translator.load('jupyter-drives');
-  const driveList: Drive[] = /*await*/ createDrivesList(manager);
 
-  function createFileBrowser(drive: Drive) {
+  function createDriveFileBrowser(drive: Drive) {
+    manager.services.contents.addDrive(drive);
     const driveBrowser = factory.createFileBrowser('drive-browser', {
       driveName: drive.name
     });
 
-    console.log('model:', driveBrowser.model);
-    const panel = createSidePanel(drive.name, app);
+    const panel = createSidePanel(drive.name, app, restorer);
+    app.contextMenu.addItem({
+      command: CommandIDs.removeDriveBrowser,
+      selector: `.jp-SideBar.lm-TabBar .lm-TabBar-tab[data-id=${panel.id}]`,
+      rank: 0
+    });
     drive?.disposed.connect(() => {
       panel.dispose();
     });
-
-    factory.tracker.add(driveBrowser);
 
     setToolbar(
       panel,
@@ -196,11 +208,8 @@ export /*async */ function activateAddDrivesPlugin(
         translator
       )
     );
-    driveListModel?.addPanel(drive, panel, driveBrowser, app, restorer);
+    panel.addWidget(driveBrowser);
   }
-  driveList.forEach(drive => {
-    createFileBrowser(drive);
-  });
 
   app.commands.addCommand(CommandIDs.openDrivesDialog, {
     execute: /*async*/ () => {
@@ -215,17 +224,16 @@ export /*async */ function activateAddDrivesPlugin(
         selectedDrivesModelMap.set(selectedDrives, driveListModel);
       }
 
-      async function onDriveAdded(selectedDrives: Drive[]) {
+      function onDriveAdded(driveList: Drive[]) {
+        const drive: Drive = driveList[driveList.length - 1];
         if (driveListModel) {
-          const response = driveListModel.sendConnectionRequest(selectedDrives);
-          if ((await response) === true) {
-            console.log('A drive needs to be added');
-            createFileBrowser(selectedDrives[length - 1]);
-          } else {
-            console.warn('Connection with the drive was not possible');
+          if (!mountedDriveNameList.includes(drive.name)) {
+            createDriveFileBrowser(drive);
+            mountedDriveNameList.push(drive.name);
           }
         }
       }
+
       if (driveListModel) {
         showDialog({
           body: new DriveListView(driveListModel, app.docRegistry),
@@ -240,38 +248,11 @@ export /*async */ function activateAddDrivesPlugin(
     },
 
     icon: DriveIcon.bindprops({ stylesheet: 'menuItem' }),
-    caption: trans.__('Add drives to filebrowser.'),
-    label: trans.__('Add Drives To Filebrowser')
+    caption: trans.__('Add a new drive filebrowser.'),
+    label: trans.__('Add A New Drive Filebrowser')
   });
-
-  /*app.commands.addCommand(CommandIDs.addDriveBrowser, {
-    execute: args => {
-      const drive = new Drive();
-      const driveBrowser = factory.createFileBrowser('drive-browser', {
-        driveName: drive.name
-      });
-      const panel = createSidePanel(drive.name, app);
-      drive?.disposed.connect(() => {
-          panel.dispose();
-        });
-
-      factory.tracker.add(driveBrowser);
-
-      setToolbar(
-        panel,
-        createToolbarFactory(
-          toolbarRegistry,
-          settingRegistry,
-          FILE_BROWSER_FACTORY,
-          FILE_BROWSER_PLUGIN_ID,
-          translator
-        )
-      );
-      driveListModel?.addPanel(drive, panel, driveBrowser, app, restorer);
-    },
-    caption: trans.__('Add drive filebrowser.'),
-    label: trans.__('Add Drive Filebrowser')
-  });*/
+  const command = 'drives:open-drives-dialog';
+  palette.addItem({ command, category: 'Drives' });
 
   function test(node: HTMLElement): boolean {
     return node.title === 'Browse Drives';
@@ -282,8 +263,21 @@ export /*async */ function activateAddDrivesPlugin(
         const node = app.contextMenuHitTest(test);
         if (node?.dataset.id) {
           const driveName = restoreDriveName(node?.dataset.id);
-          const drive = driveList.find(drive => drive.name === driveName);
-          drive?.dispose();
+          if (driveListModel) {
+            const drive = driveListModel.selectedDrives.find(
+              drive => drive.name === driveName
+            );
+            if (drive) {
+              const index = driveListModel.selectedDrives.indexOf(drive, 0);
+              if (index > -1) {
+                driveListModel.selectedDrives.splice(index, 1);
+                console.warn(
+                  `Drive ${drive.name} is being disposed as well as the respective ${node?.dataset.id} panel.`
+                );
+              }
+            }
+            drive?.dispose();
+          }
         }
       }
     },

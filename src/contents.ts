@@ -337,7 +337,7 @@ export class Drive implements Contents.IDrive {
     const data = await response.json();*/
 
     const data = drive1Contents;
-    Contents.validateContentsModel(data);
+    //Contents.validateContentsModel(data);
     return data;
   }
 
