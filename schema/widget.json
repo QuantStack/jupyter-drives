@@ -1,6 +1,6 @@
 {
   "jupyter.lab.toolbars": {
-    "FileBrowser": [
+    "DrivePanel": [
       {
         "name": "new-directory",
         "command": "filebrowser:create-new-directory",

@@ -11,9 +11,9 @@ import {
 import { useState } from 'react';
 import { Drive } from './contents';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
-import { SidePanel } from '@jupyterlab/ui-components';
-import { FileBrowser } from '@jupyterlab/filebrowser';
-import { ILayoutRestorer, JupyterFrontEnd } from '@jupyterlab/application';
+//import { SidePanel } from '@jupyterlab/ui-components';
+//import { FileBrowser } from '@jupyterlab/filebrowser';
+//import { ILayoutRestorer, JupyterFrontEnd } from '@jupyterlab/application';
 
 interface IProps {
   model: DriveListModel;
@@ -157,7 +157,6 @@ export function DriveListManagerComponent(props: IProps) {
   };
 
   const updateSelectedDrives = (item: string, isName: boolean) => {
-    console.log('you have clicked on add drive button');
     updatedSelectedDrives = [...props.model.selectedDrives];
     let pickedDrive = new Drive();
 
@@ -174,14 +173,21 @@ export function DriveListManagerComponent(props: IProps) {
       }
     });
 
-    const checkDrive = isDriveAlreadySelected(
-      pickedDrive,
-      updatedSelectedDrives
-    );
-    if (checkDrive === false) {
-      updatedSelectedDrives.push(pickedDrive);
+    if (pickedDrive.status === 'active') {
+      if (
+        isDriveAlreadySelected(pickedDrive, updatedSelectedDrives) === false
+      ) {
+        updatedSelectedDrives.push(pickedDrive);
+        console.log(`Drive filebrowser is added for ${pickedDrive.name} drive`);
+      } else {
+        console.warn(
+          `There is already a drive filebrowser for ${pickedDrive.name} drive`
+        );
+      }
     } else {
-      console.warn('The selected drive is already in the list');
+      console.warn(
+        `The selected drive ${pickedDrive.name} is inactive and cannot be mounted`
+      );
     }
 
     setSelectedDrives(updatedSelectedDrives);
@@ -263,53 +269,6 @@ export class DriveListModel extends VDomModel {
   }
   setSelectedDrives(selectedDrives: Drive[]) {
     this.selectedDrives = selectedDrives;
-  }
-  async sendConnectionRequest(selectedDrives: Drive[]): Promise<boolean> {
-    const lastAddedDrive = selectedDrives[selectedDrives.length - 1];
-    let response: boolean;
-    console.log('Checking the status of selected drive ', lastAddedDrive.name);
-    if (lastAddedDrive.status === 'active') {
-      response = true;
-    } else {
-      console.warn('The selected drive is inactive');
-      response = false;
-    }
-    /*requestAPI('send_connectionRequest', {
-      method: 'POST'
-    })
-      .then(data => {
-        console.log('data:', data);
-        return data;
-      })
-      .catch(reason => {
-        console.error(
-          `The jupyter_drive server extension appears to be missing.\n${reason}`
-        );
-        return;
-      });*/
-    return response;
-  }
-
-  async addPanel(
-    drive: Drive,
-    panel: SidePanel,
-    filebrowser: FileBrowser,
-    app: JupyterFrontEnd,
-    restorer: ILayoutRestorer | null
-  ): Promise<boolean> {
-    let response: boolean;
-    if (drive.name === 'active') {
-      response = true;
-      panel.addWidget(filebrowser);
-      //app.shell.add(panel, 'left', { rank: 102 });
-      if (restorer) {
-        restorer.add(panel, drive.name + '-browser');
-      }
-    } else {
-      response = false;
-      console.warn('The selected drive is inactive');
-    }
-    return response;
   }
 }
 

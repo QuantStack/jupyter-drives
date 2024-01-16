@@ -31,8 +31,6 @@ li {
 .search-add-drive-button {
   background-color: var(--md-blue-700);
   color: white;
-
-  /* width: 8em; */
   height: 1em;
   border-radius: 4px;
 }
@@ -59,24 +57,22 @@ li {
 .data-grid-cell {
   text-align: left;
   height: 2em;
-  /*min-width: 200px;*/
   border-right: 2px;
   border-left: 2px;
   background-color: var(--jp-layout-color2);
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 .jp-Dialog-body {
   width: 800px;
   height: 800px;
 }
+
+/* stylelint-disable-next-line selector-class-pattern */
 .jp-DirListing-header {
   display: none;
 }
-
-/*.lm-SplitPanel-handle {
-  display: none;
-}*/
-
+/* stylelint-disable-next-line selector-class-pattern */
 .lm-AccordionPanel .jp-AccordionPanel-title {
   box-sizing: border-box;
   line-height: 24px;
@@ -90,6 +86,7 @@ li {
   font-size: var(--jp-ui-font-size0);
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 .jp-FileBrowser .lm-AccordionPanel > h3:first-child {
   display: flex;
 }
