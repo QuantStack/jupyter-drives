@@ -13,3 +13,9 @@ export async function getDrivesList() {
     method: 'GET'
   });
 }
+
+export async function getDriveContent(driveName: string, path: string) {
+  return await requestAPI<Array<IBucket>>('drives/' + driveName + '/' + path, {
+    method: 'GET'
+  });
+}

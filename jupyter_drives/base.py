@@ -41,7 +41,7 @@ class DrivesConfig(Configurable):
         config = True, 
         help = "Region name.",
     )
-    
+
     api_base_url = Unicode(
         config=True,
         help="Base URL of the provider service REST API.",

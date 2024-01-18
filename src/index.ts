@@ -22,6 +22,7 @@ import { IBucket } from './s3requests';
 import { Dialog, ICommandPalette, showDialog } from '@jupyterlab/apputils';
 import { DriveListModel, DriveListView } from './drivelistmanager';
 import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
+import { getDriveContent, getDrivesList } from './s3requests';
 
 /**
  * The class name added to the filebrowser filterbox node.
@@ -39,7 +40,13 @@ function buildMountedDriveNameList(driveList: Drive[]): string[] {
   return driveNameList;
 }
 
-const s3AvailableBuckets: IBucket[] = [
+const s3AvailableBuckets2 = await getDrivesList();
+console.log('List of buckets is:', s3AvailableBuckets2);
+const driveName = 'jupyter-drive-bucket1';
+const path = 'examples';
+const driveContent = await getDriveContent(driveName, path);
+console.log('driveContent:', driveContent);
+const s3AvailableBuckets1: IBucket[] = [
   {
     creation_date: '2023-12-15T13:27:57.000Z',
     name: 'jupyterDriveBucket1',
@@ -175,7 +182,7 @@ export /*async */ function activateAddDrivesPlugin(
   addJupyterLabThemeChangeListener();
   const selectedDrivesModelMap = new Map<Drive[], DriveListModel>();
   let selectedDrives: Drive[] = [];
-  const availableDrives = createDrivesList(s3AvailableBuckets);
+  const availableDrives = createDrivesList(s3AvailableBuckets1);
   let driveListModel = selectedDrivesModelMap.get(selectedDrives);
   const mountedDriveNameList: string[] =
     buildMountedDriveNameList(selectedDrives);
