@@ -41,7 +41,7 @@ c.DrivesConfig.secret_access_key = "<AWS Secret Access Key / IAM Secret>"
 c.DrivesConfig.session_token = "<AWS Session Token / IAM Session Token>"
 ```
 
-### Custom file path containig credentials
+### Custom credentials file path 
 
 You can also just specify the location of a local file which contains your credentials. The `acccess_key`, `secret_access_key` and if applicable the `session_token` will be automatically extracted from there.
 
