@@ -86,7 +86,7 @@ class S3Manager(JupyterDrivesManager):
         '''
         try :
             # checking if the drive wasn't mounted already
-            if self.s3_content_managers[drive_name] is None:
+            if drive_name not in self.s3_content_managers or self.s3_content_managers[drive_name] is None:
 
                 # dealing with long-term credentials (access key, secret key)
                 if self._config.session_token is None:

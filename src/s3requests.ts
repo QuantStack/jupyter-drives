@@ -1,4 +1,5 @@
 import { requestAPI } from './handler';
+import { Contents } from '@jupyterlab/services';
 
 export interface IBucket {
   name: string;
@@ -14,8 +15,18 @@ export async function getDrivesList() {
   });
 }
 
-export async function getDriveContent(driveName: string, path: string) {
-  return await requestAPI<Array<IBucket>>('drives/' + driveName + '/' + path, {
-    method: 'GET'
+export async function postDriveMounted(driveName: string) {
+  await requestAPI<any>('drives', {
+    method: 'POST',
+    body: `{"drive_name":"${driveName}"}`
   });
+}
+
+export async function getDriveContents(driveName: string, path: string) {
+  return await requestAPI<Contents.IModel>(
+    'drives' + '/' + driveName + '/' + path,
+    {
+      method: 'GET'
+    }
+  );
 }

@@ -59,7 +59,7 @@ class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     async def post(self):
         body = self.get_json_body()
         result = await self._manager.mount_drive(**body)
-        self.finish(json.dump(result.message))
+        self.finish(result["message"])
 
 class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
     """
@@ -97,6 +97,7 @@ def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Co
 
     provider = DrivesConfig(config=config).provider
     entry_point = MANAGERS.get(provider)
+    
     if entry_point is None:
         log.error(f"JupyterDrives Manager: No manager defined for provider '{provider}'.")
         raise NotImplementedError()
@@ -128,7 +129,8 @@ def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Co
             for pattern, handler in handlers_with_path
         ]
     )
-
+   
+   
     log.debug(f"Jupyter-Drives Handlers: {drives_handlers}")
 
     web_app.add_handlers(host_pattern, drives_handlers)

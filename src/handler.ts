@@ -20,7 +20,6 @@ export async function requestAPI<T>(
     'jupyter-drives', // API Namespace
     endPoint
   );
-
   let response: Response;
   try {
     response = await ServerConnection.makeRequest(requestUrl, init, settings);
