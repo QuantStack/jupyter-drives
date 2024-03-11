@@ -47,11 +47,11 @@ class S3Manager(JupyterDrivesManager):
         if (self._config.access_key_id and self._config.secret_access_key):
             S3Drive = get_driver(Provider.S3)
             drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key)]
-
             results = []
+            
             for drive in drives:
                 results += drive.list_containers()
-        
+                
             for result in results:
                 data.append(
                     {
@@ -85,6 +85,12 @@ class S3Manager(JupyterDrivesManager):
             S3ContentsManager
         '''
         try :
+            s3_contents_manager = S3ContentsManager(
+                access_key = self._config.access_key_id,
+                secret_access_key = self._config.secret_access_key,
+                endpoint_url = self._config.api_base_url,
+                bucket = drive_name
+            )
             # checking if the drive wasn't mounted already
             if drive_name not in self.s3_content_managers or self.s3_content_managers[drive_name] is None:
 
@@ -119,7 +125,6 @@ class S3Manager(JupyterDrivesManager):
 
         except Exception as e:
             response = {"code": 400, "message": e}
-
         return response
     
     async def unmount_drive(self, drive_name):
@@ -153,6 +158,7 @@ class S3Manager(JupyterDrivesManager):
         try:
             if drive_name in self.s3_content_managers:
                 contents = self.s3_content_managers[drive_name].fs.ls(path)
+                print('contents:', contents)
                 code = 200
                 response["contents"] = contents
             else:
@@ -164,6 +170,7 @@ class S3Manager(JupyterDrivesManager):
             
         response["code"] = code
         return response
+    
     
     async def new_file(self, drive_name, type = "notebook", path = ""):
         '''Create a new file or directory from an S3 drive.

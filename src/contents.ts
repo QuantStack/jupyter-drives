@@ -4,6 +4,7 @@
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 //import { URLExt } from '@jupyterlab/coreutils';
+import { postDriveMounted, getDriveContents } from './s3requests';
 
 /*
  * The url for the default drive service.
@@ -32,12 +33,12 @@ const drive1Contents: Contents.IModel = {
     {
       name: 'voila2.ipynb',
       path: 'Drive1/voila2.ipynb',
-      last_modified: '2022-10-12T21:33:04.798185Z',
-      created: '2022-11-09T12:37:21.020396Z',
+      last_modified: '',
+      created: '',
       content: null,
       format: null,
       mimetype: null,
-      size: 5377,
+      size: null,
       writable: true,
       type: 'notebook'
     },
@@ -313,32 +314,49 @@ export class Drive implements Contents.IDrive {
    * Uses the [Jupyter Notebook API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jupyter-server/jupyter_server/main/jupyter_server/services/api/api.yaml#!/contents) and validates the response model.
    */
   async get(
-    path: string,
+    localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    /*
-    let url = this._getUrl(localPath);
-    if (options) {
-      // The notebook type cannot take an format option.
-      if (options.type === 'notebook') {
-        delete options['format'];
-      }
-      const content = options.content ? '1' : '0';
-      const params: PartialJSONObject = { ...options, content };
-      url += URLExt.objectToQueryString(params);
-    }
+    postDriveMounted(this.name);
+    const response = await getDriveContents(this.name, localPath);
+    let fileExtension: string = '';
+    const driveBrowserContents: Array<object> = [];
+    const driveContents: Array<string> = response['contents'];
+    driveContents.forEach(content => {
+      fileExtension = content.split('.')[1];
+      driveBrowserContents.push({
+        name: content,
+        path: this.name + '/' + content,
+        last_modified: '',
+        created: '',
+        content: null,
+        format: null,
+        mimetype: fileExtension === 'txt' ? 'text/plain' : '',
+        size: undefined,
+        writable: true,
+        type:
+          fileExtension === 'txt'
+            ? 'txt'
+            : fileExtension === 'ipynb'
+              ? 'notebook'
+              : 'directory'
+      });
+    });
+    const drivePath: Contents.IModel = {
+      name: this.name,
+      path: this.name,
+      last_modified: '',
+      created: '',
+      content: driveBrowserContents,
+      format: 'json',
+      mimetype: '',
+      size: undefined,
+      writable: true,
+      type: 'directory'
+    };
 
-    const settings = this.serverSettings;
-    const response = await ServerConnection.makeRequest(url, {}, settings);
-    if (response.status !== 200) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
-    }
-    const data = await response.json();*/
-
-    const data = drive1Contents;
-    //Contents.validateContentsModel(data);
-    return data;
+    Contents.validateContentsModel(drivePath);
+    return drivePath;
   }
 
   /**
