@@ -60,7 +60,9 @@ class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     async def post(self):
         body = self.get_json_body()
         result = await self._manager.mount_drive(**body)
-        self.finish(result["message"])
+        print('result:', result)
+        self.finish(json.dump(result))
+        #self.finish(result)
 
 class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
     """
@@ -98,7 +100,6 @@ handlers_with_path = [
 def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Config, log: Optional[logging.Logger] = None):
     host_pattern = ".*$"
     base_url = web_app.settings["base_url"]
-    print('base_url:', base_url)
     log = log or logging.getLogger(__name__)
 
     provider = DrivesConfig(config=config).provider
@@ -137,9 +138,5 @@ def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Co
         ]
     )
    
-    print('**************************************')
-    log.warn(f"Jupyter-Drives Handlers: {drives_handlers}")
-    print('**************************************')
-
     web_app.add_handlers(host_pattern, drives_handlers)
 

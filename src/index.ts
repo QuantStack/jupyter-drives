@@ -41,6 +41,7 @@ namespace CommandIDs {
 async function createDrivesList() {
   const response = await getDrivesList();
   const bucketList: Array<IBucket> = response['data'];
+  console.log('bucketList:', bucketList);
   const S3Drives: Drive[] = [];
   bucketList.forEach(item => {
     const drive = new Drive();

@@ -14,7 +14,6 @@ from s3contents import S3ContentsManager
 from ..base import DrivesConfig
 from .manager import JupyterDrivesManager
 
-
 class S3Manager(JupyterDrivesManager):
     """Jupyter drives manager for S3 drives."""
 
@@ -84,6 +83,7 @@ class S3Manager(JupyterDrivesManager):
         Args:
             S3ContentsManager
         '''
+        print('In mount drive:' )
         try :
             s3_contents_manager = S3ContentsManager(
                 access_key = self._config.access_key_id,
@@ -125,6 +125,8 @@ class S3Manager(JupyterDrivesManager):
 
         except Exception as e:
             response = {"code": 400, "message": e}
+        
+        print('RESPONSE IN MOUNT_DRIVE:', response)
         return response
     
     async def unmount_drive(self, drive_name):
