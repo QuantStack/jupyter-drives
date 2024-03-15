@@ -83,21 +83,22 @@ class S3Manager(JupyterDrivesManager):
         Args:
             S3ContentsManager
         '''
-        print('In mount drive:' )
+       
         try :
             s3_contents_manager = S3ContentsManager(
-                access_key = self._config.access_key_id,
+                access_key_id = self._config.access_key_id,
                 secret_access_key = self._config.secret_access_key,
                 endpoint_url = self._config.api_base_url,
                 bucket = drive_name
             )
+   
             # checking if the drive wasn't mounted already
             if drive_name not in self.s3_content_managers or self.s3_content_managers[drive_name] is None:
 
                 # dealing with long-term credentials (access key, secret key)
                 if self._config.session_token is None:
                     s3_contents_manager = S3ContentsManager(
-                    access_key = self._config.access_key_id,
+                    access_key_id = self._config.access_key_id,
                     secret_access_key = self._config.secret_access_key,
                     endpoint_url = self._config.api_base_url,
                     bucket = drive_name
@@ -106,7 +107,7 @@ class S3Manager(JupyterDrivesManager):
                 # dealing with short-term credentials (access key, secret key, session token)
                 else:
                     s3_contents_manager = S3ContentsManager(
-                    access_key = self._config.access_key_id,
+                    access_key_id = self._config.access_key_id,
                     secret_access_key = self._config.secret_access_key,
                     session_token = self._config.session_token,
                     endpoint_url = self._config.api_base_url,
@@ -126,7 +127,6 @@ class S3Manager(JupyterDrivesManager):
         except Exception as e:
             response = {"code": 400, "message": e}
         
-        print('RESPONSE IN MOUNT_DRIVE:', response)
         return response
     
     async def unmount_drive(self, drive_name):
@@ -160,7 +160,6 @@ class S3Manager(JupyterDrivesManager):
         try:
             if drive_name in self.s3_content_managers:
                 contents = self.s3_content_managers[drive_name].fs.ls(path)
-                print('contents:', contents)
                 code = 200
                 response["contents"] = contents
             else:

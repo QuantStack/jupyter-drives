@@ -317,32 +317,48 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
+    let relativePath = '';
+    if (localPath !== '') {
+      if (localPath.includes(this.name)) {
+        relativePath = localPath.split(this.name + '/')[1];
+      } else {
+        relativePath = localPath;
+      }
+    }
+
     postDriveMounted(this.name);
-    const response = await getDriveContents(this.name, localPath);
+    const response = await getDriveContents(this.name, relativePath);
     let fileExtension: string = '';
     const driveBrowserContents: Array<object> = [];
     const driveContents: Array<string> = response['contents'];
     driveContents.forEach(content => {
-      fileExtension = content.split('.')[1];
-      driveBrowserContents.push({
-        name: content,
-        path: this.name + '/' + content,
-        last_modified: '',
-        created: '',
-        content: null,
-        format: null,
-        mimetype: fileExtension === 'txt' ? 'text/plain' : '',
-        size: undefined,
-        writable: true,
-        type:
-          fileExtension === 'txt'
-            ? 'txt'
-            : fileExtension === 'ipynb'
-              ? 'notebook'
-              : 'directory'
-      });
+      const levels = content.split('/');
+      const path = this.name + '/' + content;
+      if (levels[levels.length - 1] !== '') {
+        const itemName = levels[levels.length - 1];
+        fileExtension = content.split('.')[1];
+        driveBrowserContents.push({
+          name: itemName,
+          path: path,
+          last_modified: '',
+          created: '',
+          content: null,
+          format: null,
+          mimetype: fileExtension === 'txt' ? 'text/plain' : '',
+          size: undefined,
+          writable: true,
+          type:
+            fileExtension === 'txt'
+              ? 'txt'
+              : fileExtension === 'ipynb'
+                ? 'notebook'
+                : 'directory'
+        });
+      }
     });
-    const drivePath: Contents.IModel = {
+    //}
+
+    const driveBrowserContentsModel: Contents.IModel = {
       name: this.name,
       path: this.name,
       last_modified: '',
@@ -355,8 +371,8 @@ export class Drive implements Contents.IDrive {
       type: 'directory'
     };
 
-    Contents.validateContentsModel(drivePath);
-    return drivePath;
+    Contents.validateContentsModel(driveBrowserContentsModel);
+    return driveBrowserContentsModel;
   }
 
   /**

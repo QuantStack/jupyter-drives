@@ -41,7 +41,6 @@ namespace CommandIDs {
 async function createDrivesList() {
   const response = await getDrivesList();
   const bucketList: Array<IBucket> = response['data'];
-  console.log('bucketList:', bucketList);
   const S3Drives: Drive[] = [];
   bucketList.forEach(item => {
     const drive = new Drive();
@@ -64,7 +63,7 @@ export function camelCaseToDashedCase(name: string) {
 
 function restoreDriveName(id: string) {
   const list1 = id.split('-file-');
-  let driveName = list1[0];
+  const driveName = list1[0];
   return driveName;
 }
 

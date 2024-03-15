@@ -60,9 +60,7 @@ class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     async def post(self):
         body = self.get_json_body()
         result = await self._manager.mount_drive(**body)
-        print('result:', result)
-        self.finish(json.dump(result))
-        #self.finish(result)
+        self.finish(result["message"])
 
 class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
     """
@@ -74,9 +72,7 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
     @tornado.web.authenticated
     async def get(self, path: str = "", drive: str = ""):
         result = await self._manager.get_contents(drive, path)
-        print("result:", result)
         self.finish(result)
-      
 
     @tornado.web.authenticated
     async def post(self, path: str = "", drive: str = ""):

@@ -22,10 +22,7 @@ export async function postDriveMounted(driveName: string) {
 }
 
 export async function getDriveContents(driveName: string, path: string) {
-  return await requestAPI<any>(
-    'drives' + '/' + driveName + '/' + path,
-    {
-      method: 'GET'
-    }
-  );
+  return await requestAPI<any>('drives' + '/' + driveName + '/' + path, {
+    method: 'GET'
+  });
 }

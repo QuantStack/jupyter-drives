@@ -54,8 +54,6 @@ class DrivesConfig(Configurable):
         help="Custom path of file where credentials are located. Extension automatically checks jupyter_notebook_config.py or directly in ~/.aws/credentials for AWS CLI users."
     )
     
-    custom_credentials_path = '~/.jupyter/jupyter-notebook-config.py'
-  
     @default("api_base_url")
     def set_default_api_base_url(self):
         # for AWS S3 drives
@@ -80,9 +78,6 @@ class DrivesConfig(Configurable):
     def _load_credentials(self):
         # check if credentials were already set in jupyter_notebook_config.py
         if self.access_key_id is not None and self.secret_access_key is not None:
-            print('WE GOT KEYS FROM CONFIG FILE')
-            print('access_key:', self.access_key_id)
-            print('secret_key:', self.secret_access_key)
             return
 
         # check if user provided custom path for credentials extraction
@@ -93,10 +88,7 @@ class DrivesConfig(Configurable):
         # if not, try to load credentials from AWS CLI
         aws_credentials_path = "~/.aws/credentials" #add read me about credentials path in windows: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
         if os.path_exists(aws_credentials_path):
-            print('WE WILL USE THE AWS CREDENTIALS SET WITH AWSCLI')
             self.access_key_id, self.secret_access_key, self.session_token = self._extract_credentials_from_file(aws_credentials_path)
-            print('access_key:', self.access_key_id)
-            print('secret_key:', self.secret_access_key)
             return
         
     def _extract_credentials_from_file(self, file_path):
