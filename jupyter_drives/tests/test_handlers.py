@@ -6,7 +6,7 @@ import tornado
 import os
 
 
-from moto import mock_s3
+from moto import mock_aws
 from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
@@ -17,7 +17,7 @@ def s3_base():
     os.environ["access_key_id"] = 'access_key'
     os.environ["secret_access_key"] = 'secret_key'
 
-    with mock_s3():
+    with mock_aws():
         S3Drive = get_driver(Provider.S3)
         drive = S3Drive('access_key', 'secret_key')
 
@@ -25,7 +25,7 @@ def s3_base():
 
 @pytest.mark.skip(reason="FIX")
 async def test_ListJupyterDrives_s3_success(jp_fetch, s3_base):
-    with mock_s3(): 
+    with mock_aws(): 
         # extract S3 drive
         drive = s3_base
 
@@ -46,7 +46,7 @@ async def test_ListJupyterDrives_s3_success(jp_fetch, s3_base):
         assert "jupyter-drives-test-bucket-2" in payload["data"]
 
 async def test_ListJupyterDrives_s3_empty_list(jp_fetch, s3_base):
-    with mock_s3(): 
+    with mock_aws(): 
         # extract S3 drive
         drive = s3_base
 
@@ -60,7 +60,7 @@ async def test_ListJupyterDrives_s3_empty_list(jp_fetch, s3_base):
 
 @pytest.mark.skip(reason="FIX")
 async def test_ListJupyterDrives_s3_missing_credentials(jp_fetch, s3_base):
-    with mock_s3(): 
+    with mock_aws(): 
         # When
         with pytest.raises(tornado.web.HTTPError) as exc_info:
             response = await jp_fetch("jupyter-drives", "drives")
@@ -70,7 +70,7 @@ async def test_ListJupyterDrives_s3_missing_credentials(jp_fetch, s3_base):
 
 @pytest.mark.skip(reason="FIX")
 async def test_MountJupyterDriveHandler(jp_fetch, s3_base):
-    with mock_s3():
+    with mock_aws():
         drive = s3_base
 
         # Create test container to mount
@@ -85,7 +85,7 @@ async def test_MountJupyterDriveHandler(jp_fetch, s3_base):
 
 @pytest.mark.skip(reason="ToBeImplemented")
 async def test_UnmountJupyterDriveHandler(jp_fetch, s3_base):
-    with mock_s3():
+    with mock_aws():
         # extract S3 drive
         drive = s3_base
 
