@@ -20,7 +20,7 @@ def s3_base():
     with mock_aws():
         S3Drive = get_driver(Provider.S3)
         drive = S3Drive('access_key', 'secret_key')
-
+        print('drive:', drive)
         yield drive
 
 @pytest.mark.skip(reason="FIX")
@@ -29,8 +29,8 @@ async def test_ListJupyterDrives_s3_success(jp_fetch, s3_base):
         # extract S3 drive
         drive = s3_base
 
-        test_bucket_name_1 = "jupyter-drives-test-bucket-1"
-        test_bucket_name_2 = "jupyter-drives-test-bucket-2"
+        test_bucket_name_1 = "jupyter-drive-bucket1"
+        test_bucket_name_2 = "jupyter-drive-bucket2"
 
         # Create some test containers
         drive.create_container(test_bucket_name_1)
@@ -42,8 +42,8 @@ async def test_ListJupyterDrives_s3_success(jp_fetch, s3_base):
         # Then
         assert response.code == 200
         payload = json.loads(response.body)
-        assert "jupyter-drives-test-bucket-1" in payload["data"]
-        assert "jupyter-drives-test-bucket-2" in payload["data"]
+        assert "jupyter-drive-bucket1" in payload["data"]
+        assert "jupyter-drive-bucket2" in payload["data"]
 
 async def test_ListJupyterDrives_s3_empty_list(jp_fetch, s3_base):
     with mock_aws(): 
@@ -74,7 +74,7 @@ async def test_MountJupyterDriveHandler(jp_fetch, s3_base):
         drive = s3_base
 
         # Create test container to mount
-        test_bucket_name_1 = "jupyter-drives-test-bucket-1"
+        test_bucket_name_1 = "jupyter-drive-bucket1"
         drive.create_container(test_bucket_name_1)
 
         # When
@@ -90,11 +90,11 @@ async def test_UnmountJupyterDriveHandler(jp_fetch, s3_base):
         drive = s3_base
 
         # Create test container to mount
-        test_bucket_name_1 = "jupyter-drives-test-bucket-1"
+        test_bucket_name_1 = "jupyter-drive-bucket1"
         drive.create_container(test_bucket_name_1)
 
         # When
-        body = {"drive_name": "jupyter-drives-test-bucket-1", "mount_drive": "false" }
+        body = {"drive_name": "jupyter-drive-bucket1", "mount_drive": "false" }
         response = await jp_fetch("jupyter-drives", "drives", body = json.dumps(body), method = "POST")
 
         assert response["code"] == 204
