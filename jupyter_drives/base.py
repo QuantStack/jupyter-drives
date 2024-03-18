@@ -87,7 +87,7 @@ class DrivesConfig(Configurable):
         
         # if not, try to load credentials from AWS CLI
         aws_credentials_path = "~/.aws/credentials" #add read me about credentials path in windows: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
-        if os.path_exists(aws_credentials_path):
+        if os.path.exists(aws_credentials_path):
             self.access_key_id, self.secret_access_key, self.session_token = self._extract_credentials_from_file(aws_credentials_path)
             return
         

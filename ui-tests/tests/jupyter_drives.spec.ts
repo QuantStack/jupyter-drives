@@ -15,7 +15,7 @@ test('should emit an activation console message', async ({ page }) => {
 
   await page.goto();
 
-  expect(
-    logs.filter(s => s === 'JupyterLab extension @jupyter/drives is activated!')
-  ).toHaveLength(1);
+  expect(logs.filter(s => s === 'AddDrives plugin is activated!')).toHaveLength(
+    1
+  );
 });
