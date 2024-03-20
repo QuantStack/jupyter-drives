@@ -14,7 +14,6 @@ from s3contents import S3ContentsManager
 from ..base import DrivesConfig
 from .manager import JupyterDrivesManager
 
-
 class S3Manager(JupyterDrivesManager):
     """Jupyter drives manager for S3 drives."""
 
@@ -47,11 +46,11 @@ class S3Manager(JupyterDrivesManager):
         if (self._config.access_key_id and self._config.secret_access_key):
             S3Drive = get_driver(Provider.S3)
             drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key)]
-
             results = []
+            
             for drive in drives:
                 results += drive.list_containers()
-        
+                
             for result in results:
                 data.append(
                     {
@@ -84,14 +83,22 @@ class S3Manager(JupyterDrivesManager):
         Args:
             S3ContentsManager
         '''
+       
         try :
+            s3_contents_manager = S3ContentsManager(
+                access_key_id = self._config.access_key_id,
+                secret_access_key = self._config.secret_access_key,
+                endpoint_url = self._config.api_base_url,
+                bucket = drive_name
+            )
+   
             # checking if the drive wasn't mounted already
-            if self.s3_content_managers[drive_name] is None:
+            if drive_name not in self.s3_content_managers or self.s3_content_managers[drive_name] is None:
 
                 # dealing with long-term credentials (access key, secret key)
                 if self._config.session_token is None:
                     s3_contents_manager = S3ContentsManager(
-                    access_key = self._config.access_key_id,
+                    access_key_id = self._config.access_key_id,
                     secret_access_key = self._config.secret_access_key,
                     endpoint_url = self._config.api_base_url,
                     bucket = drive_name
@@ -100,7 +107,7 @@ class S3Manager(JupyterDrivesManager):
                 # dealing with short-term credentials (access key, secret key, session token)
                 else:
                     s3_contents_manager = S3ContentsManager(
-                    access_key = self._config.access_key_id,
+                    access_key_id = self._config.access_key_id,
                     secret_access_key = self._config.secret_access_key,
                     session_token = self._config.session_token,
                     endpoint_url = self._config.api_base_url,
@@ -119,7 +126,7 @@ class S3Manager(JupyterDrivesManager):
 
         except Exception as e:
             response = {"code": 400, "message": e}
-
+        
         return response
     
     async def unmount_drive(self, drive_name):
@@ -164,6 +171,7 @@ class S3Manager(JupyterDrivesManager):
             
         response["code"] = code
         return response
+    
     
     async def new_file(self, drive_name, type = "notebook", path = ""):
         '''Create a new file or directory from an S3 drive.

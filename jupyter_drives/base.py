@@ -41,7 +41,7 @@ class DrivesConfig(Configurable):
         config = True, 
         help = "Region name.",
     )
-    
+
     api_base_url = Unicode(
         config=True,
         help="Base URL of the provider service REST API.",
@@ -53,7 +53,7 @@ class DrivesConfig(Configurable):
         allow_none = True,
         help="Custom path of file where credentials are located. Extension automatically checks jupyter_notebook_config.py or directly in ~/.aws/credentials for AWS CLI users."
     )
-
+    
     @default("api_base_url")
     def set_default_api_base_url(self):
         # for AWS S3 drives

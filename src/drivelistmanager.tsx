@@ -1,4 +1,5 @@
 import * as React from 'react';
+//import { requestAPI } from './handler';
 import { VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
 import {
   Button,
@@ -8,15 +9,16 @@ import {
   Search
 } from '@jupyter/react-components';
 import { useState } from 'react';
+import { Drive } from './contents';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+//import { SidePanel } from '@jupyterlab/ui-components';
+//import { FileBrowser } from '@jupyterlab/filebrowser';
+//import { ILayoutRestorer, JupyterFrontEnd } from '@jupyterlab/application';
 
 interface IProps {
   model: DriveListModel;
+  docRegistry: DocumentRegistry;
 }
-export interface IDrive {
-  name: string;
-  url: string;
-}
-
 export interface IDriveInputProps {
   isName: boolean;
   value: string;
@@ -43,6 +45,7 @@ export function DriveInputComponent(props: IDriveInputProps) {
     </div>
   );
 }
+
 interface ISearchListProps {
   isName: boolean;
   value: string;
@@ -83,7 +86,7 @@ export function DriveSearchListComponent(props: ISearchListProps) {
   );
 }
 interface IDriveDataGridProps {
-  drives: IDrive[];
+  drives: Drive[];
 }
 
 export function DriveDataGridComponent(props: IDriveDataGridProps) {
@@ -105,7 +108,7 @@ export function DriveDataGridComponent(props: IDriveDataGridProps) {
               {item.name}
             </DataGridCell>
             <DataGridCell className="data-grid-cell" grid-column="2">
-              {item.url}
+              {item.baseUrl}
             </DataGridCell>
           </DataGridRow>
         ))}
@@ -129,7 +132,7 @@ export function DriveListManagerComponent(props: IProps) {
   }
   const [nameFilteredList, setNameFilteredList] = useState(nameList);
 
-  const isDriveAlreadySelected = (pickedDrive: IDrive, driveList: IDrive[]) => {
+  const isDriveAlreadySelected = (pickedDrive: Drive, driveList: Drive[]) => {
     const isbyNameIncluded: boolean[] = [];
     const isbyUrlIncluded: boolean[] = [];
     let isIncluded: boolean = false;
@@ -139,7 +142,7 @@ export function DriveListManagerComponent(props: IProps) {
       } else {
         isbyNameIncluded.push(false);
       }
-      if (pickedDrive.url !== '' && pickedDrive.url === item.url) {
+      if (pickedDrive.baseUrl !== '' && pickedDrive.baseUrl === item.baseUrl) {
         isbyUrlIncluded.push(true);
       } else {
         isbyUrlIncluded.push(false);
@@ -155,28 +158,41 @@ export function DriveListManagerComponent(props: IProps) {
 
   const updateSelectedDrives = (item: string, isName: boolean) => {
     updatedSelectedDrives = [...props.model.selectedDrives];
-    let pickedDrive: IDrive;
-    if (isName) {
-      pickedDrive = { name: item, url: '' };
-    } else {
-      if (item !== driveUrl) {
-        setDriveUrl(item);
-      }
-      pickedDrive = { name: '', url: driveUrl };
-    }
+    let pickedDrive = new Drive();
 
-    const checkDrive = isDriveAlreadySelected(
-      pickedDrive,
-      updatedSelectedDrives
-    );
-    if (checkDrive === false) {
-      updatedSelectedDrives.push(pickedDrive);
+    props.model.availableDrives.forEach(drive => {
+      if (isName) {
+        if (item === drive.name) {
+          pickedDrive = drive;
+        }
+      } else {
+        if (item !== driveUrl) {
+          setDriveUrl(item);
+        }
+        pickedDrive.baseUrl = driveUrl;
+      }
+    });
+
+    if (pickedDrive.status === 'active') {
+      if (
+        isDriveAlreadySelected(pickedDrive, updatedSelectedDrives) === false
+      ) {
+        updatedSelectedDrives.push(pickedDrive);
+        console.log(`Drive filebrowser is added for ${pickedDrive.name} drive`);
+      } else {
+        console.warn(
+          `There is already a drive filebrowser for ${pickedDrive.name} drive`
+        );
+      }
     } else {
-      console.log('The selected drive is already in the list');
+      console.warn(
+        `The selected drive ${pickedDrive.name} is inactive and cannot be mounted`
+      );
     }
 
     setSelectedDrives(updatedSelectedDrives);
     props.model.setSelectedDrives(updatedSelectedDrives);
+    props.model.stateChanged.emit();
   };
 
   const getValue = (event: any) => {
@@ -242,30 +258,35 @@ export function DriveListManagerComponent(props: IProps) {
 }
 
 export class DriveListModel extends VDomModel {
-  public availableDrives: IDrive[];
-  public selectedDrives: IDrive[];
+  public availableDrives: Drive[];
+  public selectedDrives: Drive[];
 
-  constructor(availableDrives: IDrive[], selectedDrives: IDrive[]) {
+  constructor(availableDrives: Drive[], selectedDrives: Drive[]) {
     super();
 
     this.availableDrives = availableDrives;
     this.selectedDrives = selectedDrives;
   }
-  setSelectedDrives(selectedDrives: IDrive[]) {
+  setSelectedDrives(selectedDrives: Drive[]) {
     this.selectedDrives = selectedDrives;
   }
 }
 
 export class DriveListView extends VDomRenderer<DriveListModel> {
-  constructor(model: DriveListModel) {
+  constructor(model: DriveListModel, docRegistry: DocumentRegistry) {
     super(model);
     this.model = model;
+    this.docRegistry = docRegistry;
   }
   render() {
     return (
       <>
-        <DriveListManagerComponent model={this.model} />
+        <DriveListManagerComponent
+          model={this.model}
+          docRegistry={this.docRegistry}
+        />
       </>
     );
   }
+  private docRegistry: DocumentRegistry;
 }
