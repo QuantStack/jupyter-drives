@@ -111,12 +111,12 @@ export async function activateAddDrivesPlugin(
   factory: IFileBrowserFactory
 ) {
   addJupyterLabThemeChangeListener();
+  console.log('AddDrives plugin is activated!');
   const selectedDrivesModelMap = new Map<Drive[], DriveListModel>();
   let selectedDrives: Drive[] = [];
   const availableDrives = await createDrivesList();
   let driveListModel = selectedDrivesModelMap.get(selectedDrives);
   const addedDriveNameList: string[] = buildAddedDriveNameList(selectedDrives);
-  console.log('AddDrives plugin is activated!');
   const trans = translator.load('jupyter-drives');
 
   function createDriveFileBrowser(drive: Drive) {
