@@ -187,12 +187,12 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     // instate Drive Browser Panel
     const drivePanel = new Panel();
     drivePanel.title.icon = driveBrowserIcon;
-    drivePanel.title.iconClass = 'jp-sidebar-tabIcon';
+    drivePanel.title.iconClass = 'jp-sideBar-tabIcon';
     drivePanel.title.caption = 'Drive FileBrowser';
     drivePanel.id = 'Drive-Browser-Panel';
 
     app.shell.add(drivePanel, 'left', { rank: 102 });
-    // drivePanel.addWidget(driveBrowser);
+    drivePanel.addWidget(driveBrowser);
     if (restorer) {
       restorer.add(drivePanel, 'drive-sidepanel');
     }
