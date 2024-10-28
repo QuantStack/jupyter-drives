@@ -14,6 +14,8 @@ import { Panel } from '@lumino/widgets';
 
 import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon, driveBrowserIcon } from './icons';
+7;
+import { Drive } from './contents';
 
 /**
  * The command IDs used by the driveBrowser plugin.
@@ -164,20 +166,18 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
   ): Promise<void> => {
     const { commands } = app;
 
-    // create S3 drive
-    // const S3Drive = new Drive({
-    //   name: auth.bucket,
-    //   root: auth.root,
-    //   config: auth.config
-    // });
+    // create drive for drive file browser
+    const drive = new Drive({
+      name: 'jupyter-drives-bucket'
+    });
 
-    // app.serviceManager.contents.addDrive(S3Drive);
+    app.serviceManager.contents.addDrive(drive);
 
     // Manually restore and load the drive file browser.
     const driveBrowser = fileBrowserFactory.createFileBrowser('drivebrowser', {
       auto: false,
-      restore: false
-      // driveName: S3Drive.name
+      restore: false,
+      driveName: drive.name
     });
 
     // // Set attributes when adding the browser to the UI
