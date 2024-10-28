@@ -19,9 +19,9 @@ import { DriveIcon, driveBrowserIcon } from './icons';
  * The command IDs used by the driveBrowser plugin.
  */
 namespace CommandIDs {
-  export const openDrivesDialog = 'drives:open-drives-dialog';
-  export const openPath = 'filebrowser:open-path';
-  export const toggleBrowser = 'filebrowser:toggle-main';
+  export const openDrivesDialog = 'jupyter-drives:open-drives-dialog';
+  export const openPath = 'jupyter-drives:open-path';
+  export const toggleBrowser = 'jupyter-drives:toggle-main';
 }
 
 /**
