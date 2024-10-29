@@ -25,6 +25,7 @@ export class Drive implements Contents.IDrive {
    */
   constructor(options: Drive.IOptions = {}) {
     this._serverSettings = ServerConnection.makeSettings();
+    this._name = options.name ?? '';
     //this._apiEndpoint = options.apiEndpoint ?? SERVICE_DRIVE_URL;
   }
   /**
