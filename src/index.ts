@@ -26,18 +26,6 @@ namespace CommandIDs {
   export const toggleBrowser = 'drives:toggle-main';
 }
 
-/**
- * Initialization data for the @jupyter/drives extension.
- */
-const plugin: JupyterFrontEndPlugin<void> = {
-  id: '@jupyter/drives:plugin',
-  description: 'A Jupyter extension to support drives in the backend.',
-  autoStart: true,
-  activate: (app: JupyterFrontEnd) => {
-    console.log('JupyterLab extension @jupyter/drives is activated!');
-  }
-};
-
 const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:widget',
   description: 'Open a dialog to select drives to be added in the filebrowser.',
@@ -202,7 +190,6 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 };
 
 const plugins: JupyterFrontEndPlugin<any>[] = [
-  plugin,
   driveFileBrowser,
   openDriveDialogPlugin
 ];
