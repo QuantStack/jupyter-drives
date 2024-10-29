@@ -14,7 +14,6 @@ import { Panel } from '@lumino/widgets';
 
 import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon, driveBrowserIcon } from './icons';
-7;
 import { Drive } from './contents';
 
 /**
