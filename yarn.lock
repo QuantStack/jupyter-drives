@@ -1999,8 +1999,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@jupyter/drives@workspace:."
   dependencies:
-    "@jupyter/react-components": ^0.17.1
-    "@jupyter/web-components": 0.17.1
+    "@jupyter/react-components": ^0.16.6
+    "@jupyter/web-components": 0.16.6
     "@jupyterlab/application": ^4.2.5
     "@jupyterlab/builder": ^4.2.5
     "@jupyterlab/coreutils": ^6.2.5
@@ -2043,25 +2043,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/react-components@npm:^0.17.1":
-  version: 0.17.1
-  resolution: "@jupyter/react-components@npm:0.17.1"
-  dependencies:
-    "@jupyter/web-components": ^0.17.1
-    react: ">=17.0.0 <19.0.0"
-  checksum: 1c8b5d3a814c0c372ea21ae5544dcd6f021aecfa8168fa44c34a9364ea10ad539ff4791d524b3803be3fbe55d33a0e76576c6f715999d324ca437f289662e099
-  languageName: node
-  linkType: hard
-
-"@jupyter/web-components@npm:0.17.1, @jupyter/web-components@npm:^0.17.1":
-  version: 0.17.1
-  resolution: "@jupyter/web-components@npm:0.17.1"
+"@jupyter/web-components@npm:0.16.6":
+  version: 0.16.6
+  resolution: "@jupyter/web-components@npm:0.16.6"
   dependencies:
     "@microsoft/fast-colors": ^5.3.1
     "@microsoft/fast-element": ^1.12.0
     "@microsoft/fast-foundation": ^2.49.4
     "@microsoft/fast-web-utilities": ^5.4.1
-  checksum: 51fd643aa7ef27a482ee19a53845d71aaf80b8b4a88437a2733519e975a394959b84a65d5415c5fb56acf18bf06b788680a0f06b6118a938bebbda6561dc5fb7
+  checksum: 41a4a2b5bb2177cbb562c858c8327a868eab9205679dbc8f99105b1580882a2d14a6e2bd9202a4acdec539c44cee8d5a5b64f7fea6a03baa3ad2905b95a6538c
   languageName: node
   linkType: hard
 
