@@ -5,10 +5,22 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { IFileBrowserFactory, FileBrowser } from '@jupyterlab/filebrowser';
+import {
+  IFileBrowserFactory,
+  FileBrowser,
+  Uploader
+} from '@jupyterlab/filebrowser';
 import { ITranslator } from '@jupyterlab/translation';
 import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
-import { Dialog, showDialog } from '@jupyterlab/apputils';
+import {
+  createToolbarFactory,
+  IToolbarWidgetRegistry,
+  setToolbar,
+  Dialog,
+  showDialog
+} from '@jupyterlab/apputils';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { FilenameSearcher, IScore } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { Panel } from '@lumino/widgets';
 
@@ -24,6 +36,16 @@ namespace CommandIDs {
   export const openPath = 'drives:open-path';
   export const toggleBrowser = 'drives:toggle-main';
 }
+
+/**
+ * The file browser factory ID.
+ */
+const FILE_BROWSER_FACTORY = 'DriveBrowser';
+
+/**
+ * The class name added to the  drive filebrowser filterbox node.
+ */
+const FILTERBOX_CLASS = 'jp-DriveBrowser-filterBox';
 
 const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:widget',
@@ -136,7 +158,12 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:drives-file-browser',
   description: 'The drive file browser factory provider.',
   autoStart: true,
-  requires: [IFileBrowserFactory],
+  requires: [
+    IFileBrowserFactory,
+    IToolbarWidgetRegistry,
+    ISettingRegistry,
+    ITranslator
+  ],
   optional: [
     IRouter,
     JupyterFrontEnd.ITreeResolver,
@@ -146,6 +173,9 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
   activate: async (
     app: JupyterFrontEnd,
     fileBrowserFactory: IFileBrowserFactory,
+    toolbarRegistry: IToolbarWidgetRegistry,
+    settingsRegistry: ISettingRegistry,
+    translator: ITranslator,
     router: IRouter | null,
     tree: JupyterFrontEnd.ITreeResolver | null,
     labShell: ILabShell | null,
@@ -170,7 +200,7 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       driveName: drive.name
     });
 
-    // // Set attributes when adding the browser to the UI
+    // Set attributes when adding the browser to the UI
     driveBrowser.node.setAttribute('role', 'region');
     driveBrowser.node.setAttribute('aria-label', 'Drive Browser Section');
 
@@ -178,7 +208,7 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     const drivePanel = new Panel();
     drivePanel.title.icon = driveBrowserIcon;
     drivePanel.title.iconClass = 'jp-sideBar-tabIcon';
-    drivePanel.title.caption = 'Drive FileBrowser';
+    drivePanel.title.caption = 'Drive File Browser';
     drivePanel.id = 'Drive-Browser-Panel';
 
     app.shell.add(drivePanel, 'left', { rank: 102 });
@@ -188,6 +218,47 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     }
 
     void Private.restoreBrowser(driveBrowser, commands, router, tree, labShell);
+
+    toolbarRegistry.addFactory(
+      FILE_BROWSER_FACTORY,
+      'uploader',
+      (fileBrowser: FileBrowser) =>
+        new Uploader({ model: fileBrowser.model, translator })
+    );
+
+    toolbarRegistry.addFactory(
+      FILE_BROWSER_FACTORY,
+      'file-name-searcher',
+      (fileBrowser: FileBrowser) => {
+        const searcher = FilenameSearcher({
+          updateFilter: (
+            filterFn: (item: string) => Partial<IScore> | null,
+            query?: string
+          ) => {
+            fileBrowser.model.setFilter(value => {
+              return filterFn(value.name.toLowerCase());
+            });
+          },
+          useFuzzyFilter: true,
+          placeholder: 'Filter files by names',
+          forceRefresh: true
+        });
+        searcher.addClass(FILTERBOX_CLASS);
+        return searcher;
+      }
+    );
+
+    // connect the filebrowser toolbar to the settings registry for the plugin
+    setToolbar(
+      driveBrowser,
+      createToolbarFactory(
+        toolbarRegistry,
+        settingsRegistry,
+        FILE_BROWSER_FACTORY,
+        driveFileBrowser.id,
+        translator
+      )
+    );
   }
 };
 
