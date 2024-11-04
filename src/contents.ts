@@ -9,7 +9,7 @@ const data: Contents.IModel = {
   path: '',
   last_modified: '',
   created: '',
-  content: null,
+  content: [],
   format: null,
   mimetype: '',
   size: 0,
