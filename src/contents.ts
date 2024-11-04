@@ -67,19 +67,6 @@ export class Drive implements Contents.IDrive {
     this._provider = name;
   }
 
-  //   /**
-  //    * The Drive status getter (if it is active or not)
-  //    */
-  //   get status(): string {
-  //     return this._status;
-  //   }
-
-  //   /**
-  //    * The Drive status setter */
-  //   set status(status: string) {
-  //     this._status = status;
-  //   }
-
   /**
    * The Drive region getter
    */
@@ -549,7 +536,6 @@ export class Drive implements Contents.IDrive {
   private _name: string = '';
   private _provider: string = '';
   private _baseUrl: string = '';
-  //   private _status: string = 'active' || 'inactive';
   private _region: string = '';
   private _creationDate: string = '';
   private _fileChanged = new Signal<this, Contents.IChangedArgs>(this);

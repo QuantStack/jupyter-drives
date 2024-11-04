@@ -158,7 +158,7 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 
     // create drive for drive file browser
     const drive = new Drive({
-      name: 'jupyter-drives-bucket'
+      name: 'jupyter-drives-buckets'
     });
 
     app.serviceManager.contents.addDrive(drive);
