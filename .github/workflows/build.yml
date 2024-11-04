@@ -79,7 +79,7 @@ jobs:
         sudo rm -rf $(which node)
         sudo rm -rf $(which node)
 
-        pip install "jupyterlab>=4.0.0,<5" jupyter_drives*.whl
+        pip install "jupyterlab>=4.3.0,<5" jupyter_drives*.whl
 
 
         jupyter server extension list
