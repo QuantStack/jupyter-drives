@@ -16,6 +16,10 @@ test('should emit an activation console message', async ({ page }) => {
   await page.goto();
 
   expect(
-    logs.filter(s => s === 'JupyterLab extension @jupyter/drives is activated!')
+    logs.filter(
+      s =>
+        s ===
+        'JJupyterLab extension @jupyter/drives:drives-file-browser is activated!'
+    )
   ).toHaveLength(1);
 });
