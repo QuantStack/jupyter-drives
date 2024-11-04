@@ -204,19 +204,6 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     driveBrowser.node.setAttribute('role', 'region');
     driveBrowser.node.setAttribute('aria-label', 'Drive Browser Section');
 
-    // instate Drive Browser Panel
-    const drivePanel = new Panel();
-    drivePanel.title.icon = driveBrowserIcon;
-    drivePanel.title.iconClass = 'jp-sideBar-tabIcon';
-    drivePanel.title.caption = 'Drive File Browser';
-    drivePanel.id = 'Drive-Browser-Panel';
-
-    app.shell.add(drivePanel, 'left', { rank: 102 });
-    drivePanel.addWidget(driveBrowser);
-    if (restorer) {
-      restorer.add(drivePanel, 'drive-sidepanel');
-    }
-
     void Private.restoreBrowser(driveBrowser, commands, router, tree, labShell);
 
     toolbarRegistry.addFactory(
@@ -259,6 +246,19 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
         translator
       )
     );
+
+    // instate Drive Browser Panel
+    const drivePanel = new Panel();
+    drivePanel.title.icon = driveBrowserIcon;
+    drivePanel.title.iconClass = 'jp-sideBar-tabIcon';
+    drivePanel.title.caption = 'Drive File Browser';
+    drivePanel.id = 'Drive-Browser-Panel';
+
+    app.shell.add(drivePanel, 'left', { rank: 102, type: 'File Browser' });
+    drivePanel.addWidget(driveBrowser);
+    if (restorer) {
+      restorer.add(drivePanel, 'drive-sidepanel');
+    }
   }
 };
 

@@ -14,7 +14,11 @@
         "rank": 10
       },
       { "name": "uploader", "rank": 20 },
-      { "name": "refresh", "command": "filebrowser:refresh", "rank": 30 },
+      {
+        "name": "refresh",
+        "command": "filebrowser:refresh",
+        "rank": 30
+      },
       {
         "name": "toggle-file-filter",
         "command": "filebrowser:toggle-file-filter",
