@@ -2001,11 +2001,11 @@ __metadata:
   dependencies:
     "@jupyter/react-components": ^0.16.6
     "@jupyter/web-components": ^0.16.6
-    "@jupyterlab/application": ^4.2.5
-    "@jupyterlab/builder": ^4.2.5
-    "@jupyterlab/coreutils": ^6.2.5
-    "@jupyterlab/services": ^7.2.5
-    "@jupyterlab/testutils": ^4.2.5
+    "@jupyterlab/application": ^4.3.0
+    "@jupyterlab/builder": ^4.3.0
+    "@jupyterlab/coreutils": ^6.3.0
+    "@jupyterlab/services": ^7.3.0
+    "@jupyterlab/testutils": ^4.3.0
     "@types/jest": ^29.2.0
     "@types/json-schema": ^7.0.11
     "@types/react": ^18.0.26
@@ -2069,7 +2069,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/application@npm:^4.2.5, @jupyterlab/application@npm:^4.3.0":
+"@jupyterlab/application@npm:^4.3.0":
   version: 4.3.0
   resolution: "@jupyterlab/application@npm:4.3.0"
   dependencies:
@@ -2140,7 +2140,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/builder@npm:^4.2.5":
+"@jupyterlab/builder@npm:^4.3.0":
   version: 4.3.0
   resolution: "@jupyterlab/builder@npm:4.3.0"
   dependencies:
@@ -2283,7 +2283,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/coreutils@npm:^6.2.5, @jupyterlab/coreutils@npm:^6.3.0":
+"@jupyterlab/coreutils@npm:^6.3.0":
   version: 6.3.0
   resolution: "@jupyterlab/coreutils@npm:6.3.0"
   dependencies:
@@ -2530,7 +2530,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/services@npm:^7.2.5, @jupyterlab/services@npm:^7.3.0":
+"@jupyterlab/services@npm:^7.3.0":
   version: 7.3.0
   resolution: "@jupyterlab/services@npm:7.3.0"
   dependencies:
@@ -2620,7 +2620,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/testutils@npm:^4.2.5":
+"@jupyterlab/testutils@npm:^4.3.0":
   version: 4.3.0
   resolution: "@jupyterlab/testutils@npm:4.3.0"
   dependencies:
