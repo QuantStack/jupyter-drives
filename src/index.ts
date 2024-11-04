@@ -151,6 +151,9 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     labShell: ILabShell | null,
     restorer: ILayoutRestorer | null
   ): Promise<void> => {
+    console.log(
+      'JupyterLab extension @jupyter/drives:drives-file-browser is activated!'
+    );
     const { commands } = app;
 
     // create drive for drive file browser
