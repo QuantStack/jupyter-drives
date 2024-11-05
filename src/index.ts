@@ -22,7 +22,6 @@ import {
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { FilenameSearcher, IScore } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
-import { Panel } from '@lumino/widgets';
 
 import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon, driveBrowserIcon } from './icons';
@@ -203,8 +202,16 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     // Set attributes when adding the browser to the UI
     driveBrowser.node.setAttribute('role', 'region');
     driveBrowser.node.setAttribute('aria-label', 'Drive Browser Section');
+    driveBrowser.title.icon = driveBrowserIcon;
+    driveBrowser.title.caption = 'Drive File Browser';
+    driveBrowser.id = 'Drive-File-Browser';
 
     void Private.restoreBrowser(driveBrowser, commands, router, tree, labShell);
+
+    app.shell.add(driveBrowser, 'left', { rank: 102, type: 'File Browser' });
+    if (restorer) {
+      restorer.add(driveBrowser, 'drive-file-browser');
+    }
 
     toolbarRegistry.addFactory(
       FILE_BROWSER_FACTORY,
@@ -246,19 +253,6 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
         translator
       )
     );
-
-    // instate Drive Browser Panel
-    const drivePanel = new Panel();
-    drivePanel.title.icon = driveBrowserIcon;
-    drivePanel.title.iconClass = 'jp-sideBar-tabIcon';
-    drivePanel.title.caption = 'Drive File Browser';
-    drivePanel.id = 'Drive-Browser-Panel';
-
-    app.shell.add(drivePanel, 'left', { rank: 102, type: 'File Browser' });
-    drivePanel.addWidget(driveBrowser);
-    if (restorer) {
-      restorer.add(drivePanel, 'drive-sidepanel');
-    }
   }
 };
 
