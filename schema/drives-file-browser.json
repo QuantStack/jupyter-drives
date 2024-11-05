@@ -2,30 +2,36 @@
   "title": "Jupyter Drives Settings",
   "description": "jupyter-drives settings.",
   "jupyter.lab.toolbars": {
+    "displayMode": "icon",
     "DriveBrowser": [
       {
         "name": "new-launcher",
         "command": "launcher:create",
+        "label": "",
         "rank": 1
       },
       {
         "name": "new-directory",
         "command": "filebrowser:create-new-directory",
+        "label": "",
         "rank": 10
       },
-      { "name": "uploader", "rank": 20 },
+      { "name": "uploader", "label": "", "rank": 20 },
       {
         "name": "refresh",
         "command": "filebrowser:refresh",
+        "label": "",
         "rank": 30
       },
       {
         "name": "toggle-file-filter",
         "command": "filebrowser:toggle-file-filter",
+        "label": "",
         "rank": 40
       },
       {
         "name": "file-name-searcher",
+        "label": "",
         "rank": 50
       }
     ]
