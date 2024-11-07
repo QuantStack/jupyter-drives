@@ -173,7 +173,7 @@ const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
         });
       }
     } else {
-      console.error(response.message);
+      console.log(response.message);
     }
     return drives;
   }
