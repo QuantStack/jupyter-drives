@@ -164,14 +164,16 @@ const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
 
     const response = await getDrivesList();
     if (response.code === 200) {
-      for (const d of response.data) {
+      for (const drive of response.data) {
         drives.push({
-          name: d.name,
-          region: d.region,
-          provider: d.provider,
-          creationDate: d.creation_date
+          name: drive.name,
+          region: drive.region,
+          provider: drive.provider,
+          creationDate: drive.creation_date
         });
       }
+    } else {
+      console.error(response.message);
     }
     return drives;
   }
