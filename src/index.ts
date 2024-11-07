@@ -209,11 +209,10 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     );
     const { commands } = app;
 
-    console.log('driveslist: ', drivesList.names);
-
     // create drive for drive file browser
     const drive = new Drive({
-      name: 'jupyter-drives-buckets'
+      name: 'jupyter-drives',
+      drivesList: drivesList
     });
 
     app.serviceManager.contents.addDrive(drive);
