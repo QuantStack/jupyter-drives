@@ -46,7 +46,7 @@ const FILE_BROWSER_FACTORY = 'DriveBrowser';
 /**
  * The class name added to the  drive filebrowser filterbox node.
  */
-const FILTERBOX_CLASS = 'jp-DriveBrowser-filterBox';
+const FILTERBOX_CLASS = 'jp-drive-browser-search-box';
 
 const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyter/drives:widget',
