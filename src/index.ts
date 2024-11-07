@@ -27,7 +27,7 @@ import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon, driveBrowserIcon } from './icons';
 import { Drive } from './contents';
 import { getDrivesList } from './requests';
-import { IDrivesList } from './token';
+import { IDriveInfo, IDrivesList } from './token';
 
 /**
  * The command IDs used by the driveBrowser plugin.
@@ -155,20 +155,25 @@ const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
 /**
  * The drives list provider.
  */
-const drivesListProvider: JupyterFrontEndPlugin<IDrivesList> = {
+const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
   id: '@jupyter/drives:drives-list',
   description: 'The drives list provider.',
   provides: IDrivesList,
-  activate: async (_: JupyterFrontEnd): Promise<IDrivesList> => {
-    const driveNames: string[] = [];
+  activate: async (_: JupyterFrontEnd): Promise<IDriveInfo[]> => {
+    const drives: IDriveInfo[] = [];
 
     const response = await getDrivesList();
     if (response.code === 200) {
       for (const d of response.data) {
-        driveNames.push(d.name);
+        drives.push({
+          name: d.name,
+          region: d.region,
+          provider: d.provider,
+          creationDate: d.creation_date
+        });
       }
     }
-    return { names: driveNames };
+    return drives;
   }
 };
 
@@ -198,7 +203,7 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     toolbarRegistry: IToolbarWidgetRegistry,
     settingsRegistry: ISettingRegistry,
     translator: ITranslator,
-    drivesList: IDrivesList,
+    drivesList: IDriveInfo[],
     router: IRouter | null,
     tree: JupyterFrontEnd.ITreeResolver | null,
     labShell: ILabShell | null,

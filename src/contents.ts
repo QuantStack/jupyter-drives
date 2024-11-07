@@ -4,7 +4,7 @@
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 import { PathExt } from '@jupyterlab/coreutils';
-import { IDrivesList } from './token';
+import { IDriveInfo } from './token';
 
 let data: Contents.IModel = {
   name: '',
@@ -28,21 +28,21 @@ export class Drive implements Contents.IDrive {
   constructor(options: Drive.IOptions = {}) {
     this._serverSettings = ServerConnection.makeSettings();
     this._name = options.name ?? '';
-    this._drivesList = options.drivesList ?? { names: [] };
+    this._drivesList = options.drivesList ?? [];
     //this._apiEndpoint = options.apiEndpoint ?? SERVICE_DRIVE_URL;
   }
 
   /**
    * The drives list getter.
    */
-  get drivesList(): IDrivesList {
+  get drivesList(): IDriveInfo[] {
     return this._drivesList;
   }
 
   /**
    * The drives list setter.
    * */
-  set drivesList(list: IDrivesList) {
+  set drivesList(list: IDriveInfo[]) {
     this._drivesList = list;
   }
 
@@ -204,12 +204,12 @@ export class Drive implements Contents.IDrive {
       };
     } else {
       const drivesList: Contents.IModel[] = [];
-      for (const drive of this._drivesList.names) {
+      for (const drive of this._drivesList) {
         drivesList.push({
-          name: drive,
-          path: drive,
+          name: drive.name,
+          path: drive.name,
           last_modified: '',
-          created: '',
+          created: drive.creationDate,
           content: [],
           format: 'json',
           mimetype: '',
@@ -593,7 +593,7 @@ export class Drive implements Contents.IDrive {
   }*/
 
   // private _apiEndpoint: string;
-  private _drivesList: IDrivesList = { names: [] };
+  private _drivesList: IDriveInfo[] = [];
   private _serverSettings: ServerConnection.ISettings;
   private _name: string = '';
   private _provider: string = '';
@@ -613,7 +613,7 @@ export namespace Drive {
     /**
      * List of available drives.
      */
-    drivesList?: IDrivesList;
+    drivesList?: IDriveInfo[];
 
     /**
      * The name for the `Drive`, which is used in file
