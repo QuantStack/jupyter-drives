@@ -161,9 +161,8 @@ const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
   provides: IDrivesList,
   activate: async (_: JupyterFrontEnd): Promise<IDriveInfo[]> => {
     const drives: IDriveInfo[] = [];
-
-    const response = await getDrivesList();
-    if (response.code === 200) {
+    try {
+      const response = await getDrivesList();
       for (const drive of response.data) {
         drives.push({
           name: drive.name,
@@ -172,8 +171,8 @@ const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
           creationDate: drive.creation_date
         });
       }
-    } else {
-      console.log(response.message);
+    } catch {
+      console.log('Failed loading available drives list.');
     }
     return drives;
   }

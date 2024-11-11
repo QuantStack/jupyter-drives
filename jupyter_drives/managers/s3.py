@@ -68,7 +68,11 @@ class S3Manager(JupyterDrivesManager):
             }
         else:
             response = {"code": 400, "message": "No AWS credentials specified. Please set them in your user jupyter_server_config file."}
-
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason="No AWS credentials specified. Please set them in your user jupyter_server_config file.",
+            )
+        
         return response
     
     async def mount_drive(self, drive_name):
