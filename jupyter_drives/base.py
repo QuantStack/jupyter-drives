@@ -91,6 +91,12 @@ class DrivesConfig(Configurable):
             self.access_key_id, self.secret_access_key, self.session_token = self._extract_credentials_from_file(aws_credentials_path)
             return
         
+        # for dev purposes, use environment variables
+        if os.environ["JP_AWS_ACCESS_KEY_ID"] is not None and os.environ["JP_AWS_SECRET_ACCESS_KEY"] is not None:
+            self.access_key_id = os.environ["JP_AWS_ACCESS_KEY_ID"]
+            self.secret_access_key = os.environ["JP_AWS_SECRET_ACCESS_KEY"]
+            return
+        
     def _extract_credentials_from_file(self, file_path):
         try:
             with open(file_path, 'r') as file:
