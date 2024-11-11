@@ -67,12 +67,12 @@ class S3Manager(JupyterDrivesManager):
                 "code": 200
             }
         else:
-            response = {"code": 400}
+            response = {"code": 400, "message": "No AWS credentials specified. Please set them in your user jupyter_server_config file."}
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
             reason="No AWS credentials specified. Please set them in your user jupyter_server_config file.",
             )
-
+        
         return response
     
     async def mount_drive(self, drive_name):
@@ -85,13 +85,20 @@ class S3Manager(JupyterDrivesManager):
             S3ContentsManager
         '''
         try :
+            s3_contents_manager = S3ContentsManager(
+                access_key_id = self._config.access_key_id,
+                secret_access_key = self._config.secret_access_key,
+                endpoint_url = self._config.api_base_url,
+                bucket = drive_name
+            )
+             
             # checking if the drive wasn't mounted already
-            if self.s3_content_managers[drive_name] is None:
+            if drive_name not in self.s3_content_managers or self.s3_content_managers[drive_name] is None:
 
                 # dealing with long-term credentials (access key, secret key)
                 if self._config.session_token is None:
                     s3_contents_manager = S3ContentsManager(
-                    access_key = self._config.access_key_id,
+                    access_key_id = self._config.access_key_id,
                     secret_access_key = self._config.secret_access_key,
                     endpoint_url = self._config.api_base_url,
                     bucket = drive_name
@@ -100,7 +107,7 @@ class S3Manager(JupyterDrivesManager):
                 # dealing with short-term credentials (access key, secret key, session token)
                 else:
                     s3_contents_manager = S3ContentsManager(
-                    access_key = self._config.access_key_id,
+                    access_key_id = self._config.access_key_id,
                     secret_access_key = self._config.secret_access_key,
                     session_token = self._config.session_token,
                     endpoint_url = self._config.api_base_url,

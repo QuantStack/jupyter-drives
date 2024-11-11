@@ -64,3 +64,7 @@ li {
   border-left: 2px;
   background-color: var(--jp-layout-color2);
 }
+
+.jp-drive-browser-search-box {
+  width: 230px;
+}
