@@ -43,7 +43,7 @@ test = [
 ]
 
 [project.entry-points."jupyter_drives.manager_v1"]
-s3 = "jupyter_drives:get_manager"
+drives_manager = "jupyter_drives:get_manager"
 
 [tool.hatch.version]
 source = "nodejs"

@@ -99,7 +99,7 @@ def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Co
     log = log or logging.getLogger(__name__)
 
     provider = DrivesConfig(config=config).provider
-    entry_point = MANAGERS.get(provider)
+    entry_point = MANAGERS.get('drives_manager')
     if entry_point is None:
         log.error(f"JupyterDrives Manager: No manager defined for provider '{provider}'.")
         raise NotImplementedError()
