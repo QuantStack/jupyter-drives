@@ -1,23 +1,25 @@
-import abc
 import http 
 import json
 import logging
 from typing import Dict, List, Optional, Tuple, Union, Any
 
-import nbformat
 import tornado
-import traitlets
 import httpx
+import traitlets
 from jupyter_server.utils import url_path_join
+
+import obstore as obs
+from libcloud.storage.types import Provider
+from libcloud.storage.providers import get_driver
 
 from ..log import get_logger
 from ..base import DrivesConfig
 
 import re
 
-class JupyterDrivesManager(abc.ABC):
+class JupyterDrivesManager():
     """
-    Abstract base class for jupyter-drives manager.
+    Jupyter-drives manager class.
 
     Args:
         config: Server extension configuration object
@@ -26,12 +28,12 @@ class JupyterDrivesManager(abc.ABC):
 
     The manager will receive the global server configuration object;
     so it can add configuration parameters if needed.
-    It needs them to extract the ``DrivesConfig`` from it to pass it to this
-    parent class (see ``S3Manager`` for an example).
+    It needs them to extract the ``DrivesConfig``.
     """
-    def __init__(self, config: DrivesConfig) -> None:
-        self._config = config
+    def __init__(self, config: traitlets.config.Config) -> None:
+        self._config = DrivesConfig(config=config)
         self._client = httpx.AsyncClient()
+        self._content_managers = {}
 
     @property
     def base_api_url(self) -> str:
@@ -50,18 +52,47 @@ class JupyterDrivesManager(abc.ABC):
             [str, int]: (query argument name, value)
             None: the provider does not support pagination
         """
-        return None
+        return ("per_page", 100)
     
-    @abc.abstractclassmethod
     async def list_drives(self): 
         """Get list of available drives.
 
         Returns: 
             List of available drives and their properties.
         """
-        raise NotImplementedError()
+        data = []
+        if self._config.access_key_id and self._config.secret_access_key:
+            if self._config.provider == "s3":
+                S3Drive = get_driver(Provider.S3)
+                drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key)]
+
+                results = []
+                for drive in drives:
+                    results += drive.list_containers()
+            
+                for result in results:
+                    data.append(
+                        {
+                            "name": result.name,
+                            "region": result.driver.region,
+                            "creation_date": result.extra["creation_date"],
+                            "status": "inactive",
+                            "provider": "S3"
+                        }
+                    )
+                response = {
+                    "data": data,
+                    "code": 200
+                }
+        else:
+            response = {"code": 400, "message": "No credentials specified. Please set them in your user jupyter_server_config file."}
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason="No credentials specified. Please set them in your user jupyter_server_config file.",
+            )
+        
+        return response
     
-    @abc.abstractclassmethod
     async def mount_drive(self, drive_name, **kwargs):
         """Mount a drive.
 
@@ -71,18 +102,45 @@ class JupyterDrivesManager(abc.ABC):
         Returns:
             The content manager for the drive.
         """
-        raise NotImplementedError()
+        try: 
+            # check if content manager didn't already exist
+            if drive_name not in self._content_managers or self._content_managers[drive_name] is None:
+                if kwargs.provider == 's3':
+                    store = obs.store.S3Store.from_url("s3://" + drive_name + "/", config = {"aws_access_key_id": self._config.access_key_id, "aws_secret_access_key": self._config.secret_access_key, "aws_region": kwargs.drive_region})
+                elif kwargs.provider == 'gcs':
+                    store = obs.store.GCSStore.from_url("gs://" + drive_name + "/", config = {}) # add gcs config
+                elif kwargs.provider == 'http':
+                    store = obs.store.HTTPStore.from_url(drive_name, client_options = {}) # add http client config
+                else: 
+                    raise ValueError(f"Provider not supported: {kwargs.provider}")
+                
+                self._content_managers[drive_name].store = store
+                self._content_managers[drive_name].provider = kwargs.provider
+
+                return store
+            #     response = {
+            #         "content_manager": store,
+            #         "code": 201,
+            #         "message": "Drive succesfully mounted."
+            #     }
+            # else:
+            #     response = {
+            #     "code": 409,
+            #     "message": "Drive already mounted."
+            #     }
+        except Exception as e:
+            raise ValueError("The following error occured when mouting the drive: {e}")
+
+        # return response
     
-    @abc.abstractclassmethod
     async def unmount_drive(self, drive_name: str, **kwargs):
         """Unmount a drive.
 
         Args:
             drive_name: name of drive to unmount
         """
-        raise NotImplementedError()
+        print('Drive unmount function called.')
     
-    @abc.abstractclassmethod
     async def get_contents(self, drive_name, path, **kwargs):
         """Get contents of a file or directory.
 
@@ -90,9 +148,8 @@ class JupyterDrivesManager(abc.ABC):
             drive_name: name of drive to get the contents of
             path: path to file or directory
         """
-        raise NotImplementedError()
+        print('Get contents function called.')
     
-    @abc.abstractclassmethod
     async def new_file(self, drive_name, path, **kwargs):
         """Create a new file or directory at the given path.
         
@@ -100,9 +157,8 @@ class JupyterDrivesManager(abc.ABC):
             drive_name: name of drive where the new content is created
             path: path where new content should be created
         """
-        raise NotImplementedError()
+        print('New file function called.')
     
-    @abc.abstractclassmethod
     async def rename_file(self, drive_name, path, **kwargs):
         """Rename a file.
         
@@ -110,7 +166,7 @@ class JupyterDrivesManager(abc.ABC):
             drive_name: name of drive where file is located
             path: path of file
         """
-        raise NotImplementedError()
+        print('Rename file function called.')
     
     async def _call_provider(
         self,
