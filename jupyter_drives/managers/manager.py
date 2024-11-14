@@ -66,24 +66,35 @@ class JupyterDrivesManager():
                 S3Drive = get_driver(Provider.S3)
                 drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key)]
 
-                results = []
-                for drive in drives:
-                    results += drive.list_containers()
+            elif self._config.provider == 'gcs':
+                GCSDrive = get_driver(Provider.GOOGLE_STORAGE)
+                drives = [GCSDrive(self._config.access_key_id, self._config.secret_access_key)] # verfiy credentials needed
             
-                for result in results:
-                    data.append(
-                        {
+            else: 
+               response = {
+                    "message": "Listing drives not supported for given provider.",
+                    "code": 501
+                }
+               return response
+
+            results = []
+            for drive in drives:
+                results += drive.list_containers()
+            
+            for result in results:
+                data.append(
+                    {
                             "name": result.name,
                             "region": result.driver.region,
                             "creation_date": result.extra["creation_date"],
                             "status": "inactive",
-                            "provider": "S3"
-                        }
-                    )
-                response = {
-                    "data": data,
-                    "code": 200
-                }
+                            "provider": self._config.provider
+                    }
+                )
+            response = {
+                "data": data,
+                "code": 200
+            }
         else:
             response = {"code": 400, "message": "No credentials specified. Please set them in your user jupyter_server_config file."}
             raise tornado.web.HTTPError(
