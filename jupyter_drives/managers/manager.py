@@ -156,7 +156,23 @@ class JupyterDrivesManager():
         Args:
             drive_name: name of drive to unmount
         """
-        print('Drive unmount function called.')
+        if drive_name in self._content_managers:
+            self._content_managers.pop(drive_name, None)
+            response = {
+                "code": 204,
+                "message": "Drive successfully unmounted."
+            }
+            
+        else:
+            response = {
+                "code": 404,
+                "message": "Drive is not mounted or doesn't exist."}
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason="Drive is not mounted or doesn't exist.",
+            )
+        
+        return response
     
     async def get_contents(self, drive_name, path, **kwargs):
         """Get contents of a file or directory.
