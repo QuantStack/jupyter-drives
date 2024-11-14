@@ -12,7 +12,7 @@ import tornado
 import traitlets
 
 from .base import MANAGERS, DrivesConfig
-from .managers.manager import JupyterDrivesManager
+from .manager import JupyterDrivesManager
 
 NAMESPACE = "jupyter-drives"
 

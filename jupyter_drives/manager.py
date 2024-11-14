@@ -12,8 +12,8 @@ import obstore as obs
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
 
-from ..log import get_logger
-from ..base import DrivesConfig
+from .log import get_logger
+from .base import DrivesConfig
 
 import re
 
@@ -162,7 +162,7 @@ class JupyterDrivesManager():
                 "code": 204,
                 "message": "Drive successfully unmounted."
             }
-            
+
         else:
             response = {
                 "code": 404,

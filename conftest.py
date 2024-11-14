@@ -23,7 +23,7 @@ def drives_config(drives_base_config):
 
 @pytest.fixture
 def drives_manager(drives_base_config):
-    from .jupyter_drives.managers.manager import JupyterDrivesManager
+    from .jupyter_drives.manager import JupyterDrivesManager
 
     return JupyterDrivesManager(drives_base_config)
 

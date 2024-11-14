@@ -42,6 +42,6 @@ def _load_jupyter_server_extension(server_app):
 # Entry points
 def get_manager(config: "traitlets.config.Config") -> "jupyter_drives.managers.JupyterDrivesManager":
     """Drives Manager factory"""
-    from .managers.manager import JupyterDrivesManager
+    from .manager import JupyterDrivesManager
 
     return JupyterDrivesManager(config)
