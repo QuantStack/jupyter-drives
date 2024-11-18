@@ -206,7 +206,6 @@ export class Drive implements Contents.IDrive {
       // extract current drive name
       const currentDrive = this.drivesList.filter(x => x.name === localPath)[0];
       // when accessed the first time, mount drive
-      console.log(currentDrive);
       if (!currentDrive.mounted) {
         const response = await mountDrive(localPath, {
           provider: currentDrive.provider,
