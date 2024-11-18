@@ -169,7 +169,7 @@ const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
           region: drive.region,
           provider: drive.provider,
           creationDate: drive.creation_date,
-          mounted: false
+          mounted: drive.mounted
         });
       }
     } catch {

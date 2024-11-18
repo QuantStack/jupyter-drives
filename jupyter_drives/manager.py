@@ -87,7 +87,7 @@ class JupyterDrivesManager():
                         "name": result.name,
                         "region": self._config.region_name if self._config.region_name is not None else "eu-north-1",
                         "creation_date": result.extra["creation_date"],
-                        "status": "inactive",
+                        "mounted": "true" if result.name not in self._content_managers else "false",
                         "provider": self._config.provider
                     }
                 )
