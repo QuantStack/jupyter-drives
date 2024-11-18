@@ -122,8 +122,6 @@ class JupyterDrivesManager():
                     store = obs.store.GCSStore.from_url("gs://" + drive_name + "/", config = {}) # add gcs config
                 elif provider == 'http':
                     store = obs.store.HTTPStore.from_url(drive_name, client_options = {}) # add http client config
-                else: 
-                    raise ValueError(f"Provider not supported: {provider}")
                 
                 self._content_managers[drive_name] = store
 
