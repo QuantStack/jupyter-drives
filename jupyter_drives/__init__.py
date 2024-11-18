@@ -33,7 +33,6 @@ def _load_jupyter_server_extension(server_app):
         JupyterLab application instance
     """
     from .handlers import setup_handlers
-    from .base import DrivesConfig
 
     setup_handlers(server_app.web_app, server_app.config)
     name = "jupyter_drives"
