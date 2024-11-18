@@ -191,18 +191,6 @@ export class Drive implements Contents.IDrive {
         relativePath = localPath;
       }
 
-      data = {
-        name: PathExt.basename(localPath),
-        path: PathExt.basename(localPath),
-        last_modified: '',
-        created: '',
-        content: [],
-        format: 'json',
-        mimetype: '',
-        size: undefined,
-        writable: true,
-        type: 'directory'
-      };
       // extract current drive name
       const currentDrive = this.drivesList.filter(x => x.name === localPath)[0];
       // when accessed the first time, mount drive
@@ -217,6 +205,19 @@ export class Drive implements Contents.IDrive {
           console.error(response.message);
         }
       }
+
+      data = {
+        name: PathExt.basename(localPath),
+        path: PathExt.basename(localPath),
+        last_modified: '',
+        created: '',
+        content: [],
+        format: 'json',
+        mimetype: '',
+        size: undefined,
+        writable: true,
+        type: 'directory'
+      };
     } else {
       const drivesList: Contents.IModel[] = [];
       for (const drive of this._drivesList) {
