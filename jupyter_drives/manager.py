@@ -84,11 +84,11 @@ class JupyterDrivesManager():
             for result in results:
                 data.append(
                     {
-                            "name": result.name,
-                            "region": result.driver.region,
-                            "creation_date": result.extra["creation_date"],
-                            "status": "inactive",
-                            "provider": self._config.provider
+                        "name": result.name,
+                        "region": self._config.region_name if self._config.region_name is not None else "eu-north-1",
+                        "creation_date": result.extra["creation_date"],
+                        "status": "inactive",
+                        "provider": self._config.provider
                     }
                 )
             response = {
@@ -104,7 +104,7 @@ class JupyterDrivesManager():
         
         return response
     
-    async def mount_drive(self, drive_name, **kwargs):
+    async def mount_drive(self, drive_name, provider, region):
         """Mount a drive.
 
         Args:
@@ -116,20 +116,18 @@ class JupyterDrivesManager():
         try: 
             # check if content manager doesn't already exist
             if drive_name not in self._content_managers or self._content_managers[drive_name] is None:
-                if kwargs.provider == 's3':
-                    store = obs.store.S3Store.from_url("s3://" + drive_name + "/", config = {"aws_access_key_id": self._config.access_key_id, "aws_secret_access_key": self._config.secret_access_key, "aws_region": kwargs.drive_region})
-                elif kwargs.provider == 'gcs':
+                if provider == 's3':
+                    store = obs.store.S3Store.from_url("s3://" + drive_name + "/", config = {"aws_access_key_id": self._config.access_key_id, "aws_secret_access_key": self._config.secret_access_key, "aws_region": region})
+                elif provider == 'gcs':
                     store = obs.store.GCSStore.from_url("gs://" + drive_name + "/", config = {}) # add gcs config
-                elif kwargs.provider == 'http':
+                elif provider == 'http':
                     store = obs.store.HTTPStore.from_url(drive_name, client_options = {}) # add http client config
                 else: 
-                    raise ValueError(f"Provider not supported: {kwargs.provider}")
+                    raise ValueError(f"Provider not supported: {provider}")
                 
-                self._content_managers[drive_name].store = store
-                self._content_managers[drive_name].provider = kwargs.provider
+                self._content_managers[drive_name] = store
 
                 response = {
-                    "content_manager": store,
                     "code": 201,
                     "message": "Drive succesfully mounted."
                 }
@@ -138,14 +136,15 @@ class JupyterDrivesManager():
                 "code": 409,
                 "message": "Drive already mounted."
                 }
+                
         except Exception as e:
             response = {
                 "code": 400,
-                "message": "The following error occured when mouting the drive: {e}"
+                "message": f"The following error occured when mouting the drive: {e}"
             }
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
-            reason= "The following error occured when mouting the drive: {e}"
+            reason= f"The following error occured when mouting the drive: {e}"
             )
 
         return response

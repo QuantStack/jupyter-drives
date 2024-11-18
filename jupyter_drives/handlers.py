@@ -59,7 +59,7 @@ class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     async def post(self):
         body = self.get_json_body()
         result = await self._manager.mount_drive(**body)
-        self.finish(result["message"])
+        self.finish(result)
 
 class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
     """

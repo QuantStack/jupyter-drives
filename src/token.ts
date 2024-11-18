@@ -8,11 +8,12 @@ export const IDrivesList = new Token<IDriveInfo[]>(
 );
 
 /**
- * An interface for the available drives.
+ * An interface that stores the drive information.
  */
 export interface IDriveInfo {
   name: string;
   region: string;
   provider: string;
   creationDate: string;
+  mounted: boolean;
 }
