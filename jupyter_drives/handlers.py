@@ -12,7 +12,7 @@ import tornado
 import traitlets
 
 from .base import MANAGERS, DrivesConfig
-from .managers.manager import JupyterDrivesManager
+from .manager import JupyterDrivesManager
 
 NAMESPACE = "jupyter-drives"
 
@@ -59,7 +59,7 @@ class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     async def post(self):
         body = self.get_json_body()
         result = await self._manager.mount_drive(**body)
-        self.finish(result["message"])
+        self.finish(result)
 
 class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
     """
@@ -99,7 +99,7 @@ def setup_handlers(web_app: tornado.web.Application, config: traitlets.config.Co
     log = log or logging.getLogger(__name__)
 
     provider = DrivesConfig(config=config).provider
-    entry_point = MANAGERS.get(provider)
+    entry_point = MANAGERS.get('drives_manager')
     if entry_point is None:
         log.error(f"JupyterDrives Manager: No manager defined for provider '{provider}'.")
         raise NotImplementedError()

@@ -17,19 +17,19 @@ def drives_base_config():
 
 
 @pytest.fixture
-def drives_s3_config(drives_base_config):
+def drives_config(drives_base_config):
     return drives_base_config()
 
 
 @pytest.fixture
-def drives_s3_manager(drives_base_config):
-    from .jupyter_drives.managers.s3 import S3Manager
+def drives_manager(drives_base_config):
+    from .jupyter_drives.manager import JupyterDrivesManager
 
-    return S3Manager(drives_base_config)
+    return JupyterDrivesManager(drives_base_config)
 
 
 @pytest.fixture
-def drives_valid_s3_manager(drives_s3_manager):
-    drives_s3_manager._config.access_key_id = "valid"
-    drives_s3_manager._config.secret_access = "valid"
-    return drives_s3_manager
+def drives_valid_manager(drives_manager):
+    drives_manager._config.access_key_id = "valid"
+    drives_manager._config.secret_access = "valid"
+    return drives_manager

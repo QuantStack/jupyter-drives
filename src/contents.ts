@@ -5,6 +5,7 @@ import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 import { PathExt } from '@jupyterlab/coreutils';
 import { IDriveInfo } from './token';
+import { mountDrive } from './requests';
 
 let data: Contents.IModel = {
   name: '',
@@ -188,6 +189,21 @@ export class Drive implements Contents.IDrive {
         relativePath = localPath.split(this.name + '/')[1];
       } else {
         relativePath = localPath;
+      }
+
+      // extract current drive name
+      const currentDrive = this.drivesList.filter(x => x.name === localPath)[0];
+      // when accessed the first time, mount drive
+      if (!currentDrive.mounted) {
+        try {
+          await mountDrive(localPath, {
+            provider: currentDrive.provider,
+            region: currentDrive.region
+          });
+          currentDrive.mounted = true;
+        } catch (e) {
+          console.log(e);
+        }
       }
 
       data = {

@@ -33,15 +33,14 @@ def _load_jupyter_server_extension(server_app):
         JupyterLab application instance
     """
     from .handlers import setup_handlers
-    from .base import DrivesConfig
 
     setup_handlers(server_app.web_app, server_app.config)
     name = "jupyter_drives"
     server_app.log.info(f"Registered {name} server extension")
 
 # Entry points
-def get_s3_manager(config: "traitlets.config.Config") -> "jupyter_drives.managers.JupyterDrivesManager":
-    """S3 Manager factory"""
-    from .managers.s3 import S3Manager
+def get_manager(config: "traitlets.config.Config") -> "jupyter_drives.managers.JupyterDrivesManager":
+    """Drives Manager factory"""
+    from .manager import JupyterDrivesManager
 
-    return S3Manager(config)
+    return JupyterDrivesManager(config)

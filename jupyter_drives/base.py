@@ -7,8 +7,13 @@ from traitlets.config import Configurable
 # Supported third-party services
 MANAGERS = {}
 
+# Moved to the architecture of having one provider independent manager.
+# Keeping the loop in case of future developments that need this feature.
 for entry in entrypoints.get_group_all("jupyter_drives.manager_v1"):
     MANAGERS[entry.name] = entry
+
+# Supported providers
+PROVIDERS = ['s3', 'gcs', 'http']
 
 class DrivesConfig(Configurable):
     """
@@ -65,7 +70,7 @@ class DrivesConfig(Configurable):
             return "https://www.googleapis.com/"   
 
     provider = Enum(
-        MANAGERS.keys(),
+        PROVIDERS,
         default_value="s3",
         config=True,
         help="The source control provider.",
