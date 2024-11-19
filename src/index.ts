@@ -172,8 +172,8 @@ const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
           mounted: drive.mounted
         });
       }
-    } catch {
-      console.log('Failed loading available drives list.');
+    } catch (error) {
+      console.log('Failed loading available drives list, with error: ', error);
     }
     return drives;
   }
