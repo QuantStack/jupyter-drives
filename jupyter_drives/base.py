@@ -7,7 +7,7 @@ from traitlets.config import Configurable
 # Supported third-party services
 MANAGERS = {}
 
-# Moved to the arhitecture of having one provider independent manager.
+# Moved to the architecture of having one provider independent manager.
 # Keeping the loop in case of future developments that need this feature.
 for entry in entrypoints.get_group_all("jupyter_drives.manager_v1"):
     MANAGERS[entry.name] = entry
