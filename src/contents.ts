@@ -195,14 +195,14 @@ export class Drive implements Contents.IDrive {
       const currentDrive = this.drivesList.filter(x => x.name === localPath)[0];
       // when accessed the first time, mount drive
       if (!currentDrive.mounted) {
-        const response = await mountDrive(localPath, {
-          provider: currentDrive.provider,
-          region: currentDrive.region
-        });
-        if (response.code === 200 || response.code === 409) {
+        try {
+          await mountDrive(localPath, {
+            provider: currentDrive.provider,
+            region: currentDrive.region
+          });
           currentDrive.mounted = true;
-        } else {
-          console.error(response.message);
+        } catch (e) {
+          console.log(e);
         }
       }
 

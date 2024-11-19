@@ -71,11 +71,10 @@ class JupyterDrivesManager():
                 drives = [GCSDrive(self._config.access_key_id, self._config.secret_access_key)] # verfiy credentials needed
             
             else: 
-               response = {
-                    "message": "Listing drives not supported for given provider.",
-                    "code": 501
-                }
-               return response
+               raise tornado.web.HTTPError(
+                status_code= httpx.codes.NOT_IMPLEMENTED,
+                reason="Listing drives not supported for given provider.",
+                )
 
             results = []
             for drive in drives:
@@ -91,17 +90,15 @@ class JupyterDrivesManager():
                         "provider": self._config.provider
                     }
                 )
-            response = {
-                "data": data,
-                "code": 200
-            }
         else:
-            response = {"code": 400, "message": "No credentials specified. Please set them in your user jupyter_server_config file."}
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
             reason="No credentials specified. Please set them in your user jupyter_server_config file.",
             )
         
+        response = {
+            "data": data
+        }
         return response
     
     async def mount_drive(self, drive_name, provider, region):
@@ -125,29 +122,21 @@ class JupyterDrivesManager():
                 
                 self._content_managers[drive_name] = store
 
-                response = {
-                    "code": 201,
-                    "message": "Drive succesfully mounted."
-                }
             else:
-                response = {
-                "code": 409,
-                "message": "Drive already mounted."
-                }
+                raise tornado.web.HTTPError(
+                status_code= httpx.codes.CONFLICT,
+                reason= "Drive already mounted."
+                )
                 
         except Exception as e:
-            response = {
-                "code": 400,
-                "message": f"The following error occured when mouting the drive: {e}"
-            }
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
             reason= f"The following error occured when mouting the drive: {e}"
             )
 
-        return response
+        return 
     
-    async def unmount_drive(self, drive_name: str, **kwargs):
+    async def unmount_drive(self, drive_name: str):
         """Unmount a drive.
 
         Args:
@@ -155,21 +144,14 @@ class JupyterDrivesManager():
         """
         if drive_name in self._content_managers:
             self._content_managers.pop(drive_name, None)
-            response = {
-                "code": 204,
-                "message": "Drive successfully unmounted."
-            }
 
         else:
-            response = {
-                "code": 404,
-                "message": "Drive is not mounted or doesn't exist."}
             raise tornado.web.HTTPError(
-            status_code= httpx.codes.BAD_REQUEST,
+            status_code= httpx.codes.NOT_FOUND,
             reason="Drive is not mounted or doesn't exist.",
             )
         
-        return response
+        return
     
     async def get_contents(self, drive_name, path, **kwargs):
         """Get contents of a file or directory.
