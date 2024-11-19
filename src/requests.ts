@@ -1,4 +1,5 @@
 import { ReadonlyJSONObject } from '@lumino/coreutils';
+
 import { requestAPI } from './handler';
 
 /**
@@ -23,4 +24,14 @@ export async function mountDrive(
     region: options.region
   };
   return await requestAPI<any>('drives', 'POST', body);
+}
+
+export async function getContents(
+  driveName: string,
+  options: { path: string }
+) {
+  return await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'GET'
+  );
 }

@@ -3,6 +3,7 @@ import json
 import logging
 from typing import Dict, List, Optional, Tuple, Union, Any
 
+import os
 import tornado
 import httpx
 import traitlets
@@ -11,6 +12,7 @@ from jupyter_server.utils import url_path_join
 import obstore as obs
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
+import pyarrow
 
 from .log import get_logger
 from .base import DrivesConfig
@@ -153,14 +155,63 @@ class JupyterDrivesManager():
         
         return
     
-    async def get_contents(self, drive_name, path, **kwargs):
+    async def get_contents(self, drive_name, path):
         """Get contents of a file or directory.
 
         Args:
             drive_name: name of drive to get the contents of
-            path: path to file or directory
+            path: path to file or directory (empty string for root listing)
         """
-        print('Get contents function called.')
+        print('!!!!!!!!!!!!!!!!!!!', drive_name, 'path: ', path)
+        if path == '/':
+            path = ''
+        drive_name = 'jupyter-drives-test-bucket-1'
+        try :
+            currentObject = os.path.basename(path) if os.path.basename(path) is not None else ''
+            print('currentObject: ', currentObject)
+            # check if we are listing contents of a directory
+            if currentObject.find('.') == -1:
+                print('in if')
+                print('store: ', self._content_managers)
+                data = []
+                # using Arrow lists as they are recommended for large results
+                # sream will be an async iterable of RecordBatch
+                stream = obs.list(self._content_managers[drive_name], path, chunk_size=100, return_arrow=True)
+                async for batch in stream:
+                    contents_list = pyarrow.record_batch(batch).to_pylist()
+                    for object in contents_list:
+                        data.append({
+                            "path": object["path"],
+                            "last_modified": object["last_modified"].isoformat(),
+                            "size": object["size"],
+                        })
+            else:
+                content = b""
+                # retrieve contents of object
+                obj = await obs.get_async(self._content_managers[drive_name], path)
+                stream = obj.stream(min_chunk_size=5 * 1024 * 1024) # 5MB sized chunks
+                async for buf in stream: 
+                    content += buf
+                
+                # retrieve metadata of object
+                metadata = await obs.head_async(self._content_managers[drive_name], path)
+                data = {
+                    "path": path, 
+                    "content": content,
+                    "last_modified": metadata["last_modified"].isoformat(),
+                    "size": metadata["size"]
+                }
+            print(data)
+            response = {
+                "data": data
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when retrieving the contents: {e}",
+            )
+        
+        return response
     
     async def new_file(self, drive_name, path, **kwargs):
         """Create a new file or directory at the given path.

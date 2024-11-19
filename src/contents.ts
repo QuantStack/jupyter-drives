@@ -5,7 +5,7 @@ import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 import { PathExt } from '@jupyterlab/coreutils';
 import { IDriveInfo } from './token';
-import { mountDrive } from './requests';
+import { getContents, mountDrive } from './requests';
 
 let data: Contents.IModel = {
   name: '',
@@ -205,6 +205,9 @@ export class Drive implements Contents.IDrive {
           console.log(e);
         }
       }
+
+      const resp = await getContents(currentDrive.name, { path: '' });
+      console.log('resp: ', resp);
 
       data = {
         name: PathExt.basename(localPath),
