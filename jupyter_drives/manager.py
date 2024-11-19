@@ -162,17 +162,12 @@ class JupyterDrivesManager():
             drive_name: name of drive to get the contents of
             path: path to file or directory (empty string for root listing)
         """
-        print('!!!!!!!!!!!!!!!!!!!', drive_name, 'path: ', path)
         if path == '/':
             path = ''
-        drive_name = 'jupyter-drives-test-bucket-1'
         try :
             currentObject = os.path.basename(path) if os.path.basename(path) is not None else ''
-            print('currentObject: ', currentObject)
             # check if we are listing contents of a directory
             if currentObject.find('.') == -1:
-                print('in if')
-                print('store: ', self._content_managers)
                 data = []
                 # using Arrow lists as they are recommended for large results
                 # sream will be an async iterable of RecordBatch
@@ -201,7 +196,6 @@ class JupyterDrivesManager():
                     "last_modified": metadata["last_modified"].isoformat(),
                     "size": metadata["size"]
                 }
-            print(data)
             response = {
                 "data": data
             }

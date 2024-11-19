@@ -3,7 +3,6 @@
 
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
-import { PathExt } from '@jupyterlab/coreutils';
 import { IDriveInfo } from './token';
 import { getContents, mountDrive } from './requests';
 
@@ -208,21 +207,7 @@ export class Drive implements Contents.IDrive {
         }
       }
 
-      const resp = await getContents(currentDrive.name, { path: '' });
-      console.log('resp: ', resp);
-
-      data = {
-        name: PathExt.basename(localPath),
-        path: PathExt.basename(localPath),
-        last_modified: '',
-        created: '',
-        content: [],
-        format: 'json',
-        mimetype: '',
-        size: undefined,
-        writable: true,
-        type: 'directory'
-      };
+      data = await getContents(currentDrive.name, { path: '' });
     } else {
       const drivesList: Contents.IModel[] = [];
       for (const drive of this._drivesList) {

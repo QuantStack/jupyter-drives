@@ -1,6 +1,25 @@
 import { ReadonlyJSONObject } from '@lumino/coreutils';
+import { Contents } from '@jupyterlab/services';
+import { PathExt } from '@jupyterlab/coreutils';
 
 import { requestAPI } from './handler';
+
+let data: Contents.IModel = {
+  name: '',
+  path: '',
+  last_modified: '',
+  created: '',
+  content: null,
+  format: null,
+  mimetype: '',
+  size: 0,
+  writable: true,
+  type: ''
+};
+
+interface IContentsList {
+  [fileName: string]: Contents.IModel;
+}
 
 /**
  * Fetch the list of available drives.
@@ -30,8 +49,44 @@ export async function getContents(
   driveName: string,
   options: { path: string }
 ) {
-  return await requestAPI<any>(
+  const response = await requestAPI<any>(
     'drives/' + driveName + '/' + options.path,
     'GET'
   );
+
+  if (response.data) {
+    const fileList: IContentsList = {};
+
+    response.data.forEach((row: any) => {
+      const fileName = PathExt.basename(row.path);
+
+      fileList[fileName] = fileList[fileName] ?? {
+        name: fileName,
+        path: driveName + '/' + row.path,
+        last_modified: row.last_modified,
+        created: '',
+        content: !fileName.split('.')[1] ? [] : null,
+        format: null, //fileFormat as Contents.FileFormat,
+        mimetype: 'null', //fileMimeType,
+        size: row.size,
+        writable: true,
+        type: 'directory' //fileType
+      };
+    });
+
+    data = {
+      name: options.path ? PathExt.basename(options.path) : '',
+      path: options.path ? options.path + '/' : '',
+      last_modified: '',
+      created: '',
+      content: Object.values(fileList),
+      format: 'json',
+      mimetype: '',
+      size: undefined,
+      writable: true,
+      type: 'directory'
+    };
+  }
+
+  return data;
 }
