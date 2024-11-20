@@ -195,7 +195,6 @@ export class Drive implements Contents.IDrive {
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
     let relativePath = '';
-    console.log('GET localpath: ', localPath);
     if (localPath !== '') {
       // extract current drive name
       const currentDrive = this._drivesList.filter(
@@ -261,7 +260,6 @@ export class Drive implements Contents.IDrive {
         type: 'directory'
       };
     }
-    console.log('GET: ', relativePath);
 
     Contents.validateContentsModel(data);
     return data;
