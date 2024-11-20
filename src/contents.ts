@@ -571,7 +571,11 @@ export class Drive implements Contents.IDrive {
    *   checkpoint is created.
    */
   createCheckpoint(path: string): Promise<Contents.ICheckpointModel> {
-    return Promise.reject('Repository is read only');
+    const emptyCheckpoint: Contents.ICheckpointModel = {
+      id: '',
+      last_modified: ''
+    };
+    return Promise.resolve(emptyCheckpoint);
   }
 
   /**
