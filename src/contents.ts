@@ -194,19 +194,18 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    const relativePath = '';
+    let relativePath = '';
     console.log('GET localpath: ', localPath);
     if (localPath !== '') {
-      // if (localPath.includes(this.name)) {
-      //   relativePath = localPath.split(this.name + '/')[1];
-      // } else {
-      //   relativePath = localPath;
-      // }
-
       // extract current drive name
       const currentDrive = this._drivesList.filter(
-        x => x.name === localPath
+        x =>
+          x.name ===
+          (localPath.indexOf('/') !== -1
+            ? localPath.substring(0, localPath.indexOf('/'))
+            : localPath)
       )[0];
+
       // when accessed the first time, mount drive
       if (currentDrive.mounted === false) {
         try {
@@ -220,11 +219,19 @@ export class Drive implements Contents.IDrive {
         }
       }
 
+      // eliminate drive name from path
+      relativePath =
+        localPath.indexOf('/') !== -1
+          ? localPath.substring(localPath.indexOf('/') + 1)
+          : '';
+
       data = await getContents(currentDrive.name, {
-        path: '',
+        path: relativePath,
         registeredFileTypes: this._registeredFileTypes
       });
     } else {
+      // retriving list of contents from root
+      // in our case: list available drives
       const drivesList: Contents.IModel[] = [];
       for (const drive of this._drivesList) {
         drivesList.push({

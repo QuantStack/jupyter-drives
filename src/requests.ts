@@ -69,25 +69,31 @@ export async function getContents(
     const fileList: IContentsList = {};
 
     response.data.forEach((row: any) => {
-      const fileName = PathExt.basename(row.path);
+      // check if we are dealing with files inside a subfolder
+      if (row.path !== options.path && row.path !== options.path + '/') {
+        // extract object name from path
+        const fileName = row.path
+          .replace(options.path ? options.path + '/' : '', '')
+          .split('/')[0];
 
-      const [fileType, fileMimeType, fileFormat] = getFileType(
-        PathExt.extname(PathExt.basename(fileName)),
-        options.registeredFileTypes
-      );
+        const [fileType, fileMimeType, fileFormat] = getFileType(
+          PathExt.extname(PathExt.basename(fileName)),
+          options.registeredFileTypes
+        );
 
-      fileList[fileName] = fileList[fileName] ?? {
-        name: fileName,
-        path: driveName + '/' + row.path,
-        last_modified: row.last_modified,
-        created: '',
-        content: !fileName.split('.')[1] ? [] : null,
-        format: fileFormat as Contents.FileFormat,
-        mimetype: fileMimeType,
-        size: row.size,
-        writable: true,
-        type: fileType
-      };
+        fileList[fileName] = fileList[fileName] ?? {
+          name: fileName,
+          path: driveName + '/' + row.path,
+          last_modified: row.last_modified,
+          created: '',
+          content: !fileName.split('.')[1] ? [] : null,
+          format: fileFormat as Contents.FileFormat,
+          mimetype: fileMimeType,
+          size: row.size,
+          writable: true,
+          type: fileType
+        };
+      }
     });
 
     data = {
