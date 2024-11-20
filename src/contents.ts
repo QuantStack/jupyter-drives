@@ -1,9 +1,7 @@
-// Copyright (c) Jupyter Development Team.
-// Distributed under the terms of the Modified BSD License.
-
+import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
-import { IDriveInfo } from './token';
+import { IDriveInfo, IRegisteredFileTypes } from './token';
 import { getContents, mountDrive } from './requests';
 
 let data: Contents.IModel = {
@@ -120,6 +118,20 @@ export class Drive implements Contents.IDrive {
   }
 
   /**
+   * The registered file types
+   */
+  get registeredFileTypes(): IRegisteredFileTypes {
+    return this._registeredFileTypes;
+  }
+
+  /**
+   * The registered file types
+   */
+  set registeredFileTypes(fileTypes: IRegisteredFileTypes) {
+    this._registeredFileTypes = fileTypes;
+  }
+
+  /**
    * A signal emitted when a file operation takes place.
    */
   get fileChanged(): ISignal<this, Contents.IChangedArgs> {
@@ -182,13 +194,14 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    let relativePath = '';
+    const relativePath = '';
+    console.log('GET localpath: ', localPath);
     if (localPath !== '') {
-      if (localPath.includes(this.name)) {
-        relativePath = localPath.split(this.name + '/')[1];
-      } else {
-        relativePath = localPath;
-      }
+      // if (localPath.includes(this.name)) {
+      //   relativePath = localPath.split(this.name + '/')[1];
+      // } else {
+      //   relativePath = localPath;
+      // }
 
       // extract current drive name
       const currentDrive = this._drivesList.filter(
@@ -207,7 +220,10 @@ export class Drive implements Contents.IDrive {
         }
       }
 
-      data = await getContents(currentDrive.name, { path: '' });
+      data = await getContents(currentDrive.name, {
+        path: '',
+        registeredFileTypes: this._registeredFileTypes
+      });
     } else {
       const drivesList: Contents.IModel[] = [];
       for (const drive of this._drivesList) {
@@ -590,6 +606,40 @@ export class Drive implements Contents.IDrive {
   }
 
   /**
+   * Get all registered file types and store them accordingly with their file
+   * extension (e.g.: .txt, .pdf, .jpeg), file mimetype (e.g.: text/plain, application/pdf)
+   * and file format (e.g.: base64, text).
+   *
+   * @param app
+   */
+  getRegisteredFileTypes(app: JupyterFrontEnd) {
+    // get called when instating the toolbar
+    const registeredFileTypes = app.docRegistry.fileTypes();
+
+    for (const fileType of registeredFileTypes) {
+      // check if we are dealing with a directory
+      if (fileType.extensions.length === 0) {
+        this._registeredFileTypes[''] = {
+          fileType: 'directory',
+          fileFormat: 'json',
+          fileMimeTypes: ['text/directory']
+        };
+      }
+
+      // store the mimetype and fileformat for each file extension
+      fileType.extensions.forEach(extension => {
+        if (!this._registeredFileTypes[extension]) {
+          this._registeredFileTypes[extension] = {
+            fileType: fileType.name,
+            fileMimeTypes: [...fileType.mimeTypes],
+            fileFormat: fileType.fileFormat ? fileType.fileFormat : ''
+          };
+        }
+      });
+    }
+  }
+
+  /**
    * Get a REST url for a file given a path.
    */
   /*private _getUrl(...args: string[]): string {
@@ -609,6 +659,7 @@ export class Drive implements Contents.IDrive {
   private _fileChanged = new Signal<this, Contents.IChangedArgs>(this);
   private _isDisposed: boolean = false;
   private _disposed = new Signal<this, void>(this);
+  private _registeredFileTypes: IRegisteredFileTypes = {};
 }
 
 export namespace Drive {

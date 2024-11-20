@@ -224,6 +224,9 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 
     app.serviceManager.contents.addDrive(drive);
 
+    // get registered file types
+    drive.getRegisteredFileTypes(app);
+
     // Manually restore and load the drive file browser.
     const driveBrowser = fileBrowserFactory.createFileBrowser('drivebrowser', {
       auto: false,

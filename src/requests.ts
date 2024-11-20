@@ -3,6 +3,7 @@ import { Contents } from '@jupyterlab/services';
 import { PathExt } from '@jupyterlab/coreutils';
 
 import { requestAPI } from './handler';
+import { getFileType, IRegisteredFileTypes } from './token';
 
 let data: Contents.IModel = {
   name: '',
@@ -47,7 +48,7 @@ export async function mountDrive(
 
 export async function getContents(
   driveName: string,
-  options: { path: string }
+  options: { path: string; registeredFileTypes: IRegisteredFileTypes }
 ) {
   const response = await requestAPI<any>(
     'drives/' + driveName + '/' + options.path,
@@ -60,17 +61,22 @@ export async function getContents(
     response.data.forEach((row: any) => {
       const fileName = PathExt.basename(row.path);
 
+      const [fileType, fileMimeType, fileFormat] = getFileType(
+        PathExt.extname(PathExt.basename(fileName)),
+        options.registeredFileTypes
+      );
+
       fileList[fileName] = fileList[fileName] ?? {
         name: fileName,
         path: driveName + '/' + row.path,
         last_modified: row.last_modified,
         created: '',
         content: !fileName.split('.')[1] ? [] : null,
-        format: null, //fileFormat as Contents.FileFormat,
-        mimetype: 'null', //fileMimeType,
+        format: fileFormat as Contents.FileFormat,
+        mimetype: fileMimeType,
         size: row.size,
         writable: true,
-        type: 'directory' //fileType
+        type: fileType
       };
     });
 
