@@ -66,48 +66,71 @@ export async function getContents(
   );
 
   if (response.data) {
-    const fileList: IContentsList = {};
+    // listing the contents of a directory
+    if (options.path.indexOf('.') === -1) {
+      const fileList: IContentsList = {};
 
-    response.data.forEach((row: any) => {
-      // check if we are dealing with files inside a subfolder
-      if (row.path !== options.path && row.path !== options.path + '/') {
-        // extract object name from path
-        const fileName = row.path
-          .replace(options.path ? options.path + '/' : '', '')
-          .split('/')[0];
+      response.data.forEach((row: any) => {
+        // check if we are dealing with files inside a subfolder
+        if (row.path !== options.path && row.path !== options.path + '/') {
+          // extract object name from path
+          const fileName = row.path
+            .replace(options.path ? options.path + '/' : '', '')
+            .split('/')[0];
 
-        const [fileType, fileMimeType, fileFormat] = getFileType(
-          PathExt.extname(PathExt.basename(fileName)),
-          options.registeredFileTypes
-        );
+          const [fileType, fileMimeType, fileFormat] = getFileType(
+            PathExt.extname(PathExt.basename(fileName)),
+            options.registeredFileTypes
+          );
 
-        fileList[fileName] = fileList[fileName] ?? {
-          name: fileName,
-          path: driveName + '/' + row.path,
-          last_modified: row.last_modified,
-          created: '',
-          content: !fileName.split('.')[1] ? [] : null,
-          format: fileFormat as Contents.FileFormat,
-          mimetype: fileMimeType,
-          size: row.size,
-          writable: true,
-          type: fileType
-        };
-      }
-    });
+          fileList[fileName] = fileList[fileName] ?? {
+            name: fileName,
+            path: driveName + '/' + row.path,
+            last_modified: row.last_modified,
+            created: '',
+            content: !fileName.split('.')[1] ? [] : null,
+            format: fileFormat as Contents.FileFormat,
+            mimetype: fileMimeType,
+            size: row.size,
+            writable: true,
+            type: fileType
+          };
+        }
+      });
 
-    data = {
-      name: options.path ? PathExt.basename(options.path) : '',
-      path: options.path ? options.path + '/' : '',
-      last_modified: '',
-      created: '',
-      content: Object.values(fileList),
-      format: 'json',
-      mimetype: '',
-      size: undefined,
-      writable: true,
-      type: 'directory'
-    };
+      data = {
+        name: options.path ? PathExt.basename(options.path) : '',
+        path: options.path ? options.path + '/' : '',
+        last_modified: '',
+        created: '',
+        content: Object.values(fileList),
+        format: 'json',
+        mimetype: '',
+        size: undefined,
+        writable: true,
+        type: 'directory'
+      };
+    }
+    // getting the contents of a file
+    else {
+      const [fileType, fileMimeType, fileFormat] = getFileType(
+        PathExt.extname(PathExt.basename(options.path)),
+        options.registeredFileTypes
+      );
+
+      data = {
+        name: PathExt.basename(options.path),
+        path: driveName + '/' + response.data.path,
+        last_modified: response.data.last_modified,
+        created: '',
+        content: response.data.content,
+        format: fileFormat as Contents.FileFormat,
+        mimetype: fileMimeType,
+        size: response.data.size,
+        writable: true,
+        type: fileType
+      };
+    }
   }
 
   return data;

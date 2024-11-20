@@ -166,6 +166,7 @@ class JupyterDrivesManager():
             path = ''
         try :
             currentObject = os.path.basename(path) if os.path.basename(path) is not None else ''
+
             # check if we are listing contents of a directory
             if currentObject.find('.') == -1:
                 data = []
@@ -192,7 +193,7 @@ class JupyterDrivesManager():
                 metadata = await obs.head_async(self._content_managers[drive_name], path)
                 data = {
                     "path": path, 
-                    "content": content,
+                    "content": content.decode("utf-8"),
                     "last_modified": metadata["last_modified"].isoformat(),
                     "size": metadata["size"]
                 }
