@@ -193,8 +193,8 @@ class JupyterDrivesManager():
                 # retrieve metadata of object
                 metadata = await obs.head_async(self._content_managers[drive_name], path)
 
-                # for certain media type files, extracted contents need to be read as a byte array and decoded to base64 to be viewable in JupyterLab
-                # the following extesnions correspond to a base64 file format or are of type PDF
+                # for certain media type files, extracted content needs to be read as a byte array and decoded to base64 to be viewable in JupyterLab
+                # the following extensions correspond to a base64 file format or are of type PDF
                 ext = os.path.splitext(path)[1]
                 if ext == '.pdf' or ext == '.svg' or ext == '.tif' or ext == '.tiff' or ext == '.jpg' or ext == '.jpeg' or ext == '.gif' or ext == '.png' or ext == '.bmp' or ext == '.webp':
                     processed_content = base64.b64encode(content).decode("utf-8")
