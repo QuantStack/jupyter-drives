@@ -1,4 +1,5 @@
 import { Token } from '@lumino/coreutils';
+import { Contents } from '@jupyterlab/services';
 
 /**
  * A token for the plugin that provides the list of drives.
@@ -31,6 +32,13 @@ export interface IDriveInfo {
    * Whether a content manager for the drive was already set up in the backend (true) or not (false).
    */
   mounted: boolean;
+}
+
+/**
+ * An interface for storing the contents of a directory.
+ */
+export interface IContentsList {
+  [fileName: string]: Contents.IModel;
 }
 
 /**

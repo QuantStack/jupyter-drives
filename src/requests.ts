@@ -3,8 +3,11 @@ import { Contents } from '@jupyterlab/services';
 import { PathExt } from '@jupyterlab/coreutils';
 
 import { requestAPI } from './handler';
-import { getFileType, IRegisteredFileTypes } from './token';
+import { getFileType, IRegisteredFileTypes, IContentsList } from './token';
 
+/**
+ * The data contents model.
+ */
 let data: Contents.IModel = {
   name: '',
   path: '',
@@ -18,13 +21,9 @@ let data: Contents.IModel = {
   type: ''
 };
 
-interface IContentsList {
-  [fileName: string]: Contents.IModel;
-}
-
 /**
  * Fetch the list of available drives.
- * @returns list of drives
+ * @returns The list of available drives.
  */
 export async function getDrivesList() {
   return await requestAPI<any>('drives', 'GET');
@@ -33,6 +32,8 @@ export async function getDrivesList() {
 /**
  * Mount a drive by establishing a connection with it.
  * @param driveName
+ * @param options.provider The provider of the drive to be mounted.
+ * @param options.region The region of the drive to be mounted.
  */
 export async function mountDrive(
   driveName: string,
@@ -46,6 +47,15 @@ export async function mountDrive(
   return await requestAPI<any>('drives', 'POST', body);
 }
 
+/**
+ * Get contents of a directory or retrieve contents of a specific file.
+ *
+ * @param driveName
+ * @param options.path The path of object to be retrived
+ * @param options.path The list containing all registered file types.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
 export async function getContents(
   driveName: string,
   options: { path: string; registeredFileTypes: IRegisteredFileTypes }
