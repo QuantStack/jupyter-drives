@@ -84,6 +84,12 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
         result = await self._manager.rename_file(drive, path, **body)
         self.finish(result)
 
+    @tornado.web.authenticated
+    async def put(self, drive: str = "", path: str = ""):
+        body = self.get_json_body()
+        result = await self._manager.save_file(drive, path, **body)
+        self.finish(result)
+
 handlers = [
     ("drives", ListJupyterDrivesHandler)
 ]
