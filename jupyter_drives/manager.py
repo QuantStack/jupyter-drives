@@ -170,6 +170,40 @@ class JupyterDrivesManager():
             path: path where new content should be created
         """
         print('New file function called.')
+
+    async def save_file(self, drive_name, path, content):
+        """Save file with new content.
+        
+        Args:
+            drive_name: name of drive where file exists
+            path: path where new content should be saved
+        """
+        data = {}
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+            # format body when dealing with base64 enconding or files of type PDF
+            formattedContent = content.encode("utf-8")
+
+            await obs.put_async(self._content_managers[drive_name], path, formattedContent, mode = "overwrite")
+            metadata = await obs.head_async(self._content_managers[drive_name], path)
+
+            data = {
+                "path": path,
+                "content": content,
+                "last_modified": metadata["last_modified"].isoformat(),
+                "size": metadata["size"]
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when saving the file: {e}",
+            )
+        
+        response = {
+                "data": data
+            }
+        return response
     
     async def rename_file(self, drive_name, path, **kwargs):
         """Rename a file.
