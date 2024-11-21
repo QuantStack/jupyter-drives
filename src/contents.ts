@@ -5,7 +5,7 @@ import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 import { PathExt } from '@jupyterlab/coreutils';
 import { IDriveInfo } from './token';
-import { mountDrive } from './requests';
+import { saveFile, mountDrive } from './requests';
 
 let data: Contents.IModel = {
   name: '',
@@ -433,19 +433,26 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options: Partial<Contents.IModel> = {}
   ): Promise<Contents.IModel> {
-    /*const settings = this.serverSettings;
-    const url = this._getUrl(localPath);
-    const init = {
-      method: 'PUT',
-      body: JSON.stringify(options)
-    };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    // will return 200 for an existing file and 201 for a new file
-    if (response.status !== 200 && response.status !== 201) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
-    }
-    const data = await response.json();*/
+    // extract current drive name
+    const currentDrive = this._drivesList.filter(
+      x =>
+        x.name ===
+        (localPath.indexOf('/') !== -1
+          ? localPath.substring(0, localPath.indexOf('/'))
+          : localPath)
+    )[0];
+
+    // eliminate drive name from path
+    const relativePath =
+      localPath.indexOf('/') !== -1
+        ? localPath.substring(localPath.indexOf('/') + 1)
+        : '';
+
+    const resp = await saveFile(currentDrive.name, {
+      path: relativePath,
+      param: options
+    });
+    console.log('contents resp: ', resp);
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({

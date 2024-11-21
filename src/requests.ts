@@ -1,5 +1,6 @@
 import { ReadonlyJSONObject } from '@lumino/coreutils';
 import { requestAPI } from './handler';
+import { Contents } from '@jupyterlab/services';
 
 /**
  * Fetch the list of available drives.
@@ -23,4 +24,31 @@ export async function mountDrive(
     region: options.region
   };
   return await requestAPI<any>('drives', 'POST', body);
+}
+
+export async function saveFile(
+  driveName: string,
+  options: {
+    path: string;
+    param: Partial<Contents.IModel>;
+  }
+) {
+  // const [fileType, fileMimeType, fileFormat] = getFileType(
+  //   PathExt.extname(PathExt.basename(options.path)),
+  //   options.registeredFileTypes
+  // );
+
+  // const formattedBody = Private.formatBody(options.param, fileFormat, fileType, fileMimeType);
+  // const body: ReadonlyJSONObject = {
+  //   content: formattedBody
+  // };
+
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'PUT',
+    {
+      content: options.param.content
+    }
+  );
+  console.log('response: ', response);
 }
