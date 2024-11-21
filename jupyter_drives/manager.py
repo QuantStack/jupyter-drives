@@ -156,7 +156,7 @@ class JupyterDrivesManager():
         
         return
     
-    async def get_contents(self, drive_name, path, special_type=False):
+    async def get_contents(self, drive_name, path):
         """Get contents of a file or directory.
 
         Args:
