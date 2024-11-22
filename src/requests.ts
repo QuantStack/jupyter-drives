@@ -64,10 +64,11 @@ export async function getContents(
     'drives/' + driveName + '/' + options.path,
     'GET'
   );
+  const isDir: boolean = PathExt.extname(options.path) === '';
 
   if (response.data) {
     // listing the contents of a directory
-    if (options.path.indexOf('.') === -1) {
+    if (isDir) {
       const fileList: IContentsList = {};
 
       response.data.forEach((row: any) => {
