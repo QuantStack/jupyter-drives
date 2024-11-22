@@ -166,30 +166,38 @@ class JupyterDrivesManager():
         if path == '/':
             path = ''
         try :
-            currentObject = os.path.basename(path) if os.path.basename(path) is not None else ''
+            data = []
+            isDir = False
+            emptyDir = True # assume we are dealing with an empty directory
 
-            # check if we are listing contents of a directory
-            if currentObject.find('.') == -1:
-                data = []
-                # using Arrow lists as they are recommended for large results
-                # sream will be an async iterable of RecordBatch
-                stream = obs.list(self._content_managers[drive_name], path, chunk_size=100, return_arrow=True)
-                async for batch in stream:
-                    contents_list = pyarrow.record_batch(batch).to_pylist()
-                    for object in contents_list:
-                        data.append({
-                            "path": object["path"],
-                            "last_modified": object["last_modified"].isoformat(),
-                            "size": object["size"],
-                        })
-            else:
+            # using Arrow lists as they are recommended for large results
+            # stream will be an async iterable of RecordBatch
+            stream = obs.list(self._content_managers[drive_name], path, chunk_size=100, return_arrow=True)
+            async for batch in stream:
+                # check once if we are dealing with a directory
+                if isDir is False and batch: 
+                    isDir = True
+                    emptyDir = False
+                    
+                contents_list = pyarrow.record_batch(batch).to_pylist()
+                for object in contents_list:
+                    data.append({
+                        "path": object["path"],
+                        "last_modified": object["last_modified"].isoformat(),
+                        "size": object["size"],
+                    })
+                
+            # check if we are dealing with an empty drive
+            if isDir is False and path != '':
                 content = b""
                 # retrieve contents of object
                 obj = await obs.get_async(self._content_managers[drive_name], path)
                 stream = obj.stream(min_chunk_size=5 * 1024 * 1024) # 5MB sized chunks
                 async for buf in stream: 
+                    if emptyDir is True and buf:
+                        emptyDir = False
                     content += buf
-                
+
                 # retrieve metadata of object
                 metadata = await obs.head_async(self._content_managers[drive_name], path)
 
@@ -207,6 +215,12 @@ class JupyterDrivesManager():
                     "last_modified": metadata["last_modified"].isoformat(),
                     "size": metadata["size"]
                 }
+
+            # dealing with the case of an empty directory 
+            # TO DO: find better way to check
+            if emptyDir is True and os.path.basename(path).find('.') == -1:
+                data = []
+
             response = {
                 "data": data
             }

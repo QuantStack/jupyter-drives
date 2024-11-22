@@ -64,7 +64,8 @@ export async function getContents(
     'drives/' + driveName + '/' + options.path,
     'GET'
   );
-  const isDir: boolean = PathExt.extname(options.path) === '';
+  // checking if we are dealing with a directory or a file
+  const isDir: boolean = response.data.length !== undefined;
 
   if (response.data) {
     // listing the contents of a directory
