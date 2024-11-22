@@ -641,7 +641,7 @@ export class Drive implements Contents.IDrive {
           this._registeredFileTypes[extension] = {
             fileType: fileType.name,
             fileMimeTypes: [...fileType.mimeTypes],
-            fileFormat: fileType.fileFormat ? fileType.fileFormat : ''
+            fileFormat: fileType.fileFormat ?? ''
           };
         }
       });
