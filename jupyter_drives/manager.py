@@ -174,7 +174,7 @@ class JupyterDrivesManager():
             # stream will be an async iterable of RecordBatch
             stream = obs.list(self._content_managers[drive_name], path, chunk_size=100, return_arrow=True)
             async for batch in stream:
-                # check once if we are dealing with a directory
+                # if content exists we are dealing with a directory
                 if isDir is False and batch: 
                     isDir = True
                     emptyDir = False
@@ -194,6 +194,7 @@ class JupyterDrivesManager():
                 obj = await obs.get_async(self._content_managers[drive_name], path)
                 stream = obj.stream(min_chunk_size=5 * 1024 * 1024) # 5MB sized chunks
                 async for buf in stream: 
+                    # if content exists we are dealing with a file
                     if emptyDir is True and buf:
                         emptyDir = False
                     content += buf
