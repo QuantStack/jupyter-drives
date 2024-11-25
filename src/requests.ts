@@ -143,18 +143,9 @@ export async function saveFile(
   options: {
     path: string;
     param: Partial<Contents.IModel>;
+    registeredFileTypes: IRegisteredFileTypes;
   }
 ) {
-  // const [fileType, fileMimeType, fileFormat] = getFileType(
-  //   PathExt.extname(PathExt.basename(options.path)),
-  //   options.registeredFileTypes
-  // );
-
-  // const formattedBody = Private.formatBody(options.param, fileFormat, fileType, fileMimeType);
-  // const body: ReadonlyJSONObject = {
-  //   content: formattedBody
-  // };
-
   const response = await requestAPI<any>(
     'drives/' + driveName + '/' + options.path,
     'PUT',
@@ -162,5 +153,23 @@ export async function saveFile(
       content: options.param.content
     }
   );
-  console.log('response: ', response);
+
+  const [fileType, fileMimeType, fileFormat] = getFileType(
+    PathExt.extname(PathExt.basename(options.path)),
+    options.registeredFileTypes
+  );
+
+  data = {
+    name: PathExt.basename(options.path),
+    path: PathExt.join(driveName, options.path),
+    last_modified: response.data.last_modified,
+    created: response.data.last_modified,
+    content: response.data.content,
+    format: fileFormat as Contents.FileFormat,
+    mimetype: fileMimeType,
+    size: response.data.size,
+    writable: true,
+    type: fileType
+  };
+  return data;
 }

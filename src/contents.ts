@@ -460,11 +460,11 @@ export class Drive implements Contents.IDrive {
         ? localPath.substring(localPath.indexOf('/') + 1)
         : '';
 
-    const resp = await saveFile(currentDrive.name, {
+    const data = await saveFile(currentDrive.name, {
       path: relativePath,
-      param: options
+      param: options,
+      registeredFileTypes: this._registeredFileTypes
     });
-    console.log('contents resp: ', resp);
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
