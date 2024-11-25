@@ -3,14 +3,17 @@ import json
 import logging
 from typing import Dict, List, Optional, Tuple, Union, Any
 
+import os
 import tornado
 import httpx
 import traitlets
+import base64
 from jupyter_server.utils import url_path_join
 
 import obstore as obs
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
+import pyarrow
 
 from .log import get_logger
 from .base import DrivesConfig
@@ -86,7 +89,7 @@ class JupyterDrivesManager():
                         "name": result.name,
                         "region": self._config.region_name if self._config.region_name is not None else "eu-north-1",
                         "creation_date": result.extra["creation_date"],
-                        "mounted": "true" if result.name not in self._content_managers else "false",
+                        "mounted": False if result.name not in self._content_managers else True,
                         "provider": self._config.provider
                     }
                 )
@@ -153,14 +156,86 @@ class JupyterDrivesManager():
         
         return
     
-    async def get_contents(self, drive_name, path, **kwargs):
+    async def get_contents(self, drive_name, path):
         """Get contents of a file or directory.
 
         Args:
             drive_name: name of drive to get the contents of
-            path: path to file or directory
+            path: path to file or directory (empty string for root listing)
         """
-        print('Get contents function called.')
+        if path == '/':
+            path = ''
+        try :
+            data = []
+            isDir = False
+            emptyDir = True # assume we are dealing with an empty directory
+
+            # using Arrow lists as they are recommended for large results
+            # stream will be an async iterable of RecordBatch
+            stream = obs.list(self._content_managers[drive_name], path, chunk_size=100, return_arrow=True)
+            async for batch in stream:
+                # if content exists we are dealing with a directory
+                if isDir is False and batch: 
+                    isDir = True
+                    emptyDir = False
+                    
+                contents_list = pyarrow.record_batch(batch).to_pylist()
+                for object in contents_list:
+                    data.append({
+                        "path": object["path"],
+                        "last_modified": object["last_modified"].isoformat(),
+                        "size": object["size"],
+                    })
+                
+            # check if we are dealing with an empty drive
+            if isDir is False and path != '':
+                content = b""
+                # retrieve contents of object
+                obj = await obs.get_async(self._content_managers[drive_name], path)
+                stream = obj.stream(min_chunk_size=5 * 1024 * 1024) # 5MB sized chunks
+                async for buf in stream: 
+                    # if content exists we are dealing with a file
+                    if emptyDir is True and buf:
+                        emptyDir = False
+                    content += buf
+
+                # retrieve metadata of object
+                metadata = await obs.head_async(self._content_managers[drive_name], path)
+
+                # for certain media type files, extracted content needs to be read as a byte array and decoded to base64 to be viewable in JupyterLab
+                # the following extensions correspond to a base64 file format or are of type PDF
+                ext = os.path.splitext(path)[1]
+                if ext == '.pdf' or ext == '.svg' or ext == '.tif' or ext == '.tiff' or ext == '.jpg' or ext == '.jpeg' or ext == '.gif' or ext == '.png' or ext == '.bmp' or ext == '.webp':
+                    processed_content = base64.b64encode(content).decode("utf-8")
+                else:
+                    processed_content = content.decode("utf-8")
+
+                data = {
+                    "path": path, 
+                    "content": processed_content,
+                    "last_modified": metadata["last_modified"].isoformat(),
+                    "size": metadata["size"]
+                }
+
+            # dealing with the case of an empty directory, making sure it is not an empty file
+            # TO DO: find better way to check
+            if emptyDir is True: 
+                ext_list = ['.R', '.bmp', '.csv', '.gif', '.html', '.ipynb', '.jl', '.jpeg', '.jpg', '.json', '.jsonl', '.md', '.ndjson', '.pdf', '.png', '.py', '.svg', '.tif', '.tiff', '.tsv', '.txt', '.webp', '.yaml', '.yml']
+                object_name = os.path.basename(path)
+                # if object doesn't contain . or doesn't end in one of the registered extensions
+                if object_name.find('.') == -1 or ext_list.count(os.path.splitext(object_name)[1]) == 0:
+                    data = []
+
+            response = {
+                "data": data
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when retrieving the contents: {e}",
+            )
+        
+        return response
     
     async def new_file(self, drive_name, path, **kwargs):
         """Create a new file or directory at the given path.

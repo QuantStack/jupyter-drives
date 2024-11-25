@@ -69,17 +69,17 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
         return super().initialize(logger, manager)
     
     @tornado.web.authenticated
-    async def get(self, path: str = "", drive: str = ""):
+    async def get(self, drive: str = "", path: str = ""):
         result = await self._manager.get_contents(drive, path)
         self.finish(result)
 
     @tornado.web.authenticated
-    async def post(self, path: str = "", drive: str = ""):
+    async def post(self, drive: str = "", path: str = ""):
         result = await self._manager.new_file(drive, path)
         self.finish(result)
 
     @tornado.web.authenticated
-    async def patch(self, path: str = "", drive: str = ""):
+    async def patch(self, drive: str = "", path: str = ""):
         body = self.get_json_body()
         result = await self._manager.rename_file(drive, path, **body)
         self.finish(result)
