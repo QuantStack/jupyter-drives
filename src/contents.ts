@@ -1,7 +1,6 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
-import { PathExt } from '@jupyterlab/coreutils';
 
 import { IDriveInfo, IRegisteredFileTypes } from './token';
 import { saveFile, getContents, mountDrive } from './requests';
