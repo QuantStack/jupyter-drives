@@ -172,8 +172,8 @@ const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
           mounted: drive.mounted
         });
       }
-    } catch {
-      console.log('Failed loading available drives list.');
+    } catch (error) {
+      console.log('Failed loading available drives list, with error: ', error);
     }
     return drives;
   }
@@ -223,6 +223,9 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     });
 
     app.serviceManager.contents.addDrive(drive);
+
+    // get registered file types
+    drive.getRegisteredFileTypes(app);
 
     // Manually restore and load the drive file browser.
     const driveBrowser = fileBrowserFactory.createFileBrowser('drivebrowser', {
