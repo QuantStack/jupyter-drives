@@ -216,7 +216,7 @@ class JupyterDrivesManager():
                     "size": metadata["size"]
                 }
 
-            # dealing with the case of an empty directory 
+            # dealing with the case of an empty directory, making sure it is not an empty file
             # TO DO: find better way to check
             if emptyDir is True: 
                 ext_list = ['.R', '.bmp', '.csv', '.gif', '.html', '.ipynb', '.jl', '.jpeg', '.jpg', '.json', '.jsonl', '.md', '.ndjson', '.pdf', '.png', '.py', '.svg', '.tif', '.tiff', '.tsv', '.txt', '.webp', '.yaml', '.yml']
