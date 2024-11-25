@@ -31,6 +31,7 @@ export async function getDrivesList() {
 
 /**
  * Mount a drive by establishing a connection with it.
+ *
  * @param driveName
  * @param options.provider The provider of the drive to be mounted.
  * @param options.region The region of the drive to be mounted.
@@ -51,8 +52,8 @@ export async function mountDrive(
  * Get contents of a directory or retrieve contents of a specific file.
  *
  * @param driveName
- * @param options.path The path of object to be retrived
- * @param options.path The list containing all registered file types.
+ * @param options.path The path of object to be retrived.
+ * @param options.registeredFileTypes The list containing all registered file types.
  *
  * @returns A promise which resolves with the contents model.
  */
@@ -138,6 +139,16 @@ export async function getContents(
   return data;
 }
 
+/**
+ * Save an object.
+ *
+ * @param driveName
+ * @param options.path The path of the object to be saved.
+ * @param options.param The options sent when getting the request from the content manager.
+ * @param options.registeredFileTypes The list containing all registered file types.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
 export async function saveFile(
   driveName: string,
   options: {
