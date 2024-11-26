@@ -3,7 +3,7 @@ import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 
 import { IDriveInfo, IRegisteredFileTypes } from './token';
-import { saveFile, getContents, mountDrive } from './requests';
+import { saveFile, getContents, mountDrive, createObject } from './requests';
 
 let data: Contents.IModel = {
   name: '',
@@ -278,26 +278,43 @@ export class Drive implements Contents.IDrive {
   async newUntitled(
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
-    /*let body = '{}';
-    if (options) {
-      if (options.ext) {
-        options.ext = Private.normalizeExtension(options.ext);
-      }
-      body = JSON.stringify(options);
-    }
+    const path = options.path ?? '';
 
-    const settings = this.serverSettings;
-    const url = this._getUrl(options.path ?? '');
-    const init = {
-      method: 'POST',
-      body
-    };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    if (response.status !== 201) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
+    if (path !== '') {
+      // extract current drive name
+      const currentDrive = this._drivesList.filter(
+        x =>
+          x.name ===
+          (path.indexOf('/') !== -1
+            ? path.substring(0, path.indexOf('/'))
+            : path)
+      )[0];
+
+      // eliminate drive name from path
+      const relativePath =
+        path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
+
+      // get current list of contents of drive
+      const old_data = await getContents(currentDrive.name, {
+        path: relativePath,
+        registeredFileTypes: this._registeredFileTypes
+      });
+
+      if (options.type !== undefined) {
+        // get incremented untitled name
+        const name = this.incrementUntitledName(old_data, options);
+        data = await createObject(currentDrive.name, {
+          name: name,
+          path: relativePath,
+          registeredFileTypes: this._registeredFileTypes
+        });
+      } else {
+        console.warn('Type of new element is undefined');
+      }
+    } else {
+      // create new element at root would mean creating a new drive
+      console.warn('Operation not supported.');
     }
-    const data = await response.json();*/
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -318,6 +335,9 @@ export class Drive implements Contents.IDrive {
     let countText = 0;
     let countDir = 0;
     let countNotebook = 0;
+    if (options.type === 'notebook') {
+      options.ext = 'ipynb';
+    }
 
     content.forEach(item => {
       if (options.ext !== undefined) {

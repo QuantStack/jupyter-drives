@@ -237,14 +237,39 @@ class JupyterDrivesManager():
         
         return response
     
-    async def new_file(self, drive_name, path, **kwargs):
+    async def new_file(self, drive_name, path):
         """Create a new file or directory at the given path.
         
         Args:
             drive_name: name of drive where the new content is created
             path: path where new content should be created
+            content: content of object
         """
-        print('New file function called.')
+        data = {}
+        try:
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+
+            # TO DO: switch to mode "created", which is not implemented yet
+            await obs.put_async(self._content_managers[drive_name], path, b"", mode = "overwrite")
+            metadata = await obs.head_async(self._content_managers[drive_name], path)
+
+            data = {
+                "path": path,
+                "content": "",
+                "last_modified": metadata["last_modified"].isoformat(),
+                "size": metadata["size"]
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when creating the object: {e}",
+            )
+        
+        response = {
+            "data": data
+        }
+        return response
 
     async def save_file(self, drive_name, path, content):
         """Save file with new content.
@@ -252,6 +277,7 @@ class JupyterDrivesManager():
         Args:
             drive_name: name of drive where file exists
             path: path where new content should be saved
+            content: content of object
         """
         data = {}
         try: 

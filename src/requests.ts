@@ -184,3 +184,48 @@ export async function saveFile(
   };
   return data;
 }
+
+/**
+ * Create a new object.
+ *
+ * @param driveName
+ * @param options.path The path of new object.
+ * @param options.registeredFileTypes The list containing all registered file types.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function createObject(
+  driveName: string,
+  options: {
+    name: string;
+    path: string;
+    registeredFileTypes: IRegisteredFileTypes;
+  }
+) {
+  const path = options.path
+    ? PathExt.join(options.path, options.name)
+    : options.name;
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + path,
+    'POST'
+  );
+
+  const [fileType, fileMimeType, fileFormat] = getFileType(
+    PathExt.extname(PathExt.basename(options.name)),
+    options.registeredFileTypes
+  );
+
+  data = {
+    name: options.name,
+    path: PathExt.join(driveName, path),
+    last_modified: response.data.last_modified,
+    created: response.data.last_modified,
+    content: response.data.content,
+    format: fileFormat as Contents.FileFormat,
+    mimetype: fileMimeType,
+    size: response.data.size,
+    writable: true,
+    type: fileType
+  };
+  return data;
+}
