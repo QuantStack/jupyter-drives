@@ -165,6 +165,9 @@ class JupyterDrivesManager():
         """
         if path == '/':
             path = ''
+        else: 
+            path = path.strip('/')
+
         try :
             data = []
             isDir = False
