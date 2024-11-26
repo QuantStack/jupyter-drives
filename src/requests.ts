@@ -88,7 +88,9 @@ export async function getContents(
 
           fileList[fileName] = fileList[fileName] ?? {
             name: fileName,
-            path: driveName + '/' + row.path,
+            path: options.path
+              ? PathExt.join(driveName, options.path, fileName)
+              : PathExt.join(driveName, fileName),
             last_modified: row.last_modified,
             created: '',
             content: !fileName.split('.')[1] ? [] : null,
@@ -102,8 +104,8 @@ export async function getContents(
       });
 
       data = {
-        name: options.path ? PathExt.basename(options.path) : '',
-        path: options.path ? options.path + '/' : '',
+        name: options.path ? PathExt.basename(options.path) : driveName,
+        path: PathExt.join(driveName, options.path ? options.path + '/' : ''),
         last_modified: '',
         created: '',
         content: Object.values(fileList),
@@ -123,7 +125,7 @@ export async function getContents(
 
       data = {
         name: PathExt.basename(options.path),
-        path: driveName + '/' + response.data.path,
+        path: PathExt.join(driveName, response.data.path),
         last_modified: response.data.last_modified,
         created: '',
         content: response.data.content,
