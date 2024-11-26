@@ -309,14 +309,36 @@ class JupyterDrivesManager():
             }
         return response
     
-    async def rename_file(self, drive_name, path, **kwargs):
+    async def rename_file(self, drive_name, path, new_path):
         """Rename a file.
         
         Args:
             drive_name: name of drive where file is located
             path: path of file
         """
-        print('Rename file function called.')
+        data = {}
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+            
+            await obs.rename_async(self._content_managers[drive_name], path, new_path)
+            metadata = await obs.head_async(self._content_managers[drive_name], new_path)
+
+            data = {
+                "path": new_path,
+                "last_modified": metadata["last_modified"].isoformat(),
+                "size": metadata["size"]
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when renaming the object: {e}",
+            )
+        
+        response = {
+                "data": data
+            }
+        return response
 
     async def delete_file(self, drive_name, path):
         """Delete an object.

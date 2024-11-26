@@ -265,6 +265,77 @@ export async function deleteObjects(
 }
 
 /**
+ * Rename an object.
+ *
+ * @param driveName
+ * @param options.path The path of object.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function renameObjects(
+  driveName: string,
+  options: {
+    path: string;
+    newPath: string;
+    newFileName: string;
+    registeredFileTypes: IRegisteredFileTypes;
+  }
+) {
+  const formattedNewPath =
+    options.newPath.substring(0, options.newPath.lastIndexOf('/') + 1) +
+    options.newFileName;
+
+  const [fileType, fileMimeType, fileFormat] = getFileType(
+    PathExt.extname(PathExt.basename(options.newFileName)),
+    options.registeredFileTypes
+  );
+
+  // get list of contents with given prefix (path)
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'GET'
+  );
+
+  // renaming contents of a directory
+  if (response.data.length !== undefined && response.data.length !== 0) {
+    await Promise.all(
+      response.data.map(async (c: any) => {
+        const remainingFilePath = c.path.substring(options.path.length);
+        Private.renameSingleObject(
+          driveName,
+          PathExt.join(options.path, remainingFilePath),
+          PathExt.join(formattedNewPath, remainingFilePath)
+        );
+      })
+    );
+  }
+  // always rename the object (file or main directory)
+  try {
+    const renamedObject = await Private.renameSingleObject(
+      driveName,
+      options.path,
+      formattedNewPath
+    );
+    data = {
+      name: options.newFileName,
+      path: PathExt.join(driveName, formattedNewPath),
+      last_modified: renamedObject.data.last_modified,
+      created: '',
+      content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
+      format: fileFormat as Contents.FileFormat,
+      mimetype: fileMimeType,
+      size: renamedObject.data.size,
+      writable: true,
+      type: fileType
+    };
+  } catch (error) {
+    // renaming failed if directory didn't exist and was only part of a path
+  }
+
+  return data;
+}
+
+/**
  * Check existance of an object.
  *
  * @param driveName
@@ -334,5 +405,26 @@ namespace Private {
     objectPath: string
   ) {
     await requestAPI<any>('drives/' + driveName + '/' + objectPath, 'DELETE');
+  }
+
+  /**
+   * Helping function for renaming files inside
+   * a directory, in the case of deleting the directory.
+   *
+   * @param driveName
+   * @param objectPath complete path of object to delete
+   */
+  export async function renameSingleObject(
+    driveName: string,
+    objectPath: string,
+    newObjectPath: string
+  ) {
+    return await requestAPI<any>(
+      'drives/' + driveName + '/' + objectPath,
+      'PATCH',
+      {
+        new_path: newObjectPath
+      }
+    );
   }
 }

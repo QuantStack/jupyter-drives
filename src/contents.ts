@@ -9,8 +9,10 @@ import {
   getContents,
   mountDrive,
   createObject,
+  checkObject,
   deleteObjects,
-  countObjectNameAppearances
+  countObjectNameAppearances,
+  renameObjects
 } from './requests';
 
 let data: Contents.IModel = {
@@ -441,25 +443,51 @@ export class Drive implements Contents.IDrive {
     newLocalPath: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
-    /*const settings = this.serverSettings;
-    const url = this._getUrl(oldLocalPath);
-    const init = {
-      method: 'PATCH',
-      body: JSON.stringify({ path: newLocalPath })
-    };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    if (response.status !== 200) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
-    }
-    const data = await response.json();*/
+    // extract current drive name
+    const currentDrive = this._drivesList.filter(
+      x =>
+        x.name ===
+        (oldLocalPath.indexOf('/') !== -1
+          ? oldLocalPath.substring(0, oldLocalPath.indexOf('/'))
+          : oldLocalPath)
+    )[0];
 
+    // eliminate drive name from path
+    const relativePath =
+      oldLocalPath.indexOf('/') !== -1
+        ? oldLocalPath.substring(oldLocalPath.indexOf('/') + 1)
+        : '';
+    const newRelativePath =
+      newLocalPath.indexOf('/') !== -1
+        ? newLocalPath.substring(newLocalPath.indexOf('/') + 1)
+        : '';
+
+    // extract new file name
+    let newFileName = PathExt.basename(newLocalPath);
+
+    try {
+      // check if object with chosen name already exists
+      await checkObject(currentDrive.name, {
+        path: newLocalPath
+      });
+      newFileName = await this.incrementName(newLocalPath, this._name);
+    } catch (error) {
+      // HEAD request failed for this file name, continue, as name doesn't already exist.
+    } finally {
+      data = await renameObjects(currentDrive.name, {
+        path: relativePath,
+        newPath: newRelativePath,
+        newFileName: newFileName,
+        registeredFileTypes: this._registeredFileTypes
+      });
+    }
+
+    Contents.validateContentsModel(data);
     this._fileChanged.emit({
       type: 'rename',
       oldValue: { path: oldLocalPath },
-      newValue: { path: newLocalPath }
+      newValue: data
     });
-    Contents.validateContentsModel(data);
     return data;
   }
 
