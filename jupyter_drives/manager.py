@@ -314,6 +314,26 @@ class JupyterDrivesManager():
             path: path of file
         """
         print('Rename file function called.')
+
+    async def delete_file(self, drive_name, path):
+        """Delete an object.
+        
+        Args:
+            drive_name: name of drive where object exists
+            path: path where content is located
+        """
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+            await obs.delete_async(self._content_managers[drive_name], path)
+
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when deleting the object: {e}",
+            )
+        
+        return
     
     async def _call_provider(
         self,

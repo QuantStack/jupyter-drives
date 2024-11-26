@@ -211,7 +211,7 @@ export async function createObject(
   );
 
   const [fileType, fileMimeType, fileFormat] = getFileType(
-    PathExt.extname(PathExt.basename(options.name)),
+    PathExt.extname(options.name),
     options.registeredFileTypes
   );
 
@@ -228,4 +228,52 @@ export async function createObject(
     type: fileType
   };
   return data;
+}
+
+/**
+ * Delete an object.
+ *
+ * @param driveName
+ * @param options.path The path of object.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function deleteObjects(
+  driveName: string,
+  options: {
+    path: string;
+  }
+) {
+  // get list of contents with given prefix (path)
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'GET'
+  );
+
+  // deleting contents of a directory
+  if (response.data.length !== undefined && response.data.length !== 0) {
+    await Promise.all(
+      response.data.map(async (c: any) => {
+        return Private.deleteSingleObject(driveName, c.path);
+      })
+    );
+  }
+  // always deleting the object (file or main directory)
+  return Private.deleteSingleObject(driveName, options.path);
+}
+
+namespace Private {
+  /**
+   * Helping function for deleting files inside
+   * a directory, in the case of deleting the directory.
+   *
+   * @param driveName
+   * @param objectPath complete path of object to delete
+   */
+  export async function deleteSingleObject(
+    driveName: string,
+    objectPath: string
+  ) {
+    await requestAPI<any>('drives/' + driveName + '/' + objectPath, 'DELETE');
+  }
 }

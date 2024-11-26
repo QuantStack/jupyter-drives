@@ -3,7 +3,13 @@ import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 
 import { IDriveInfo, IRegisteredFileTypes } from './token';
-import { saveFile, getContents, mountDrive, createObject } from './requests';
+import {
+  saveFile,
+  getContents,
+  mountDrive,
+  createObject,
+  deleteObjects
+} from './requests';
 
 let data: Contents.IModel = {
   name: '',
@@ -389,16 +395,24 @@ export class Drive implements Contents.IDrive {
   }*/
 
   async delete(localPath: string): Promise<void> {
-    /*const url = this._getUrl(localPath);
-    const settings = this.serverSettings;
-    const init = { method: 'DELETE' };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    // TODO: update IPEP27 to specify errors more precisely, so
-    // that error types can be detected here with certainty.
-    if (response.status !== 204) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
-    }*/
+    // extract current drive name
+    const currentDrive = this._drivesList.filter(
+      x =>
+        x.name ===
+        (localPath.indexOf('/') !== -1
+          ? localPath.substring(0, localPath.indexOf('/'))
+          : localPath)
+    )[0];
+
+    // eliminate drive name from path
+    const relativePath =
+      localPath.indexOf('/') !== -1
+        ? localPath.substring(localPath.indexOf('/') + 1)
+        : '';
+
+    await deleteObjects(currentDrive.name, {
+      path: relativePath
+    });
 
     this._fileChanged.emit({
       type: 'delete',
