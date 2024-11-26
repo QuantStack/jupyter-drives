@@ -95,6 +95,11 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
         result = await self._manager.delete_file(drive, path)
         self.finish(result)
 
+    @tornado.web.authenticated
+    async def head(self, drive: str = "", path: str = ""):
+        result = await self._manager.check_file(drive, path)
+        self.finish(result)
+
 handlers = [
     ("drives", ListJupyterDrivesHandler)
 ]

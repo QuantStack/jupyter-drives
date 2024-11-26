@@ -264,6 +264,63 @@ export async function deleteObjects(
   return Private.deleteSingleObject(driveName, options.path);
 }
 
+/**
+ * Check existance of an object.
+ *
+ * @param driveName
+ * @param options.path The path to the object.
+ *
+ * @returns A promise which resolves or rejects depending on the object existing.
+ */
+export async function checkObject(
+  driveName: string,
+  options: {
+    path: string;
+  }
+) {
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'HEAD'
+  );
+
+  return response.result;
+}
+
+/**
+ * Count number of appeareances of object name.
+ *
+ * @param driveName:
+ * @param path: The path to the object.
+ * @param originalName: The original name of the object (before it was incremented).
+ *
+ * @returns A promise which resolves with the number of appeareances of object.
+ */
+export const countObjectNameAppearances = async (
+  driveName: string,
+  path: string,
+  originalName: string
+): Promise<number> => {
+  let counter: number = 0;
+
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + path.substring(0, path.lastIndexOf('/')),
+    'GET'
+  );
+
+  if (response.data && response.data.length !== 0) {
+    response.data.forEach((c: any) => {
+      const fileName = c.row.replace(path ? path + '/' : '', '').split('/')[0];
+      if (
+        fileName.substring(0, originalName.length + 1).includes(originalName)
+      ) {
+        counter += 1;
+      }
+    });
+  }
+
+  return counter;
+};
+
 namespace Private {
   /**
    * Helping function for deleting files inside

@@ -1,6 +1,7 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
+import { PathExt } from '@jupyterlab/coreutils';
 
 import { IDriveInfo, IRegisteredFileTypes } from './token';
 import {
@@ -8,7 +9,8 @@ import {
   getContents,
   mountDrive,
   createObject,
-  deleteObjects
+  deleteObjects,
+  countObjectNameAppearances
 } from './requests';
 
 let data: Contents.IModel = {
@@ -460,6 +462,39 @@ export class Drive implements Contents.IDrive {
     Contents.validateContentsModel(data);
     return data;
   }
+
+  /**
+   * Helping function to increment name of existing files or directorties.
+   *
+   * @param localPath - Path to file.
+   *
+   * @param driveName - The name of the drive where content is counted.
+
+   */
+  async incrementName(localPath: string, driveName: string) {
+    let fileExtension: string = '';
+    let originalName: string = '';
+
+    // extract name from path
+    originalName = PathExt.basename(localPath);
+    // eliminate file extension
+    fileExtension = PathExt.extname(originalName);
+    originalName =
+      fileExtension !== ''
+        ? originalName.split('.')[originalName.split('.').length - 2]
+        : originalName;
+
+    const counter = await countObjectNameAppearances(
+      driveName,
+      localPath,
+      originalName
+    );
+    let newName = counter ? originalName + counter : originalName;
+    newName = fileExtension !== '' ? newName + fileExtension : newName;
+
+    return newName;
+  }
+
   /**
    * Save a file.
    *
