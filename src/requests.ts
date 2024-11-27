@@ -268,7 +268,10 @@ export async function deleteObjects(
  * Rename an object.
  *
  * @param driveName
- * @param options.path The path of object.
+ * @param options.path The original path of object.
+ * @param options.newPath The new path of object.
+ * @param options.newFileName The name of the item to be renamed.
+ * @param options.registeredFileTypes The list containing all registered file types.
  *
  * @returns A promise which resolves with the contents model.
  */
