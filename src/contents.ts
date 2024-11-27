@@ -226,7 +226,7 @@ export class Drive implements Contents.IDrive {
           });
           this._drivesList.filter(x => x.name === localPath)[0].mounted = true;
         } catch (e) {
-          console.log(e);
+          // it will give an error if drive is already mounted
         }
       }
 
