@@ -8,6 +8,7 @@ import tornado
 import httpx
 import traitlets
 import base64
+from io import BytesIO
 from jupyter_server.utils import url_path_join
 
 import obstore as obs
@@ -274,7 +275,7 @@ class JupyterDrivesManager():
         }
         return response
 
-    async def save_file(self, drive_name, path, content):
+    async def save_file(self, drive_name, path, content, options_format, content_format, content_type):
         """Save file with new content.
         
         Args:
@@ -286,8 +287,27 @@ class JupyterDrivesManager():
         try: 
             # eliminate leading and trailing backslashes
             path = path.strip('/')
-            # format body when dealing with base64 enconding or files of type PDF
-            formattedContent = content.encode("utf-8")
+
+            if options_format == 'json':
+                formattedContent = json.dumps(content, indent=2)
+                formattedContent = formattedContent.encode("utf-8")
+            elif options_format == 'base64' and (content_format == 'base64' or content_type == 'PDF'):
+                # transform base64 encoding to a UTF-8 byte array for saving or storing
+                byte_characters = base64.b64decode(content)
+                
+                byte_arrays = []
+                for offset in range(0, len(byte_characters), 512):
+                    slice_ = byte_characters[offset:offset + 512]
+                    byte_array = bytearray(slice_)
+                    byte_arrays.append(byte_array)
+                
+                # combine byte arrays and wrap in a BytesIO object 
+                formattedContent = BytesIO(b"".join(byte_arrays))
+                formattedContent.seek(0)  # reset cursor for any further reading
+            elif options_format == 'text':
+                formattedContent = content.encode("utf-8")
+            else:
+                formattedContent = content
 
             await obs.put_async(self._content_managers[drive_name], path, formattedContent, mode = "overwrite")
             metadata = await obs.head_async(self._content_managers[drive_name], path)

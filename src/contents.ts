@@ -5,7 +5,7 @@ import { PathExt } from '@jupyterlab/coreutils';
 
 import { IDriveInfo, IRegisteredFileTypes } from './token';
 import {
-  saveFile,
+  saveObject,
   getContents,
   mountDrive,
   createObject,
@@ -558,7 +558,7 @@ export class Drive implements Contents.IDrive {
         ? localPath.substring(localPath.indexOf('/') + 1)
         : '';
 
-    const data = await saveFile(currentDrive.name, {
+    const data = await saveObject(currentDrive.name, {
       path: relativePath,
       param: options,
       registeredFileTypes: this._registeredFileTypes

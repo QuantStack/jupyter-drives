@@ -151,7 +151,7 @@ export async function getContents(
  *
  * @returns A promise which resolves with the contents model.
  */
-export async function saveFile(
+export async function saveObject(
   driveName: string,
   options: {
     path: string;
@@ -159,17 +159,20 @@ export async function saveFile(
     registeredFileTypes: IRegisteredFileTypes;
   }
 ) {
+  const [fileType, fileMimeType, fileFormat] = getFileType(
+    PathExt.extname(PathExt.basename(options.path)),
+    options.registeredFileTypes
+  );
+
   const response = await requestAPI<any>(
     'drives/' + driveName + '/' + options.path,
     'PUT',
     {
-      content: options.param.content
+      content: options.param.content,
+      options_format: options.param.format,
+      content_format: fileFormat,
+      content_type: fileType
     }
-  );
-
-  const [fileType, fileMimeType, fileFormat] = getFileType(
-    PathExt.extname(PathExt.basename(options.path)),
-    options.registeredFileTypes
   );
 
   data = {
