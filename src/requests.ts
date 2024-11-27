@@ -263,8 +263,12 @@ export async function deleteObjects(
       })
     );
   }
-  // always deleting the object (file or main directory)
-  return Private.deleteSingleObject(driveName, options.path);
+  try {
+    // always deleting the object (file or main directory)
+    return Private.deleteSingleObject(driveName, options.path);
+  } catch (error) {
+    // deleting failed if directory didn't exist and was only part of a path
+  }
 }
 
 /**
