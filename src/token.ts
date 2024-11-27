@@ -78,3 +78,26 @@ export function getFileType(
 
   return [fileType, fileMimetype, fileFormat];
 }
+
+/**
+ * Helping function to extract current drive.
+ * @param path
+ * @param drivesList
+ * @returns current drive
+ */
+export function extractCurrentDrive(path: string, drivesList: IDriveInfo[]) {
+  return drivesList.filter(
+    x =>
+      x.name ===
+      (path.indexOf('/') !== -1 ? path.substring(0, path.indexOf('/')) : path)
+  )[0];
+}
+
+/**
+ * Helping function to eliminate drive name from path
+ * @param path
+ * @returns fornatted path without drive name
+ */
+export function formatPath(path: string) {
+  return path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
+}

@@ -3,7 +3,12 @@ import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 import { PathExt } from '@jupyterlab/coreutils';
 
-import { IDriveInfo, IRegisteredFileTypes } from './token';
+import {
+  extractCurrentDrive,
+  formatPath,
+  IDriveInfo,
+  IRegisteredFileTypes
+} from './token';
 import {
   saveObject,
   getContents,
@@ -206,16 +211,8 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    let relativePath = '';
     if (localPath !== '') {
-      // extract current drive name
-      const currentDrive = this._drivesList.filter(
-        x =>
-          x.name ===
-          (localPath.indexOf('/') !== -1
-            ? localPath.substring(0, localPath.indexOf('/'))
-            : localPath)
-      )[0];
+      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
       // when accessed the first time, mount drive
       if (currentDrive.mounted === false) {
@@ -230,14 +227,8 @@ export class Drive implements Contents.IDrive {
         }
       }
 
-      // eliminate drive name from path
-      relativePath =
-        localPath.indexOf('/') !== -1
-          ? localPath.substring(localPath.indexOf('/') + 1)
-          : '';
-
       data = await getContents(currentDrive.name, {
-        path: relativePath,
+        path: formatPath(localPath),
         registeredFileTypes: this._registeredFileTypes
       });
     } else {
@@ -291,14 +282,7 @@ export class Drive implements Contents.IDrive {
     const path = options.path ?? '';
 
     if (path !== '') {
-      // extract current drive name
-      const currentDrive = this._drivesList.filter(
-        x =>
-          x.name ===
-          (path.indexOf('/') !== -1
-            ? path.substring(0, path.indexOf('/'))
-            : path)
-      )[0];
+      const currentDrive = extractCurrentDrive(path, this._drivesList);
 
       // eliminate drive name from path
       const relativePath =
@@ -396,23 +380,10 @@ export class Drive implements Contents.IDrive {
    */
   async delete(localPath: string): Promise<void> {
     if (localPath !== '') {
-      // extract current drive name
-      const currentDrive = this._drivesList.filter(
-        x =>
-          x.name ===
-          (localPath.indexOf('/') !== -1
-            ? localPath.substring(0, localPath.indexOf('/'))
-            : localPath)
-      )[0];
-
-      // eliminate drive name from path
-      const relativePath =
-        localPath.indexOf('/') !== -1
-          ? localPath.substring(localPath.indexOf('/') + 1)
-          : '';
+      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
       await deleteObjects(currentDrive.name, {
-        path: relativePath
+        path: formatPath(localPath)
       });
     } else {
       // create new element at root would mean modifying a drive
@@ -445,34 +416,27 @@ export class Drive implements Contents.IDrive {
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
     if (oldLocalPath !== '') {
-      // extract current drive name
-      const currentDrive = this._drivesList.filter(
-        x =>
-          x.name ===
-          (oldLocalPath.indexOf('/') !== -1
-            ? oldLocalPath.substring(0, oldLocalPath.indexOf('/'))
-            : oldLocalPath)
-      )[0];
+      const currentDrive = extractCurrentDrive(oldLocalPath, this._drivesList);
 
       // eliminate drive name from path
-      const relativePath =
-        oldLocalPath.indexOf('/') !== -1
-          ? oldLocalPath.substring(oldLocalPath.indexOf('/') + 1)
-          : '';
-      const newRelativePath =
-        newLocalPath.indexOf('/') !== -1
-          ? newLocalPath.substring(newLocalPath.indexOf('/') + 1)
-          : '';
+      const relativePath = formatPath(oldLocalPath);
+      const newRelativePath = formatPath(newLocalPath);
+      console.log('rel: ', relativePath);
+      console.log('new: ', newRelativePath);
 
       // extract new file name
-      let newFileName = PathExt.basename(newLocalPath);
+      let newFileName = PathExt.basename(newRelativePath);
 
       try {
         // check if object with chosen name already exists
         await checkObject(currentDrive.name, {
-          path: newLocalPath
+          path: newRelativePath
         });
-        newFileName = await this.incrementName(newLocalPath, this._name);
+        newFileName = await this.incrementName(
+          newRelativePath,
+          currentDrive.name
+        );
+        console.log(newFileName);
       } catch (error) {
         // HEAD request failed for this file name, continue, as name doesn't already exist.
       } finally {
@@ -549,23 +513,10 @@ export class Drive implements Contents.IDrive {
     options: Partial<Contents.IModel> = {}
   ): Promise<Contents.IModel> {
     if (localPath !== '') {
-      // extract current drive name
-      const currentDrive = this._drivesList.filter(
-        x =>
-          x.name ===
-          (localPath.indexOf('/') !== -1
-            ? localPath.substring(0, localPath.indexOf('/'))
-            : localPath)
-      )[0];
-
-      // eliminate drive name from path
-      const relativePath =
-        localPath.indexOf('/') !== -1
-          ? localPath.substring(localPath.indexOf('/') + 1)
-          : '';
+      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
       data = await saveObject(currentDrive.name, {
-        path: relativePath,
+        path: formatPath(localPath),
         param: options,
         registeredFileTypes: this._registeredFileTypes
       });
@@ -636,22 +587,11 @@ export class Drive implements Contents.IDrive {
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
     if (path !== '') {
-      // extract current drive name
-      const currentDrive = this._drivesList.filter(
-        x =>
-          x.name ===
-          (path.indexOf('/') !== -1
-            ? path.substring(0, path.indexOf('/'))
-            : path)
-      )[0];
+      const currentDrive = extractCurrentDrive(path, this._drivesList);
 
       // eliminate drive name from path
-      const relativePath =
-        path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
-      const toRelativePath =
-        toDir.indexOf('/') !== -1
-          ? toDir.substring(toDir.indexOf('/') + 1)
-          : '';
+      const relativePath = formatPath(path);
+      const toRelativePath = formatPath(toDir);
 
       // construct new file or directory name for the copy
       const newFileName = await this.incrementCopyName(
