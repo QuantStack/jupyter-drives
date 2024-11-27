@@ -421,8 +421,6 @@ export class Drive implements Contents.IDrive {
       // eliminate drive name from path
       const relativePath = formatPath(oldLocalPath);
       const newRelativePath = formatPath(newLocalPath);
-      console.log('rel: ', relativePath);
-      console.log('new: ', newRelativePath);
 
       // extract new file name
       let newFileName = PathExt.basename(newRelativePath);
@@ -436,7 +434,6 @@ export class Drive implements Contents.IDrive {
           newRelativePath,
           currentDrive.name
         );
-        console.log(newFileName);
       } catch (error) {
         // HEAD request failed for this file name, continue, as name doesn't already exist.
       } finally {
