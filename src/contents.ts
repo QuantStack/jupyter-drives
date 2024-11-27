@@ -285,7 +285,6 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the created file content when the
    *    file is created.
    */
-
   async newUntitled(
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
@@ -395,29 +394,30 @@ export class Drive implements Contents.IDrive {
    *
    * @returns A promise which resolves when the file is deleted.
    */
-  /*delete(path: string): Promise<void> {
-    return Promise.reject('Repository is read only');
-  }*/
-
   async delete(localPath: string): Promise<void> {
-    // extract current drive name
-    const currentDrive = this._drivesList.filter(
-      x =>
-        x.name ===
-        (localPath.indexOf('/') !== -1
-          ? localPath.substring(0, localPath.indexOf('/'))
-          : localPath)
-    )[0];
+    if (localPath !== '') {
+      // extract current drive name
+      const currentDrive = this._drivesList.filter(
+        x =>
+          x.name ===
+          (localPath.indexOf('/') !== -1
+            ? localPath.substring(0, localPath.indexOf('/'))
+            : localPath)
+      )[0];
 
-    // eliminate drive name from path
-    const relativePath =
-      localPath.indexOf('/') !== -1
-        ? localPath.substring(localPath.indexOf('/') + 1)
-        : '';
+      // eliminate drive name from path
+      const relativePath =
+        localPath.indexOf('/') !== -1
+          ? localPath.substring(localPath.indexOf('/') + 1)
+          : '';
 
-    await deleteObjects(currentDrive.name, {
-      path: relativePath
-    });
+      await deleteObjects(currentDrive.name, {
+        path: relativePath
+      });
+    } else {
+      // create new element at root would mean modifying a drive
+      console.warn('Operation not supported.');
+    }
 
     this._fileChanged.emit({
       type: 'delete',
@@ -444,43 +444,48 @@ export class Drive implements Contents.IDrive {
     newLocalPath: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
-    // extract current drive name
-    const currentDrive = this._drivesList.filter(
-      x =>
-        x.name ===
-        (oldLocalPath.indexOf('/') !== -1
-          ? oldLocalPath.substring(0, oldLocalPath.indexOf('/'))
-          : oldLocalPath)
-    )[0];
+    if (oldLocalPath !== '') {
+      // extract current drive name
+      const currentDrive = this._drivesList.filter(
+        x =>
+          x.name ===
+          (oldLocalPath.indexOf('/') !== -1
+            ? oldLocalPath.substring(0, oldLocalPath.indexOf('/'))
+            : oldLocalPath)
+      )[0];
 
-    // eliminate drive name from path
-    const relativePath =
-      oldLocalPath.indexOf('/') !== -1
-        ? oldLocalPath.substring(oldLocalPath.indexOf('/') + 1)
-        : '';
-    const newRelativePath =
-      newLocalPath.indexOf('/') !== -1
-        ? newLocalPath.substring(newLocalPath.indexOf('/') + 1)
-        : '';
+      // eliminate drive name from path
+      const relativePath =
+        oldLocalPath.indexOf('/') !== -1
+          ? oldLocalPath.substring(oldLocalPath.indexOf('/') + 1)
+          : '';
+      const newRelativePath =
+        newLocalPath.indexOf('/') !== -1
+          ? newLocalPath.substring(newLocalPath.indexOf('/') + 1)
+          : '';
 
-    // extract new file name
-    let newFileName = PathExt.basename(newLocalPath);
+      // extract new file name
+      let newFileName = PathExt.basename(newLocalPath);
 
-    try {
-      // check if object with chosen name already exists
-      await checkObject(currentDrive.name, {
-        path: newLocalPath
-      });
-      newFileName = await this.incrementName(newLocalPath, this._name);
-    } catch (error) {
-      // HEAD request failed for this file name, continue, as name doesn't already exist.
-    } finally {
-      data = await renameObjects(currentDrive.name, {
-        path: relativePath,
-        newPath: newRelativePath,
-        newFileName: newFileName,
-        registeredFileTypes: this._registeredFileTypes
-      });
+      try {
+        // check if object with chosen name already exists
+        await checkObject(currentDrive.name, {
+          path: newLocalPath
+        });
+        newFileName = await this.incrementName(newLocalPath, this._name);
+      } catch (error) {
+        // HEAD request failed for this file name, continue, as name doesn't already exist.
+      } finally {
+        data = await renameObjects(currentDrive.name, {
+          path: relativePath,
+          newPath: newRelativePath,
+          newFileName: newFileName,
+          registeredFileTypes: this._registeredFileTypes
+        });
+      }
+    } else {
+      // create new element at root would mean modifying a drive
+      console.warn('Operation not supported.');
     }
 
     Contents.validateContentsModel(data);
@@ -543,26 +548,31 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options: Partial<Contents.IModel> = {}
   ): Promise<Contents.IModel> {
-    // extract current drive name
-    const currentDrive = this._drivesList.filter(
-      x =>
-        x.name ===
-        (localPath.indexOf('/') !== -1
-          ? localPath.substring(0, localPath.indexOf('/'))
-          : localPath)
-    )[0];
+    if (localPath !== '') {
+      // extract current drive name
+      const currentDrive = this._drivesList.filter(
+        x =>
+          x.name ===
+          (localPath.indexOf('/') !== -1
+            ? localPath.substring(0, localPath.indexOf('/'))
+            : localPath)
+      )[0];
 
-    // eliminate drive name from path
-    const relativePath =
-      localPath.indexOf('/') !== -1
-        ? localPath.substring(localPath.indexOf('/') + 1)
-        : '';
+      // eliminate drive name from path
+      const relativePath =
+        localPath.indexOf('/') !== -1
+          ? localPath.substring(localPath.indexOf('/') + 1)
+          : '';
 
-    const data = await saveObject(currentDrive.name, {
-      path: relativePath,
-      param: options,
-      registeredFileTypes: this._registeredFileTypes
-    });
+      data = await saveObject(currentDrive.name, {
+        path: relativePath,
+        param: options,
+        registeredFileTypes: this._registeredFileTypes
+      });
+    } else {
+      // create new element at root would mean modifying a drive
+      console.warn('Operation not supported.');
+    }
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -625,32 +635,41 @@ export class Drive implements Contents.IDrive {
     toDir: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
-    // extract current drive name
-    const currentDrive = this._drivesList.filter(
-      x =>
-        x.name ===
-        (path.indexOf('/') !== -1 ? path.substring(0, path.indexOf('/')) : path)
-    )[0];
+    if (path !== '') {
+      // extract current drive name
+      const currentDrive = this._drivesList.filter(
+        x =>
+          x.name ===
+          (path.indexOf('/') !== -1
+            ? path.substring(0, path.indexOf('/'))
+            : path)
+      )[0];
 
-    // eliminate drive name from path
-    const relativePath =
-      path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
-    const toRelativePath =
-      toDir.indexOf('/') !== -1 ? toDir.substring(toDir.indexOf('/') + 1) : '';
+      // eliminate drive name from path
+      const relativePath =
+        path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
+      const toRelativePath =
+        toDir.indexOf('/') !== -1
+          ? toDir.substring(toDir.indexOf('/') + 1)
+          : '';
 
-    // construct new file or directory name for the copy
-    const newFileName = await this.incrementCopyName(
-      relativePath,
-      toRelativePath,
-      currentDrive.name
-    );
+      // construct new file or directory name for the copy
+      const newFileName = await this.incrementCopyName(
+        relativePath,
+        toRelativePath,
+        currentDrive.name
+      );
 
-    data = await copyObjects(currentDrive.name, {
-      path: relativePath,
-      toPath: toRelativePath,
-      newFileName: newFileName,
-      registeredFileTypes: this._registeredFileTypes
-    });
+      data = await copyObjects(currentDrive.name, {
+        path: relativePath,
+        toPath: toRelativePath,
+        newFileName: newFileName,
+        registeredFileTypes: this._registeredFileTypes
+      });
+    } else {
+      // create new element at root would mean modifying a drive
+      console.warn('Operation not supported.');
+    }
 
     this._fileChanged.emit({
       type: 'new',
