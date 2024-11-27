@@ -12,7 +12,8 @@ import {
   checkObject,
   deleteObjects,
   countObjectNameAppearances,
-  renameObjects
+  renameObjects,
+  copyObjects
 } from './requests';
 
 let data: Contents.IModel = {
@@ -573,6 +574,43 @@ export class Drive implements Contents.IDrive {
   }
 
   /**
+   * Helping function for copying an object.
+   *
+   * @param copiedItemPath - The original file path.
+   *
+   * @param toPath - The path where item will be copied.
+   *
+   * @param driveName - The name of the drive where content is moved.
+   *
+   * @returns A promise which resolves with the new name when the
+   *  file is copied.
+   */
+  async incrementCopyName(
+    copiedItemPath: string,
+    toPath: string,
+    driveName: string
+  ) {
+    // extracting original file name
+    const originalFileName = PathExt.basename(copiedItemPath);
+
+    // constructing new file name and path with -Copy string
+    const newFileName =
+      PathExt.extname(originalFileName) === ''
+        ? originalFileName + '-Copy'
+        : originalFileName.split('.')[0] +
+          '-Copy.' +
+          originalFileName.split('.')[1];
+
+    const newFilePath = PathExt.join(toPath, newFileName);
+    // copiedItemPath.substring(0, copiedItemPath.lastIndexOf('/') + 1) + newFileName;
+
+    // getting incremented name of Copy in case of duplicates
+    const incrementedName = await this.incrementName(newFilePath, driveName);
+
+    return incrementedName;
+  }
+
+  /**
    * Copy a file into a given directory.
    *
    * @param path - The original file path.
@@ -582,79 +620,37 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the new contents model when the
    *  file is copied.
    */
-
-  incrementCopyName(contents: Contents.IModel, copiedItemPath: string): string {
-    const content: Array<Contents.IModel> = contents.content;
-    let name: string = '';
-    let countText = 0;
-    let countDir = 0;
-    let countNotebook = 0;
-    let ext = undefined;
-    const list1 = copiedItemPath.split('/');
-    const copiedItemName = list1[list1.length - 1];
-
-    const list2 = copiedItemName.split('.');
-    let rootName = list2[0];
-
-    content.forEach(item => {
-      if (item.name.includes(rootName) && item.name.includes('.txt')) {
-        ext = '.txt';
-        if (rootName.includes('-Copy')) {
-          const list3 = rootName.split('-Copy');
-          countText = parseInt(list3[1]) + 1;
-          rootName = list3[0];
-        } else {
-          countText = countText + 1;
-        }
-      }
-      if (item.name.includes(rootName) && item.name.includes('.ipynb')) {
-        ext = '.ipynb';
-        if (rootName.includes('-Copy')) {
-          const list3 = rootName.split('-Copy');
-          countNotebook = parseInt(list3[1]) + 1;
-          rootName = list3[0];
-        } else {
-          countNotebook = countNotebook + 1;
-        }
-      } else if (item.name.includes(rootName)) {
-        if (rootName.includes('-Copy')) {
-          const list3 = rootName.split('-Copy');
-          countDir = parseInt(list3[1]) + 1;
-          rootName = list3[0];
-        } else {
-          countDir = countDir + 1;
-        }
-      }
-    });
-
-    if (ext === '.txt') {
-      name = rootName + '-Copy' + countText + ext;
-    }
-    if (ext === 'ipynb') {
-      name = rootName + '-Copy' + countText + ext;
-    } else if (ext === undefined) {
-      name = rootName + '-Copy' + countDir;
-    }
-
-    return name;
-  }
   async copy(
-    fromFile: string,
+    path: string,
     toDir: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
-    /*const settings = this.serverSettings;
-    const url = this._getUrl(toDir);
-    const init = {
-      method: 'POST',
-      body: JSON.stringify({ copy_from: fromFile })
-    };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    if (response.status !== 201) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
-    }
-    const data = await response.json();*/
+    // extract current drive name
+    const currentDrive = this._drivesList.filter(
+      x =>
+        x.name ===
+        (path.indexOf('/') !== -1 ? path.substring(0, path.indexOf('/')) : path)
+    )[0];
+
+    // eliminate drive name from path
+    const relativePath =
+      path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
+    const toRelativePath =
+      toDir.indexOf('/') !== -1 ? toDir.substring(toDir.indexOf('/') + 1) : '';
+
+    // construct new file or directory name for the copy
+    const newFileName = await this.incrementCopyName(
+      relativePath,
+      toRelativePath,
+      currentDrive.name
+    );
+
+    data = await copyObjects(currentDrive.name, {
+      path: relativePath,
+      toPath: toRelativePath,
+      newFileName: newFileName,
+      registeredFileTypes: this._registeredFileTypes
+    });
 
     this._fileChanged.emit({
       type: 'new',

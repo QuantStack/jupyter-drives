@@ -381,6 +381,38 @@ class JupyterDrivesManager():
         }
         return response
     
+    async def copy_file(self, drive_name, path, to_path):
+        """Save file with new content.
+        
+        Args:
+            drive_name: name of drive where file exists
+            path: path where original content exists
+            to_path: path where object should be copied
+        """
+        data = {}
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+
+            await obs.copy_async(self._content_managers[drive_name], path, to_path)
+            metadata = await obs.head_async(self._content_managers[drive_name], to_path)
+
+            data = {
+                "path": to_path,
+                "last_modified": metadata["last_modified"].isoformat(),
+                "size": metadata["size"]
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when copying the: {e}",
+            )
+        
+        response = {
+                "data": data
+            }
+        return response
+    
     async def _call_provider(
         self,
         url: str,

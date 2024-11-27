@@ -336,6 +336,78 @@ export async function renameObjects(
 }
 
 /**
+ * Copy an object.
+ *
+ * @param driveName
+ * @param options.path The path of object.
+ * @param options.toPath The path where object should be copied.
+ * @param options.newFileName The name of the item to be copied.
+ * @param options.registeredFileTypes The list containing all registered file types.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function copyObjects(
+  driveName: string,
+  options: {
+    path: string;
+    toPath: string;
+    newFileName: string;
+    registeredFileTypes: IRegisteredFileTypes;
+  }
+) {
+  const formattedNewPath = PathExt.join(options.toPath, options.newFileName);
+
+  const [fileType, fileMimeType, fileFormat] = getFileType(
+    PathExt.extname(PathExt.basename(options.newFileName)),
+    options.registeredFileTypes
+  );
+
+  // get list of contents with given prefix (path)
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'GET'
+  );
+
+  // copying contents of a directory
+  if (response.data.length !== undefined && response.data.length !== 0) {
+    await Promise.all(
+      response.data.map(async (c: any) => {
+        const remainingFilePath = c.path.substring(options.path.length);
+        Private.copySingleObject(
+          driveName,
+          PathExt.join(options.path, remainingFilePath),
+          PathExt.join(formattedNewPath, remainingFilePath)
+        );
+      })
+    );
+  }
+  // always copy the main object (file or directory)
+  try {
+    const copiedObject = await Private.copySingleObject(
+      driveName,
+      options.path,
+      formattedNewPath
+    );
+    data = {
+      name: options.newFileName,
+      path: PathExt.join(driveName, formattedNewPath),
+      last_modified: copiedObject.data.last_modified,
+      created: '',
+      content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
+      format: fileFormat as Contents.FileFormat,
+      mimetype: fileMimeType,
+      size: copiedObject.data.size,
+      writable: true,
+      type: fileType
+    };
+  } catch (error) {
+    // copied failed if directory didn't exist and was only part of a path
+  }
+
+  return data;
+}
+
+/**
  * Check existance of an object.
  *
  * @param driveName
@@ -380,7 +452,7 @@ export const countObjectNameAppearances = async (
 
   if (response.data && response.data.length !== 0) {
     response.data.forEach((c: any) => {
-      const fileName = c.row.replace(path ? path + '/' : '', '').split('/')[0];
+      const fileName = c.path.replace(path ? path + '/' : '', '').split('/')[0];
       if (
         fileName.substring(0, originalName.length + 1).includes(originalName)
       ) {
@@ -412,7 +484,7 @@ namespace Private {
    * a directory, in the case of deleting the directory.
    *
    * @param driveName
-   * @param objectPath complete path of object to delete
+   * @param objectPath complete path of object to rename
    */
   export async function renameSingleObject(
     driveName: string,
@@ -424,6 +496,27 @@ namespace Private {
       'PATCH',
       {
         new_path: newObjectPath
+      }
+    );
+  }
+
+  /**
+   * Helping function for copying files inside
+   * a directory, in the case of deleting the directory.
+   *
+   * @param driveName
+   * @param objectPath complete path of object to copy
+   */
+  export async function copySingleObject(
+    driveName: string,
+    objectPath: string,
+    newObjectPath: string
+  ) {
+    return await requestAPI<any>(
+      'drives/' + driveName + '/' + objectPath,
+      'PUT',
+      {
+        to_path: newObjectPath
       }
     );
   }
