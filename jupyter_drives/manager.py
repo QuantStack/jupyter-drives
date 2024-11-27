@@ -387,19 +387,17 @@ class JupyterDrivesManager():
             drive_name: name of drive where object exists
             path: path where content is located
         """
-        result = False
         try: 
             # eliminate leading and trailing backslashes
             path = path.strip('/')
             await obs.head_async(self._content_managers[drive_name], path)
-            result = True
         except Exception:
-           pass
+           raise tornado.web.HTTPError(
+            status_code= httpx.codes.NOT_FOUND,
+            reason="Object does not already exist within drive.",
+            )
         
-        response = {
-            result: result
-        }
-        return response
+        return 
     
     async def copy_file(self, drive_name, path, to_path):
         """Save file with new content.

@@ -431,12 +431,7 @@ export async function checkObject(
     path: string;
   }
 ) {
-  const response = await requestAPI<any>(
-    'drives/' + driveName + '/' + options.path,
-    'HEAD'
-  );
-
-  return response.result;
+  await requestAPI<any>('drives/' + driveName + '/' + options.path, 'HEAD');
 }
 
 /**
@@ -454,9 +449,10 @@ export const countObjectNameAppearances = async (
   originalName: string
 ): Promise<number> => {
   let counter: number = 0;
+  path = path.substring(0, path.lastIndexOf('/'));
 
   const response = await requestAPI<any>(
-    'drives/' + driveName + '/' + path.substring(0, path.lastIndexOf('/')),
+    'drives/' + driveName + '/' + path,
     'GET'
   );
 
