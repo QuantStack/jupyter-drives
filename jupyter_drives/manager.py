@@ -294,6 +294,30 @@ class JupyterDrivesManager():
     
         return location
     
+    def _check_object(self, drive_name, path):
+        """Helping function to check if we are dealing with an empty file or directory.
+
+        Args:
+            drive_name: name of drive where object exists
+            path: path to object to check
+        """
+        isDir = False
+        try:
+            location = self._content_managers[drive_name]["location"]
+            if location not in self._s3_clients:
+                self._s3_clients[location] = self._s3_session.client('s3', location)
+
+            listing = self._s3_clients[location].list_objects_v2(Bucket = drive_name, Prefix = path + '/')
+            if 'Contents' in listing:
+                isDir = True
+        except Exception as e:
+             raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when retriving the drive location: {e}",
+            )
+        
+        return isDir
+    
     async def _call_provider(
         self,
         url: str,
