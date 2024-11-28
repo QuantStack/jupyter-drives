@@ -247,7 +247,6 @@ class JupyterDrivesManager():
         Args:
             drive_name: name of drive where the new content is created
             path: path where new content should be created
-            content: content of object
         """
         data = {}
         try:
@@ -289,8 +288,8 @@ class JupyterDrivesManager():
             path = path.strip('/')
 
             if options_format == 'json':
-                formattedContent = json.dumps(content, indent=2)
-                formattedContent = formattedContent.encode("utf-8")
+                formatted_content = json.dumps(content, indent=2)
+                formatted_content = formatted_content.encode("utf-8")
             elif options_format == 'base64' and (content_format == 'base64' or content_type == 'PDF'):
                 # transform base64 encoding to a UTF-8 byte array for saving or storing
                 byte_characters = base64.b64decode(content)
@@ -302,14 +301,14 @@ class JupyterDrivesManager():
                     byte_arrays.append(byte_array)
                 
                 # combine byte arrays and wrap in a BytesIO object 
-                formattedContent = BytesIO(b"".join(byte_arrays))
-                formattedContent.seek(0)  # reset cursor for any further reading
+                formatted_content = BytesIO(b"".join(byte_arrays))
+                formatted_content.seek(0)  # reset cursor for any further reading
             elif options_format == 'text':
-                formattedContent = content.encode("utf-8")
+                formatted_content = content.encode("utf-8")
             else:
-                formattedContent = content
+                formatted_content = content
 
-            await obs.put_async(self._content_managers[drive_name], path, formattedContent, mode = "overwrite")
+            await obs.put_async(self._content_managers[drive_name], path, formatted_content, mode = "overwrite")
             metadata = await obs.head_async(self._content_managers[drive_name], path)
 
             data = {
@@ -335,6 +334,7 @@ class JupyterDrivesManager():
         Args:
             drive_name: name of drive where file is located
             path: path of file
+            new_path: path of new file name
         """
         data = {}
         try: 
