@@ -14,6 +14,7 @@ import obstore as obs
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
 import pyarrow
+import boto3
 
 from .log import get_logger
 from .base import DrivesConfig
@@ -37,6 +38,17 @@ class JupyterDrivesManager():
         self._config = DrivesConfig(config=config)
         self._client = httpx.AsyncClient()
         self._content_managers = {}
+
+         # initiate boto3 session if we are dealing with S3 drives
+        if self._config.provider == 's3':
+            self._s3_clients = {}
+            if self._config.access_key_id and self._config.secret_access_key:
+                self._s3_session = boto3.Session(aws_access_key_id = self._config.access_key_id, aws_secret_access_key = self._config.secret_access_key)
+            else:
+                raise tornado.web.HTTPError(
+                status_code= httpx.codes.BAD_REQUEST,
+                reason="No credentials specified. Please set them in your user jupyter_server_config file.",
+                )
 
     @property
     def base_api_url(self) -> str:
@@ -84,10 +96,13 @@ class JupyterDrivesManager():
                 results += drive.list_containers()
             
             for result in results:
+                # in case of S3 drives get region of each drive
+                if self._config.provider == 's3':
+                    location = self._get_drive_location(result.name)
                 data.append(
                     {
                         "name": result.name,
-                        "region": self._config.region_name if self._config.region_name is not None else "eu-north-1",
+                        "region": location,
                         "creation_date": result.extra["creation_date"],
                         "mounted": False if result.name not in self._content_managers else True,
                         "provider": self._config.provider
@@ -123,7 +138,10 @@ class JupyterDrivesManager():
                 elif provider == 'http':
                     store = obs.store.HTTPStore.from_url(drive_name, client_options = {}) # add http client config
                 
-                self._content_managers[drive_name] = store
+                self._content_managers[drive_name] = {
+                    "store": store,
+                    "location": region
+                }
 
             else:
                 raise tornado.web.HTTPError(
@@ -172,7 +190,7 @@ class JupyterDrivesManager():
 
             # using Arrow lists as they are recommended for large results
             # stream will be an async iterable of RecordBatch
-            stream = obs.list(self._content_managers[drive_name], path, chunk_size=100, return_arrow=True)
+            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=100, return_arrow=True)
             async for batch in stream:
                 # if content exists we are dealing with a directory
                 if isDir is False and batch: 
@@ -191,7 +209,7 @@ class JupyterDrivesManager():
             if isDir is False and path != '':
                 content = b""
                 # retrieve contents of object
-                obj = await obs.get_async(self._content_managers[drive_name], path)
+                obj = await obs.get_async(self._content_managers[drive_name]["store"], path)
                 stream = obj.stream(min_chunk_size=5 * 1024 * 1024) # 5MB sized chunks
                 async for buf in stream: 
                     # if content exists we are dealing with a file
@@ -200,7 +218,7 @@ class JupyterDrivesManager():
                     content += buf
 
                 # retrieve metadata of object
-                metadata = await obs.head_async(self._content_managers[drive_name], path)
+                metadata = await obs.head_async(self._content_managers[drive_name]["store"], path)
 
                 # for certain media type files, extracted content needs to be read as a byte array and decoded to base64 to be viewable in JupyterLab
                 # the following extensions correspond to a base64 file format or are of type PDF
@@ -254,6 +272,27 @@ class JupyterDrivesManager():
             path: path of file
         """
         print('Rename file function called.')
+    
+    def _get_drive_location(self, drive_name):
+        """Helping function for getting drive region.
+
+        Args:
+            drive_name: name of drive to get the region of
+        """
+        location = 'eu-north-1'
+        try:
+            # set temporary client for location extraction
+            s3 = self._s3_session.client('s3')
+            result = s3.get_bucket_location(Bucket = drive_name)
+
+            location = result['LocationConstraint']
+        except Exception as e:
+             raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when retriving the drive location: {e}",
+            )
+    
+        return location
     
     async def _call_provider(
         self,
