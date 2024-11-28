@@ -281,6 +281,9 @@ class JupyterDrivesManager():
             drive_name: name of drive where file exists
             path: path where new content should be saved
             content: content of object
+            options_format: format of content (as sent through contents manager request)
+            content_format: format of content (as defined by the registered file formats in JupyterLab)
+            content_type: type of content (as defined by the registered file types in JupyterLab)
         """
         data = {}
         try: 
