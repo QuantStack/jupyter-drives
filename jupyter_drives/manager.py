@@ -8,6 +8,7 @@ import tornado
 import httpx
 import traitlets
 import base64
+from io import BytesIO
 from jupyter_server.utils import url_path_join
 
 import obstore as obs
@@ -165,6 +166,9 @@ class JupyterDrivesManager():
         """
         if path == '/':
             path = ''
+        else: 
+            path = path.strip('/')
+
         try :
             data = []
             isDir = False
@@ -237,23 +241,198 @@ class JupyterDrivesManager():
         
         return response
     
-    async def new_file(self, drive_name, path, **kwargs):
+    async def new_file(self, drive_name, path):
         """Create a new file or directory at the given path.
         
         Args:
             drive_name: name of drive where the new content is created
             path: path where new content should be created
         """
-        print('New file function called.')
+        data = {}
+        try:
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+
+            # TO DO: switch to mode "created", which is not implemented yet
+            await obs.put_async(self._content_managers[drive_name], path, b"", mode = "overwrite")
+            metadata = await obs.head_async(self._content_managers[drive_name], path)
+
+            data = {
+                "path": path,
+                "content": "",
+                "last_modified": metadata["last_modified"].isoformat(),
+                "size": metadata["size"]
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when creating the object: {e}",
+            )
+        
+        response = {
+            "data": data
+        }
+        return response
+
+    async def save_file(self, drive_name, path, content, options_format, content_format, content_type):
+        """Save file with new content.
+        
+        Args:
+            drive_name: name of drive where file exists
+            path: path where new content should be saved
+            content: content of object
+            options_format: format of content (as sent through contents manager request)
+            content_format: format of content (as defined by the registered file formats in JupyterLab)
+            content_type: type of content (as defined by the registered file types in JupyterLab)
+        """
+        data = {}
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+
+            if options_format == 'json':
+                formatted_content = json.dumps(content, indent=2)
+                formatted_content = formatted_content.encode("utf-8")
+            elif options_format == 'base64' and (content_format == 'base64' or content_type == 'PDF'):
+                # transform base64 encoding to a UTF-8 byte array for saving or storing
+                byte_characters = base64.b64decode(content)
+                
+                byte_arrays = []
+                for offset in range(0, len(byte_characters), 512):
+                    slice_ = byte_characters[offset:offset + 512]
+                    byte_array = bytearray(slice_)
+                    byte_arrays.append(byte_array)
+                
+                # combine byte arrays and wrap in a BytesIO object 
+                formatted_content = BytesIO(b"".join(byte_arrays))
+                formatted_content.seek(0)  # reset cursor for any further reading
+            elif options_format == 'text':
+                formatted_content = content.encode("utf-8")
+            else:
+                formatted_content = content
+
+            await obs.put_async(self._content_managers[drive_name], path, formatted_content, mode = "overwrite")
+            metadata = await obs.head_async(self._content_managers[drive_name], path)
+
+            data = {
+                "path": path,
+                "content": content,
+                "last_modified": metadata["last_modified"].isoformat(),
+                "size": metadata["size"]
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when saving the file: {e}",
+            )
+        
+        response = {
+                "data": data
+            }
+        return response
     
-    async def rename_file(self, drive_name, path, **kwargs):
+    async def rename_file(self, drive_name, path, new_path):
         """Rename a file.
         
         Args:
             drive_name: name of drive where file is located
             path: path of file
+            new_path: path of new file name
         """
-        print('Rename file function called.')
+        data = {}
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+            
+            await obs.rename_async(self._content_managers[drive_name], path, new_path)
+            metadata = await obs.head_async(self._content_managers[drive_name], new_path)
+
+            data = {
+                "path": new_path,
+                "last_modified": metadata["last_modified"].isoformat(),
+                "size": metadata["size"]
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when renaming the object: {e}",
+            )
+        
+        response = {
+                "data": data
+            }
+        return response
+
+    async def delete_file(self, drive_name, path):
+        """Delete an object.
+        
+        Args:
+            drive_name: name of drive where object exists
+            path: path where content is located
+        """
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+            await obs.delete_async(self._content_managers[drive_name], path)
+
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when deleting the object: {e}",
+            )
+        
+        return
+    
+    async def check_file(self, drive_name, path):
+        """Check if an object already exists within a drive.
+        
+        Args:
+            drive_name: name of drive where object exists
+            path: path where content is located
+        """
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+            await obs.head_async(self._content_managers[drive_name], path)
+        except Exception:
+           raise tornado.web.HTTPError(
+            status_code= httpx.codes.NOT_FOUND,
+            reason="Object does not already exist within drive.",
+            )
+        
+        return 
+    
+    async def copy_file(self, drive_name, path, to_path):
+        """Save file with new content.
+        
+        Args:
+            drive_name: name of drive where file exists
+            path: path where original content exists
+            to_path: path where object should be copied
+        """
+        data = {}
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+
+            await obs.copy_async(self._content_managers[drive_name], path, to_path)
+            metadata = await obs.head_async(self._content_managers[drive_name], to_path)
+
+            data = {
+                "path": to_path,
+                "last_modified": metadata["last_modified"].isoformat(),
+                "size": metadata["size"]
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when copying the: {e}",
+            )
+        
+        response = {
+                "data": data
+            }
+        return response
     
     async def _call_provider(
         self,

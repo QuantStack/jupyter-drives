@@ -31,6 +31,7 @@ export async function getDrivesList() {
 
 /**
  * Mount a drive by establishing a connection with it.
+ *
  * @param driveName
  * @param options.provider The provider of the drive to be mounted.
  * @param options.region The region of the drive to be mounted.
@@ -51,8 +52,8 @@ export async function mountDrive(
  * Get contents of a directory or retrieve contents of a specific file.
  *
  * @param driveName
- * @param options.path The path of object to be retrived
- * @param options.path The list containing all registered file types.
+ * @param options.path The path of object to be retrived.
+ * @param options.registeredFileTypes The list containing all registered file types.
  *
  * @returns A promise which resolves with the contents model.
  */
@@ -87,7 +88,9 @@ export async function getContents(
 
           fileList[fileName] = fileList[fileName] ?? {
             name: fileName,
-            path: driveName + '/' + row.path,
+            path: options.path
+              ? PathExt.join(driveName, options.path, fileName)
+              : PathExt.join(driveName, fileName),
             last_modified: row.last_modified,
             created: '',
             content: !fileName.split('.')[1] ? [] : null,
@@ -101,8 +104,8 @@ export async function getContents(
       });
 
       data = {
-        name: options.path ? PathExt.basename(options.path) : '',
-        path: options.path ? options.path + '/' : '',
+        name: options.path ? PathExt.basename(options.path) : driveName,
+        path: PathExt.join(driveName, options.path ? options.path + '/' : ''),
         last_modified: '',
         created: '',
         content: Object.values(fileList),
@@ -122,7 +125,7 @@ export async function getContents(
 
       data = {
         name: PathExt.basename(options.path),
-        path: driveName + '/' + response.data.path,
+        path: PathExt.join(driveName, response.data.path),
         last_modified: response.data.last_modified,
         created: '',
         content: response.data.content,
@@ -136,4 +139,391 @@ export async function getContents(
   }
 
   return data;
+}
+
+/**
+ * Save an object.
+ *
+ * @param driveName
+ * @param options.path The path of the object to be saved.
+ * @param options.param The options sent when getting the request from the content manager.
+ * @param options.registeredFileTypes The list containing all registered file types.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function saveObject(
+  driveName: string,
+  options: {
+    path: string;
+    param: Partial<Contents.IModel>;
+    registeredFileTypes: IRegisteredFileTypes;
+  }
+) {
+  const [fileType, fileMimeType, fileFormat] = getFileType(
+    PathExt.extname(PathExt.basename(options.path)),
+    options.registeredFileTypes
+  );
+
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'PUT',
+    {
+      content: options.param.content,
+      options_format: options.param.format,
+      content_format: fileFormat,
+      content_type: fileType
+    }
+  );
+
+  data = {
+    name: PathExt.basename(options.path),
+    path: PathExt.join(driveName, options.path),
+    last_modified: response.data.last_modified,
+    created: response.data.last_modified,
+    content: response.data.content,
+    format: fileFormat as Contents.FileFormat,
+    mimetype: fileMimeType,
+    size: response.data.size,
+    writable: true,
+    type: fileType
+  };
+  return data;
+}
+
+/**
+ * Create a new object.
+ *
+ * @param driveName
+ * @param options.path The path of new object.
+ * @param options.registeredFileTypes The list containing all registered file types.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function createObject(
+  driveName: string,
+  options: {
+    name: string;
+    path: string;
+    registeredFileTypes: IRegisteredFileTypes;
+  }
+) {
+  const path = options.path
+    ? PathExt.join(options.path, options.name)
+    : options.name;
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + path,
+    'POST'
+  );
+
+  const [fileType, fileMimeType, fileFormat] = getFileType(
+    PathExt.extname(options.name),
+    options.registeredFileTypes
+  );
+
+  data = {
+    name: options.name,
+    path: PathExt.join(driveName, path),
+    last_modified: response.data.last_modified,
+    created: response.data.last_modified,
+    content: response.data.content,
+    format: fileFormat as Contents.FileFormat,
+    mimetype: fileMimeType,
+    size: response.data.size,
+    writable: true,
+    type: fileType
+  };
+  return data;
+}
+
+/**
+ * Delete an object.
+ *
+ * @param driveName
+ * @param options.path The path of object.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function deleteObjects(
+  driveName: string,
+  options: {
+    path: string;
+  }
+) {
+  // get list of contents with given prefix (path)
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'GET'
+  );
+
+  // deleting contents of a directory
+  if (response.data.length !== undefined && response.data.length !== 0) {
+    await Promise.all(
+      response.data.map(async (c: any) => {
+        return Private.deleteSingleObject(driveName, c.path);
+      })
+    );
+  }
+  try {
+    // always deleting the object (file or main directory)
+    return Private.deleteSingleObject(driveName, options.path);
+  } catch (error) {
+    // deleting failed if directory didn't exist and was only part of a path
+  }
+}
+
+/**
+ * Rename an object.
+ *
+ * @param driveName
+ * @param options.path The original path of object.
+ * @param options.newPath The new path of object.
+ * @param options.newFileName The name of the item to be renamed.
+ * @param options.registeredFileTypes The list containing all registered file types.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function renameObjects(
+  driveName: string,
+  options: {
+    path: string;
+    newPath: string;
+    newFileName: string;
+    registeredFileTypes: IRegisteredFileTypes;
+  }
+) {
+  const formattedNewPath =
+    options.newPath.substring(0, options.newPath.lastIndexOf('/') + 1) +
+    options.newFileName;
+
+  const [fileType, fileMimeType, fileFormat] = getFileType(
+    PathExt.extname(PathExt.basename(options.newFileName)),
+    options.registeredFileTypes
+  );
+
+  // get list of contents with given prefix (path)
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'GET'
+  );
+
+  // renaming contents of a directory
+  if (response.data.length !== undefined && response.data.length !== 0) {
+    await Promise.all(
+      response.data.map(async (c: any) => {
+        const remainingFilePath = c.path.substring(options.path.length);
+        Private.renameSingleObject(
+          driveName,
+          PathExt.join(options.path, remainingFilePath),
+          PathExt.join(formattedNewPath, remainingFilePath)
+        );
+      })
+    );
+  }
+  // always rename the object (file or main directory)
+  try {
+    const renamedObject = await Private.renameSingleObject(
+      driveName,
+      options.path,
+      formattedNewPath
+    );
+    data = {
+      name: options.newFileName,
+      path: PathExt.join(driveName, formattedNewPath),
+      last_modified: renamedObject.data.last_modified,
+      created: '',
+      content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
+      format: fileFormat as Contents.FileFormat,
+      mimetype: fileMimeType,
+      size: renamedObject.data.size,
+      writable: true,
+      type: fileType
+    };
+  } catch (error) {
+    // renaming failed if directory didn't exist and was only part of a path
+  }
+
+  return data;
+}
+
+/**
+ * Copy an object.
+ *
+ * @param driveName
+ * @param options.path The path of object.
+ * @param options.toPath The path where object should be copied.
+ * @param options.newFileName The name of the item to be copied.
+ * @param options.registeredFileTypes The list containing all registered file types.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function copyObjects(
+  driveName: string,
+  options: {
+    path: string;
+    toPath: string;
+    newFileName: string;
+    registeredFileTypes: IRegisteredFileTypes;
+  }
+) {
+  const formattedNewPath = PathExt.join(options.toPath, options.newFileName);
+
+  const [fileType, fileMimeType, fileFormat] = getFileType(
+    PathExt.extname(PathExt.basename(options.newFileName)),
+    options.registeredFileTypes
+  );
+
+  // get list of contents with given prefix (path)
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'GET'
+  );
+
+  // copying contents of a directory
+  if (response.data.length !== undefined && response.data.length !== 0) {
+    await Promise.all(
+      response.data.map(async (c: any) => {
+        const remainingFilePath = c.path.substring(options.path.length);
+        Private.copySingleObject(
+          driveName,
+          PathExt.join(options.path, remainingFilePath),
+          PathExt.join(formattedNewPath, remainingFilePath)
+        );
+      })
+    );
+  }
+  // always copy the main object (file or directory)
+  try {
+    const copiedObject = await Private.copySingleObject(
+      driveName,
+      options.path,
+      formattedNewPath
+    );
+    data = {
+      name: options.newFileName,
+      path: PathExt.join(driveName, formattedNewPath),
+      last_modified: copiedObject.data.last_modified,
+      created: '',
+      content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
+      format: fileFormat as Contents.FileFormat,
+      mimetype: fileMimeType,
+      size: copiedObject.data.size,
+      writable: true,
+      type: fileType
+    };
+  } catch (error) {
+    // copied failed if directory didn't exist and was only part of a path
+  }
+
+  return data;
+}
+
+/**
+ * Check existance of an object.
+ *
+ * @param driveName
+ * @param options.path The path to the object.
+ *
+ * @returns A promise which resolves or rejects depending on the object existing.
+ */
+export async function checkObject(
+  driveName: string,
+  options: {
+    path: string;
+  }
+) {
+  await requestAPI<any>('drives/' + driveName + '/' + options.path, 'HEAD');
+}
+
+/**
+ * Count number of appeareances of object name.
+ *
+ * @param driveName:
+ * @param path: The path to the object.
+ * @param originalName: The original name of the object (before it was incremented).
+ *
+ * @returns A promise which resolves with the number of appeareances of object.
+ */
+export const countObjectNameAppearances = async (
+  driveName: string,
+  path: string,
+  originalName: string
+): Promise<number> => {
+  let counter: number = 0;
+  path = path.substring(0, path.lastIndexOf('/'));
+
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + path,
+    'GET'
+  );
+
+  if (response.data && response.data.length !== 0) {
+    response.data.forEach((c: any) => {
+      const fileName = c.path.replace(path ? path + '/' : '', '').split('/')[0];
+      if (
+        fileName.substring(0, originalName.length + 1).includes(originalName)
+      ) {
+        counter += 1;
+      }
+    });
+  }
+
+  return counter;
+};
+
+namespace Private {
+  /**
+   * Helping function for deleting files inside
+   * a directory, in the case of deleting the directory.
+   *
+   * @param driveName
+   * @param objectPath complete path of object to delete
+   */
+  export async function deleteSingleObject(
+    driveName: string,
+    objectPath: string
+  ) {
+    await requestAPI<any>('drives/' + driveName + '/' + objectPath, 'DELETE');
+  }
+
+  /**
+   * Helping function for renaming files inside
+   * a directory, in the case of deleting the directory.
+   *
+   * @param driveName
+   * @param objectPath complete path of object to rename
+   */
+  export async function renameSingleObject(
+    driveName: string,
+    objectPath: string,
+    newObjectPath: string
+  ) {
+    return await requestAPI<any>(
+      'drives/' + driveName + '/' + objectPath,
+      'PATCH',
+      {
+        new_path: newObjectPath
+      }
+    );
+  }
+
+  /**
+   * Helping function for copying files inside
+   * a directory, in the case of deleting the directory.
+   *
+   * @param driveName
+   * @param objectPath complete path of object to copy
+   */
+  export async function copySingleObject(
+    driveName: string,
+    objectPath: string,
+    newObjectPath: string
+  ) {
+    return await requestAPI<any>(
+      'drives/' + driveName + '/' + objectPath,
+      'PUT',
+      {
+        to_path: newObjectPath
+      }
+    );
+  }
 }
