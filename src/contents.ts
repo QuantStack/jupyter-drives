@@ -1,8 +1,25 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
-import { IDriveInfo, IRegisteredFileTypes } from './token';
-import { getContents, mountDrive } from './requests';
+import { PathExt } from '@jupyterlab/coreutils';
+
+import {
+  extractCurrentDrive,
+  formatPath,
+  IDriveInfo,
+  IRegisteredFileTypes
+} from './token';
+import {
+  saveObject,
+  getContents,
+  mountDrive,
+  createObject,
+  checkObject,
+  deleteObjects,
+  countObjectNameAppearances,
+  renameObjects,
+  copyObjects
+} from './requests';
 
 let data: Contents.IModel = {
   name: '',
@@ -194,16 +211,8 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
-    let relativePath = '';
     if (localPath !== '') {
-      // extract current drive name
-      const currentDrive = this._drivesList.filter(
-        x =>
-          x.name ===
-          (localPath.indexOf('/') !== -1
-            ? localPath.substring(0, localPath.indexOf('/'))
-            : localPath)
-      )[0];
+      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
       // when accessed the first time, mount drive
       if (currentDrive.mounted === false) {
@@ -214,18 +223,12 @@ export class Drive implements Contents.IDrive {
           });
           this._drivesList.filter(x => x.name === localPath)[0].mounted = true;
         } catch (e) {
-          console.log(e);
+          // it will give an error if drive is already mounted
         }
       }
 
-      // eliminate drive name from path
-      relativePath =
-        localPath.indexOf('/') !== -1
-          ? localPath.substring(localPath.indexOf('/') + 1)
-          : '';
-
       data = await getContents(currentDrive.name, {
-        path: relativePath,
+        path: formatPath(localPath),
         registeredFileTypes: this._registeredFileTypes
       });
     } else {
@@ -273,30 +276,39 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the created file content when the
    *    file is created.
    */
-
   async newUntitled(
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
-    /*let body = '{}';
-    if (options) {
-      if (options.ext) {
-        options.ext = Private.normalizeExtension(options.ext);
-      }
-      body = JSON.stringify(options);
-    }
+    const path = options.path ?? '';
 
-    const settings = this.serverSettings;
-    const url = this._getUrl(options.path ?? '');
-    const init = {
-      method: 'POST',
-      body
-    };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    if (response.status !== 201) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
+    if (path !== '') {
+      const currentDrive = extractCurrentDrive(path, this._drivesList);
+
+      // eliminate drive name from path
+      const relativePath =
+        path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
+
+      // get current list of contents of drive
+      const old_data = await getContents(currentDrive.name, {
+        path: relativePath,
+        registeredFileTypes: this._registeredFileTypes
+      });
+
+      if (options.type !== undefined) {
+        // get incremented untitled name
+        const name = this.incrementUntitledName(old_data, options);
+        data = await createObject(currentDrive.name, {
+          name: name,
+          path: relativePath,
+          registeredFileTypes: this._registeredFileTypes
+        });
+      } else {
+        console.warn('Type of new element is undefined');
+      }
+    } else {
+      // create new element at root would mean creating a new drive
+      console.warn('Operation not supported.');
     }
-    const data = await response.json();*/
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -317,6 +329,9 @@ export class Drive implements Contents.IDrive {
     let countText = 0;
     let countDir = 0;
     let countNotebook = 0;
+    if (options.type === 'notebook') {
+      options.ext = 'ipynb';
+    }
 
     content.forEach(item => {
       if (options.ext !== undefined) {
@@ -363,21 +378,17 @@ export class Drive implements Contents.IDrive {
    *
    * @returns A promise which resolves when the file is deleted.
    */
-  /*delete(path: string): Promise<void> {
-    return Promise.reject('Repository is read only');
-  }*/
-
   async delete(localPath: string): Promise<void> {
-    /*const url = this._getUrl(localPath);
-    const settings = this.serverSettings;
-    const init = { method: 'DELETE' };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    // TODO: update IPEP27 to specify errors more precisely, so
-    // that error types can be detected here with certainty.
-    if (response.status !== 204) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
-    }*/
+    if (localPath !== '') {
+      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
+
+      await deleteObjects(currentDrive.name, {
+        path: formatPath(localPath)
+      });
+    } else {
+      // create new element at root would mean modifying a drive
+      console.warn('Operation not supported.');
+    }
 
     this._fileChanged.emit({
       type: 'delete',
@@ -404,27 +415,81 @@ export class Drive implements Contents.IDrive {
     newLocalPath: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
-    /*const settings = this.serverSettings;
-    const url = this._getUrl(oldLocalPath);
-    const init = {
-      method: 'PATCH',
-      body: JSON.stringify({ path: newLocalPath })
-    };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    if (response.status !== 200) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
-    }
-    const data = await response.json();*/
+    if (oldLocalPath !== '') {
+      const currentDrive = extractCurrentDrive(oldLocalPath, this._drivesList);
 
+      // eliminate drive name from path
+      const relativePath = formatPath(oldLocalPath);
+      const newRelativePath = formatPath(newLocalPath);
+
+      // extract new file name
+      let newFileName = PathExt.basename(newRelativePath);
+
+      try {
+        // check if object with chosen name already exists
+        await checkObject(currentDrive.name, {
+          path: newRelativePath
+        });
+        newFileName = await this.incrementName(
+          newRelativePath,
+          currentDrive.name
+        );
+      } catch (error) {
+        // HEAD request failed for this file name, continue, as name doesn't already exist.
+      } finally {
+        data = await renameObjects(currentDrive.name, {
+          path: relativePath,
+          newPath: newRelativePath,
+          newFileName: newFileName,
+          registeredFileTypes: this._registeredFileTypes
+        });
+      }
+    } else {
+      // create new element at root would mean modifying a drive
+      console.warn('Operation not supported.');
+    }
+
+    Contents.validateContentsModel(data);
     this._fileChanged.emit({
       type: 'rename',
       oldValue: { path: oldLocalPath },
-      newValue: { path: newLocalPath }
+      newValue: data
     });
-    Contents.validateContentsModel(data);
     return data;
   }
+
+  /**
+   * Helping function to increment name of existing files or directorties.
+   *
+   * @param localPath - Path to file.
+   *
+   * @param driveName - The name of the drive where content is counted.
+
+   */
+  async incrementName(localPath: string, driveName: string) {
+    let fileExtension: string = '';
+    let originalName: string = '';
+
+    // extract name from path
+    originalName = PathExt.basename(localPath);
+    // eliminate file extension
+    fileExtension = PathExt.extname(originalName);
+    originalName =
+      fileExtension !== ''
+        ? originalName.split('.')[originalName.split('.').length - 2]
+        : originalName;
+
+    const counter = await countObjectNameAppearances(
+      driveName,
+      localPath,
+      originalName
+    );
+    let newName = counter ? originalName + counter : originalName;
+    newName = fileExtension !== '' ? newName + fileExtension : newName;
+
+    return newName;
+  }
+
   /**
    * Save a file.
    *
@@ -444,19 +509,18 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options: Partial<Contents.IModel> = {}
   ): Promise<Contents.IModel> {
-    /*const settings = this.serverSettings;
-    const url = this._getUrl(localPath);
-    const init = {
-      method: 'PUT',
-      body: JSON.stringify(options)
-    };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    // will return 200 for an existing file and 201 for a new file
-    if (response.status !== 200 && response.status !== 201) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
+    if (localPath !== '') {
+      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
+
+      data = await saveObject(currentDrive.name, {
+        path: formatPath(localPath),
+        param: options,
+        registeredFileTypes: this._registeredFileTypes
+      });
+    } else {
+      // create new element at root would mean modifying a drive
+      console.warn('Operation not supported.');
     }
-    const data = await response.json();*/
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -465,6 +529,43 @@ export class Drive implements Contents.IDrive {
       newValue: data
     });
     return data;
+  }
+
+  /**
+   * Helping function for copying an object.
+   *
+   * @param copiedItemPath - The original file path.
+   *
+   * @param toPath - The path where item will be copied.
+   *
+   * @param driveName - The name of the drive where content is moved.
+   *
+   * @returns A promise which resolves with the new name when the
+   *  file is copied.
+   */
+  async incrementCopyName(
+    copiedItemPath: string,
+    toPath: string,
+    driveName: string
+  ) {
+    // extracting original file name
+    const originalFileName = PathExt.basename(copiedItemPath);
+
+    // constructing new file name and path with -Copy string
+    const newFileName =
+      PathExt.extname(originalFileName) === ''
+        ? originalFileName + '-Copy'
+        : originalFileName.split('.')[0] +
+          '-Copy.' +
+          originalFileName.split('.')[1];
+
+    const newFilePath = PathExt.join(toPath, newFileName);
+    // copiedItemPath.substring(0, copiedItemPath.lastIndexOf('/') + 1) + newFileName;
+
+    // getting incremented name of Copy in case of duplicates
+    const incrementedName = await this.incrementName(newFilePath, driveName);
+
+    return incrementedName;
   }
 
   /**
@@ -477,79 +578,35 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the new contents model when the
    *  file is copied.
    */
-
-  incrementCopyName(contents: Contents.IModel, copiedItemPath: string): string {
-    const content: Array<Contents.IModel> = contents.content;
-    let name: string = '';
-    let countText = 0;
-    let countDir = 0;
-    let countNotebook = 0;
-    let ext = undefined;
-    const list1 = copiedItemPath.split('/');
-    const copiedItemName = list1[list1.length - 1];
-
-    const list2 = copiedItemName.split('.');
-    let rootName = list2[0];
-
-    content.forEach(item => {
-      if (item.name.includes(rootName) && item.name.includes('.txt')) {
-        ext = '.txt';
-        if (rootName.includes('-Copy')) {
-          const list3 = rootName.split('-Copy');
-          countText = parseInt(list3[1]) + 1;
-          rootName = list3[0];
-        } else {
-          countText = countText + 1;
-        }
-      }
-      if (item.name.includes(rootName) && item.name.includes('.ipynb')) {
-        ext = '.ipynb';
-        if (rootName.includes('-Copy')) {
-          const list3 = rootName.split('-Copy');
-          countNotebook = parseInt(list3[1]) + 1;
-          rootName = list3[0];
-        } else {
-          countNotebook = countNotebook + 1;
-        }
-      } else if (item.name.includes(rootName)) {
-        if (rootName.includes('-Copy')) {
-          const list3 = rootName.split('-Copy');
-          countDir = parseInt(list3[1]) + 1;
-          rootName = list3[0];
-        } else {
-          countDir = countDir + 1;
-        }
-      }
-    });
-
-    if (ext === '.txt') {
-      name = rootName + '-Copy' + countText + ext;
-    }
-    if (ext === 'ipynb') {
-      name = rootName + '-Copy' + countText + ext;
-    } else if (ext === undefined) {
-      name = rootName + '-Copy' + countDir;
-    }
-
-    return name;
-  }
   async copy(
-    fromFile: string,
+    path: string,
     toDir: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
-    /*const settings = this.serverSettings;
-    const url = this._getUrl(toDir);
-    const init = {
-      method: 'POST',
-      body: JSON.stringify({ copy_from: fromFile })
-    };
-    const response = await ServerConnection.makeRequest(url, init, settings);
-    if (response.status !== 201) {
-      const err = await ServerConnection.ResponseError.create(response);
-      throw err;
+    if (path !== '') {
+      const currentDrive = extractCurrentDrive(path, this._drivesList);
+
+      // eliminate drive name from path
+      const relativePath = formatPath(path);
+      const toRelativePath = formatPath(toDir);
+
+      // construct new file or directory name for the copy
+      const newFileName = await this.incrementCopyName(
+        relativePath,
+        toRelativePath,
+        currentDrive.name
+      );
+
+      data = await copyObjects(currentDrive.name, {
+        path: relativePath,
+        toPath: toRelativePath,
+        newFileName: newFileName,
+        registeredFileTypes: this._registeredFileTypes
+      });
+    } else {
+      // create new element at root would mean modifying a drive
+      console.warn('Operation not supported.');
     }
-    const data = await response.json();*/
 
     this._fileChanged.emit({
       type: 'new',

@@ -84,6 +84,25 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
         result = await self._manager.rename_file(drive, path, **body)
         self.finish(result)
 
+    @tornado.web.authenticated
+    async def put(self, drive: str = "", path: str = ""):
+        body = self.get_json_body()
+        if 'content' in body: 
+            result = await self._manager.save_file(drive, path, **body)
+        elif 'to_path' in body: 
+            result = await self._manager.copy_file(drive, path, **body)
+        self.finish(result)
+    
+    @tornado.web.authenticated
+    async def delete(self, drive: str = "", path: str = ""):
+        result = await self._manager.delete_file(drive, path)
+        self.finish(result)
+
+    @tornado.web.authenticated
+    async def head(self, drive: str = "", path: str = ""):
+        result = await self._manager.check_file(drive, path)
+        self.finish(result)
+
 handlers = [
     ("drives", ListJupyterDrivesHandler)
 ]
