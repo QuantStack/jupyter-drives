@@ -240,13 +240,16 @@ class JupyterDrivesManager():
                 }
 
             # dealing with the case of an empty directory, making sure it is not an empty file
-            # TO DO: find better way to check
             if emptyDir is True: 
                 ext_list = ['.R', '.bmp', '.csv', '.gif', '.html', '.ipynb', '.jl', '.jpeg', '.jpg', '.json', '.jsonl', '.md', '.ndjson', '.pdf', '.png', '.py', '.svg', '.tif', '.tiff', '.tsv', '.txt', '.webp', '.yaml', '.yml']
                 object_name = os.path.basename(path)
                 # if object doesn't contain . or doesn't end in one of the registered extensions
                 if object_name.find('.') == -1 or ext_list.count(os.path.splitext(object_name)[1]) == 0:
                     data = []
+                
+                # remove upper logic once directories are fixed
+                check = self._check_object(drive_name, path)
+                print(check)
 
             response = {
                 "data": data
