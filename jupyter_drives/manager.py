@@ -272,8 +272,8 @@ class JupyterDrivesManager():
             path = path.strip('/')
 
             # TO DO: switch to mode "created", which is not implemented yet
-            await obs.put_async(self._content_managers[drive_name], path, b"", mode = "overwrite")
-            metadata = await obs.head_async(self._content_managers[drive_name], path)
+            await obs.put_async(self._content_managers[drive_name]["store"], path, b"", mode = "overwrite")
+            metadata = await obs.head_async(self._content_managers[drive_name]["store"], path)
 
             data = {
                 "path": path,
@@ -329,8 +329,8 @@ class JupyterDrivesManager():
             else:
                 formatted_content = content
 
-            await obs.put_async(self._content_managers[drive_name], path, formatted_content, mode = "overwrite")
-            metadata = await obs.head_async(self._content_managers[drive_name], path)
+            await obs.put_async(self._content_managers[drive_name]["store"], path, formatted_content, mode = "overwrite")
+            metadata = await obs.head_async(self._content_managers[drive_name]["store"], path)
 
             data = {
                 "path": path,
@@ -362,8 +362,8 @@ class JupyterDrivesManager():
             # eliminate leading and trailing backslashes
             path = path.strip('/')
             
-            await obs.rename_async(self._content_managers[drive_name], path, new_path)
-            metadata = await obs.head_async(self._content_managers[drive_name], new_path)
+            await obs.rename_async(self._content_managers[drive_name]["store"], path, new_path)
+            metadata = await obs.head_async(self._content_managers[drive_name]["store"], new_path)
 
             data = {
                 "path": new_path,
@@ -391,7 +391,7 @@ class JupyterDrivesManager():
         try: 
             # eliminate leading and trailing backslashes
             path = path.strip('/')
-            await obs.delete_async(self._content_managers[drive_name], path)
+            await obs.delete_async(self._content_managers[drive_name]["store"], path)
 
         except Exception as e:
             raise tornado.web.HTTPError(
@@ -411,7 +411,7 @@ class JupyterDrivesManager():
         try: 
             # eliminate leading and trailing backslashes
             path = path.strip('/')
-            await obs.head_async(self._content_managers[drive_name], path)
+            await obs.head_async(self._content_managers[drive_name]["store"], path)
         except Exception:
            raise tornado.web.HTTPError(
             status_code= httpx.codes.NOT_FOUND,
@@ -433,8 +433,8 @@ class JupyterDrivesManager():
             # eliminate leading and trailing backslashes
             path = path.strip('/')
 
-            await obs.copy_async(self._content_managers[drive_name], path, to_path)
-            metadata = await obs.head_async(self._content_managers[drive_name], to_path)
+            await obs.copy_async(self._content_managers[drive_name]["store"], path, to_path)
+            metadata = await obs.head_async(self._content_managers[drive_name]["store"], to_path)
 
             data = {
                 "path": to_path,
