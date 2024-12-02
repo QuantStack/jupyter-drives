@@ -274,21 +274,22 @@ class JupyterDrivesManager():
         try:
             # eliminate leading and trailing backslashes
             path = path.strip('/')
+            print('isDir: ', is_dir)
 
             if is_dir == False or self._config.provider != 's3':
                 # TO DO: switch to mode "created", which is not implemented yet
                 await obs.put_async(self._content_managers[drive_name]["store"], path, b"", mode = "overwrite")
+                metadata = await obs.head_async(self._content_managers[drive_name]["store"], path)
+                data = {
+                    "path": path,
+                    "content": "",
+                    "last_modified": metadata["last_modified"].isoformat(),
+                    "size": metadata["size"]
+                }
             elif is_dir == True and self._config.provider == 's3': 
                 # create an empty directory through boto, as obstore does not allow it
-                self._create_empty_directory(drive_name, path)
-            metadata = await obs.head_async(self._content_managers[drive_name]["store"], path)
-
-            data = {
-                "path": path,
-                "content": "",
-                "last_modified": metadata["last_modified"].isoformat(),
-                "size": metadata["size"]
-            }
+                data = self._create_empty_directory(drive_name, path)
+        
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
@@ -526,19 +527,28 @@ class JupyterDrivesManager():
             drive_name: name of drive where to create object
             path: path of new object
         """
+        data = {}
         try:
             location = self._content_managers[drive_name]["location"]
             if location not in self._s3_clients:
                 self._s3_clients[location] = self._s3_session.client('s3', location)
 
-            self._s3_clients[location].put_object(Bucket=drive_name, Key=path+'/')
+            self._s3_clients[location].put_object(Bucket = drive_name, Key = path + '/')
+            metadata = self._s3_clients[location].head_object(Bucket = drive_name, Key = path + '/')
+            
+            data = {
+                "path": path,
+                "content": "",
+                "last_modified": metadata["LastModified"].isoformat(),
+                "size": 0
+            }
         except Exception as e:
              raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
             reason=f"The following error occured when creating the directory: {e}",
             )
 
-        return
+        return data
     
     async def _delete_directories(self, drive_name, path):
         """Helping function to delete directories, when dealing with S3 buckets.
