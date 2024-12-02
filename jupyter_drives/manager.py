@@ -399,8 +399,22 @@ class JupyterDrivesManager():
         try: 
             # eliminate leading and trailing backslashes
             path = path.strip('/')
-            await obs.delete_async(self._content_managers[drive_name]["store"], path)
 
+            # get list of contents with given prefix (path)
+            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=100, return_arrow=True)
+            async for batch in stream:
+                contents_list = pyarrow.record_batch(batch).to_pylist()
+                # delete each object within directory
+                for object in contents_list:
+                    await obs.delete_async(self._content_managers[drive_name]["store"], object["path"])
+            
+            # delete file
+            await obs.delete_async(self._content_managers[drive_name]["store"], path)
+            
+            # when dealing with S3 directory, use helping function to delete remaining directories
+            if self._config.provider == 's3':
+                await self._delete_directories(drive_name, path)
+            
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
@@ -507,7 +521,7 @@ class JupyterDrivesManager():
     
     def _create_empty_directory(self, drive_name, path):
         """Helping function to create an empty directory, when dealing with S3 buckets.
-        
+
         Args:
             drive_name: name of drive where to create object
             path: path of new object
@@ -522,6 +536,36 @@ class JupyterDrivesManager():
              raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
             reason=f"The following error occured when creating the directory: {e}",
+            )
+
+        return
+    
+    async def _delete_directories(self, drive_name, path):
+        """Helping function to delete directories, when dealing with S3 buckets.
+
+        Args:
+            drive_name: name of drive where to create object
+            path: path of new object
+        """
+        try:
+            location = self._content_managers[drive_name]["location"]
+            if location not in self._s3_clients:
+                self._s3_clients[location] = self._s3_session.client('s3', location)
+
+            # delete remaining sub-directories
+            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=100, return_arrow=True)
+            async for batch in stream:
+                contents_list = pyarrow.record_batch(batch).to_pylist()
+                for object in contents_list:
+                    self._s3_clients[location].delete_object(Bucket=drive_name, Key=object["path"]+'/')
+            
+            # delete main directory
+            self._s3_clients[location].delete_object(Bucket=drive_name, Key=path+'/')
+            
+        except Exception as e:
+             raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when deleting the directory: {e}",
             )
 
         return 

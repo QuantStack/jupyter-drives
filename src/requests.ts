@@ -254,26 +254,7 @@ export async function deleteObjects(
     path: string;
   }
 ) {
-  // get list of contents with given prefix (path)
-  const response = await requestAPI<any>(
-    'drives/' + driveName + '/' + options.path,
-    'GET'
-  );
-
-  // deleting contents of a directory
-  if (response.data.length !== undefined && response.data.length !== 0) {
-    await Promise.all(
-      response.data.map(async (c: any) => {
-        return Private.deleteSingleObject(driveName, c.path);
-      })
-    );
-  }
-  try {
-    // always deleting the object (file or main directory)
-    return Private.deleteSingleObject(driveName, options.path);
-  } catch (error) {
-    // deleting failed if directory didn't exist and was only part of a path
-  }
+  await requestAPI<any>('drives/' + driveName + '/' + options.path, 'DELETE');
 }
 
 /**
@@ -476,20 +457,6 @@ export const countObjectNameAppearances = async (
 };
 
 namespace Private {
-  /**
-   * Helping function for deleting files inside
-   * a directory, in the case of deleting the directory.
-   *
-   * @param driveName
-   * @param objectPath complete path of object to delete
-   */
-  export async function deleteSingleObject(
-    driveName: string,
-    objectPath: string
-  ) {
-    await requestAPI<any>('drives/' + driveName + '/' + objectPath, 'DELETE');
-  }
-
   /**
    * Helping function for renaming files inside
    * a directory, in the case of deleting the directory.
