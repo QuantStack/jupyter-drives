@@ -195,6 +195,7 @@ export async function saveObject(
  *
  * @param driveName
  * @param options.path The path of new object.
+ * @param options.isDir A boolean variable showing if we are dealing with a directory or file.
  * @param options.registeredFileTypes The list containing all registered file types.
  *
  * @returns A promise which resolves with the contents model.
@@ -204,6 +205,7 @@ export async function createObject(
   options: {
     name: string;
     path: string;
+    isDir: boolean;
     registeredFileTypes: IRegisteredFileTypes;
   }
 ) {
@@ -212,7 +214,10 @@ export async function createObject(
     : options.name;
   const response = await requestAPI<any>(
     'drives/' + driveName + '/' + path,
-    'POST'
+    'POST',
+    {
+      is_dir: options.isDir
+    }
   );
 
   const [fileType, fileMimeType, fileFormat] = getFileType(
