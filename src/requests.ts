@@ -195,6 +195,7 @@ export async function saveObject(
  *
  * @param driveName
  * @param options.path The path of new object.
+ * @param options.isDir A boolean variable showing if we are dealing with a directory or file.
  * @param options.registeredFileTypes The list containing all registered file types.
  *
  * @returns A promise which resolves with the contents model.
@@ -204,6 +205,7 @@ export async function createObject(
   options: {
     name: string;
     path: string;
+    isDir: boolean;
     registeredFileTypes: IRegisteredFileTypes;
   }
 ) {
@@ -212,7 +214,10 @@ export async function createObject(
     : options.name;
   const response = await requestAPI<any>(
     'drives/' + driveName + '/' + path,
-    'POST'
+    'POST',
+    {
+      is_dir: options.isDir
+    }
   );
 
   const [fileType, fileMimeType, fileFormat] = getFileType(
@@ -249,26 +254,7 @@ export async function deleteObjects(
     path: string;
   }
 ) {
-  // get list of contents with given prefix (path)
-  const response = await requestAPI<any>(
-    'drives/' + driveName + '/' + options.path,
-    'GET'
-  );
-
-  // deleting contents of a directory
-  if (response.data.length !== undefined && response.data.length !== 0) {
-    await Promise.all(
-      response.data.map(async (c: any) => {
-        return Private.deleteSingleObject(driveName, c.path);
-      })
-    );
-  }
-  try {
-    // always deleting the object (file or main directory)
-    return Private.deleteSingleObject(driveName, options.path);
-  } catch (error) {
-    // deleting failed if directory didn't exist and was only part of a path
-  }
+  await requestAPI<any>('drives/' + driveName + '/' + options.path, 'DELETE');
 }
 
 /**
@@ -300,47 +286,26 @@ export async function renameObjects(
     options.registeredFileTypes
   );
 
-  // get list of contents with given prefix (path)
   const response = await requestAPI<any>(
     'drives/' + driveName + '/' + options.path,
-    'GET'
+    'PATCH',
+    {
+      new_path: formattedNewPath
+    }
   );
 
-  // renaming contents of a directory
-  if (response.data.length !== undefined && response.data.length !== 0) {
-    await Promise.all(
-      response.data.map(async (c: any) => {
-        const remainingFilePath = c.path.substring(options.path.length);
-        Private.renameSingleObject(
-          driveName,
-          PathExt.join(options.path, remainingFilePath),
-          PathExt.join(formattedNewPath, remainingFilePath)
-        );
-      })
-    );
-  }
-  // always rename the object (file or main directory)
-  try {
-    const renamedObject = await Private.renameSingleObject(
-      driveName,
-      options.path,
-      formattedNewPath
-    );
-    data = {
-      name: options.newFileName,
-      path: PathExt.join(driveName, formattedNewPath),
-      last_modified: renamedObject.data.last_modified,
-      created: '',
-      content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
-      format: fileFormat as Contents.FileFormat,
-      mimetype: fileMimeType,
-      size: renamedObject.data.size,
-      writable: true,
-      type: fileType
-    };
-  } catch (error) {
-    // renaming failed if directory didn't exist and was only part of a path
-  }
+  data = {
+    name: options.newFileName,
+    path: PathExt.join(driveName, formattedNewPath),
+    last_modified: response.data.last_modified,
+    created: '',
+    content: null,
+    format: fileFormat as Contents.FileFormat,
+    mimetype: fileMimeType,
+    size: response.data.size,
+    writable: true,
+    type: fileType
+  };
 
   return data;
 }
@@ -471,41 +436,6 @@ export const countObjectNameAppearances = async (
 };
 
 namespace Private {
-  /**
-   * Helping function for deleting files inside
-   * a directory, in the case of deleting the directory.
-   *
-   * @param driveName
-   * @param objectPath complete path of object to delete
-   */
-  export async function deleteSingleObject(
-    driveName: string,
-    objectPath: string
-  ) {
-    await requestAPI<any>('drives/' + driveName + '/' + objectPath, 'DELETE');
-  }
-
-  /**
-   * Helping function for renaming files inside
-   * a directory, in the case of deleting the directory.
-   *
-   * @param driveName
-   * @param objectPath complete path of object to rename
-   */
-  export async function renameSingleObject(
-    driveName: string,
-    objectPath: string,
-    newObjectPath: string
-  ) {
-    return await requestAPI<any>(
-      'drives/' + driveName + '/' + objectPath,
-      'PATCH',
-      {
-        new_path: newObjectPath
-      }
-    );
-  }
-
   /**
    * Helping function for copying files inside
    * a directory, in the case of deleting the directory.
