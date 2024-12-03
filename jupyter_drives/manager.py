@@ -2,6 +2,7 @@ import http
 import json
 import logging
 from typing import Dict, List, Optional, Tuple, Union, Any
+from datetime import datetime
 
 import os
 import tornado
@@ -274,7 +275,6 @@ class JupyterDrivesManager():
         try:
             # eliminate leading and trailing backslashes
             path = path.strip('/')
-            print('isDir: ', is_dir)
 
             if is_dir == False or self._config.provider != 's3':
                 # TO DO: switch to mode "created", which is not implemented yet
@@ -367,18 +367,39 @@ class JupyterDrivesManager():
             new_path: path of new file name
         """
         data = {}
+        finished = False
         try: 
             # eliminate leading and trailing backslashes
             path = path.strip('/')
-            
-            await obs.rename_async(self._content_managers[drive_name]["store"], path, new_path)
-            metadata = await obs.head_async(self._content_managers[drive_name]["store"], new_path)
 
-            data = {
-                "path": new_path,
-                "last_modified": metadata["last_modified"].isoformat(),
-                "size": metadata["size"]
-            }
+            # get list of contents with given prefix (path)
+            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=100, return_arrow=True)
+            async for batch in stream:
+                contents_list = pyarrow.record_batch(batch).to_pylist()
+                # rename each object within directory
+                for object in contents_list:
+                    finished = True
+                    remaining_path = object["path"][len(path)+1:]
+                    old_path = path if remaining_path == '' else os.path.join(path, remaining_path)
+                    formatted_new_path = new_path if remaining_path == '' else os.path.join(new_path, remaining_path)
+                    try:
+                        await obs.rename_async(self._content_managers[drive_name]["store"], old_path, formatted_new_path)
+                    except Exception as e:
+                        # we are dealing with a directory rename in S3 and obstore doesn't find the object
+                        if self._config.provider == 's3':
+                            self._rename_directory(drive_name, old_path, formatted_new_path)
+                        else: 
+                            raise tornado.web.HTTPError(
+                            status_code= httpx.codes.BAD_REQUEST,
+                            reason=f"The following error occured when renaming the object: {e}",
+                            )
+                        
+            # no extra S3 directories to rename
+            if data == {} and finished == False:
+                # rename single file from root(won't be listed above)
+                await obs.rename_async(self._content_managers[drive_name]["store"], path, new_path)
+            
+            data = await self._get_metadata(drive_name, new_path)
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
@@ -573,12 +594,68 @@ class JupyterDrivesManager():
             self._s3_clients[location].delete_object(Bucket=drive_name, Key=path+'/')
             
         except Exception as e:
-             raise tornado.web.HTTPError(
+            raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
             reason=f"The following error occured when deleting the directory: {e}",
             )
 
         return 
+    
+    def _rename_directory(self, drive_name, path, new_path):
+        """Helping function to rename directories, when dealing with S3 buckets.
+
+        Args:
+            drive_name: name of drive where to create object
+            path: path of object
+            new_path: new path of object
+        """
+        try:
+            location = self._content_managers[drive_name]["location"]
+            if location not in self._s3_clients:
+                self._s3_clients[location] = self._s3_session.client('s3', location)
+
+            self._s3_clients[location].copy_object(Bucket=drive_name, CopySource=os.path.join(drive_name, path)+'/', Key=new_path + '/')
+            self._s3_clients[location].delete_object(Bucket=drive_name, Key = path + '/')
+        except Exception:
+           # object is not found if we are not dealing with directory
+           pass
+
+        return
+    
+    async def _get_metadata(self, drive_name, path):
+        """Helping function to get metadata of object.
+
+        Args:
+            drive_name: name of drive where to create object
+            path: path of object
+        """
+        try:
+            metadata = await obs.head_async(self._content_managers[drive_name]["store"], path)
+            data = {
+                "path": path,
+                "last_modified": metadata["last_modified"].isoformat(),
+                "size": metadata["size"]
+            }
+        except Exception:
+            try:
+                location = self._content_managers[drive_name]["location"]
+                if location not in self._s3_clients:
+                    self._s3_clients[location] = self._s3_session.client('s3', location)
+
+                metadata = self._s3_clients[location].head_object(Bucket=drive_name, Key=path + '/')
+                data = {
+                    "path": path,
+                    "last_modified": metadata["last_modified"].isoformat(),
+                    "size": metadata["size"]
+                }
+            except Exception:
+                data = {
+                    "path": path, 
+                    "last_modified": datetime.now().isoformat(),
+                    "size": 0
+                }
+        
+        return data
     
     async def _call_provider(
         self,
