@@ -597,6 +597,7 @@ export class Drive implements Contents.IDrive {
   ): Promise<Contents.IModel> {
     if (path !== '') {
       const currentDrive = extractCurrentDrive(path, this._drivesList);
+      const toDrive = extractCurrentDrive(toDir, this._drivesList);
 
       // eliminate drive name from path
       const relativePath = formatPath(path);
@@ -606,13 +607,14 @@ export class Drive implements Contents.IDrive {
       const newFileName = await this.incrementCopyName(
         relativePath,
         toRelativePath,
-        currentDrive.name
+        toDrive.name
       );
 
       data = await copyObjects(currentDrive.name, {
         path: relativePath,
         toPath: toRelativePath,
         newFileName: newFileName,
+        toDrive: toDrive.name,
         registeredFileTypes: this._registeredFileTypes
       });
     } else {

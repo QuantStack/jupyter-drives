@@ -426,21 +426,39 @@ class JupyterDrivesManager():
         
         return 
     
-    async def copy_file(self, drive_name, path, to_path):
+    async def copy_file(self, drive_name, path, to_path, to_drive):
         """Save file with new content.
         
         Args:
             drive_name: name of drive where file exists
             path: path where original content exists
             to_path: path where object should be copied
+            to_drive: name of drive where to copy object
         """
         data = {}
         try: 
             # eliminate leading and trailing backslashes
             path = path.strip('/')
 
-            await obs.copy_async(self._content_managers[drive_name]["store"], path, to_path)
-            metadata = await obs.head_async(self._content_managers[drive_name]["store"], to_path)
+            # copy object within same drive
+            if to_drive == drive_name:
+                await obs.copy_async(self._content_managers[drive_name]["store"], path, to_path)
+                metadata = await obs.head_async(self._content_managers[drive_name]["store"], to_path)
+            # copy object to another drive
+            else:
+                content = b''
+                try:
+                    # retrieving contents of file
+                    file = await obs.get_async(self._content_managers[drive_name]["store"], path)
+                    stream = file.stream(min_chunk_size=5 * 1024 * 1024) # 5MB sized chunks
+                    async for buf in stream: 
+                        content += buf
+                except: 
+                    # dealing with a directory, no contents to retrieve
+                    pass
+
+                await obs.put_async(self._content_managers[to_drive]["store"], to_path, content)                
+                metadata = await obs.head_async(self._content_managers[to_drive]["store"], to_path)
 
             data = {
                 "path": to_path,

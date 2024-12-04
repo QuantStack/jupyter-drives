@@ -362,6 +362,7 @@ export async function copyObjects(
     path: string;
     toPath: string;
     newFileName: string;
+    toDrive: string;
     registeredFileTypes: IRegisteredFileTypes;
   }
 ) {
@@ -385,6 +386,7 @@ export async function copyObjects(
         const remainingFilePath = c.path.substring(options.path.length);
         Private.copySingleObject(
           driveName,
+          options.toDrive,
           PathExt.join(options.path, remainingFilePath),
           PathExt.join(formattedNewPath, remainingFilePath)
         );
@@ -395,12 +397,13 @@ export async function copyObjects(
   try {
     const copiedObject = await Private.copySingleObject(
       driveName,
+      options.toDrive,
       options.path,
       formattedNewPath
     );
     data = {
       name: options.newFileName,
-      path: PathExt.join(driveName, formattedNewPath),
+      path: PathExt.join(options.toDrive, formattedNewPath),
       last_modified: copiedObject.data.last_modified,
       created: '',
       content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
@@ -540,6 +543,7 @@ namespace Private {
    */
   export async function copySingleObject(
     driveName: string,
+    toDrive: string,
     objectPath: string,
     newObjectPath: string
   ) {
@@ -547,7 +551,8 @@ namespace Private {
       'drives/' + driveName + '/' + objectPath,
       'PUT',
       {
-        to_path: newObjectPath
+        to_path: newObjectPath,
+        to_drive: toDrive
       }
     );
   }
