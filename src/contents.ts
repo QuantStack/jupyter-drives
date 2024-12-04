@@ -18,7 +18,8 @@ import {
   deleteObjects,
   countObjectNameAppearances,
   renameObjects,
-  copyObjects
+  copyObjects,
+  presignedLink
 } from './requests';
 
 let data: Contents.IModel = {
@@ -191,9 +192,20 @@ export class Drive implements Contents.IDrive {
    * use [[ContentsManager.getAbsolutePath]] to get an absolute
    * path if necessary.
    */
-  getDownloadUrl(path: string): Promise<string> {
-    // Parse the path into user/repo/path
-    return Promise.reject('Empty getDownloadUrl method');
+  async getDownloadUrl(path: string): Promise<string> {
+    let link = '';
+    if (path !== '') {
+      const currentDrive = extractCurrentDrive(path, this._drivesList);
+
+      link = await presignedLink(currentDrive.name, {
+        path: formatPath(path)
+      });
+    } else {
+      // download URL for drive not supported
+      console.warn('Operation not supported.');
+    }
+
+    return link;
   }
 
   /**

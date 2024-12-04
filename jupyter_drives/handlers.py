@@ -91,6 +91,8 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
             result = await self._manager.save_file(drive, path, **body)
         elif 'to_path' in body: 
             result = await self._manager.copy_file(drive, path, **body)
+        elif 'presigned_link' in body:
+            result = await self._manager.presigned_link(drive, path)
         self.finish(result)
     
     @tornado.web.authenticated

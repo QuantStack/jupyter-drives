@@ -21,7 +21,7 @@ export const AUTH_ERROR_MESSAGES = [
  * @param endPoint API REST end point for the extension; default ''
  * @param method HTML method; default 'GET'
  * @param body JSON object to be passed as body or null; default null
- * @param namespace API namespace; default 'git'
+ * @param namespace API namespace;
  * @returns The response body interpreted as JSON
  *
  * @throws {ServerConnection.NetworkError} If the request cannot be made

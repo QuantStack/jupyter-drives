@@ -418,6 +418,31 @@ export async function copyObjects(
 }
 
 /**
+ * Get presigned link of object.
+ *
+ * @param driveName:
+ * @param optinons. path: The path to the object.
+ *
+ * @returns A promise which resolves with link.
+ */
+export const presignedLink = async (
+  driveName: string,
+  options: {
+    path: string;
+  }
+): Promise<string> => {
+  const response = await requestAPI<any>(
+    'drives/' + driveName + '/' + options.path,
+    'PUT',
+    {
+      presigned_link: true
+    }
+  );
+
+  return response.data.link;
+};
+
+/**
  * Check existance of an object.
  *
  * @param driveName
