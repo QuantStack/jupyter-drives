@@ -2,6 +2,7 @@ import http
 import json
 import logging
 from typing import Dict, List, Optional, Tuple, Union, Any
+from datetime import timedelta
 
 import os
 import tornado
@@ -448,6 +449,36 @@ class JupyterDrivesManager():
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
             reason=f"The following error occured when copying the: {e}",
+            )
+        
+        response = {
+                "data": data
+            }
+        return response
+    
+    async def presigned_link(self, drive_name, path):
+        """Get presigned link of object.
+        
+        Args:
+            drive_name: name of drive where file exists
+            path: path where contents exists
+        """
+        data = {}
+        try: 
+            # eliminate leading and trailing backslashes
+            path = path.strip('/')
+
+            expiry = timedelta(seconds = 3600) # expiry time for presigned link
+            link = await obs.sign_async(self._content_managers[drive_name]["store"], 'GET', path, expiry)
+
+            data = {
+                "path": path,
+                "link": link
+            }
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when getting the presigned link: {e}",
             )
         
         response = {
