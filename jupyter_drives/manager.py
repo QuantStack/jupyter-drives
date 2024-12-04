@@ -332,6 +332,8 @@ class JupyterDrivesManager():
                 formatted_content = content.encode("utf-8")
             else:
                 formatted_content = content
+            if formatted_content is None or formatted_content == '':
+                formatted_content = b''
 
             await obs.put_async(self._content_managers[drive_name]["store"], path, formatted_content, mode = "overwrite")
             metadata = await obs.head_async(self._content_managers[drive_name]["store"], path)
