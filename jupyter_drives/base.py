@@ -85,9 +85,11 @@ class DrivesConfig(Configurable):
         if self.access_key_id is not None and self.secret_access_key is not None:
             return
 
-        # check if user provided custom path for credentials extraction
+       # check if user provided custom path for credentials extraction
+        if self.custom_credentials_path is None and "JP_DRIVES_CUSTOM_CREDENTIALS_PATH" in os.environ:
+            self.custom_credentials_path = os.environ["JP_DRIVES_CUSTOM_CREDENTIALS_PATH"]
         if self.custom_credentials_path is not None:
-            self.access_key_id, self.secret_access_key, self.session_token = self._extract_credentials_from_file(self.custom_credentials_path)
+            self.provider, self.access_key_id, self.secret_access_key, self.session_token = self._extract_credentials_from_file(self.custom_credentials_path)
             return
         
         # if not, try to load credentials from AWS CLI
@@ -96,25 +98,31 @@ class DrivesConfig(Configurable):
             self.access_key_id, self.secret_access_key, self.session_token = self._extract_credentials_from_file(aws_credentials_path)
             return
         
-        # for dev purposes, use environment variables
-        if os.environ["JP_AWS_ACCESS_KEY_ID"] is not None and os.environ["JP_AWS_SECRET_ACCESS_KEY"] is not None:
-            self.access_key_id = os.environ["JP_AWS_ACCESS_KEY_ID"]
-            self.secret_access_key = os.environ["JP_AWS_SECRET_ACCESS_KEY"]
+        # as a last resort, use environment variables
+        if "JP_DRIVES_ACCESS_KEY_ID" in os.environ and "JP_DRIVES_SECRET_ACCESS_KEY" in os.environ:
+            self.access_key_id = os.environ["JP_DRIVES_ACCESS_KEY_ID"]
+            self.secret_access_key = os.environ["JP_DRIVES_SECRET_ACCESS_KEY"]
+            if "JP_DRIVES_SESSION_TOKEN" in os.environ:
+                self.session_token = os.environ["JP_DRIVES_SESSION_TOKEN"]
+            if "JP_DRIVES_PROVIDER" in os.environ:
+                self.provider = os.environ["JP_DRIVES_PROVIDER"]
             return
         
     def _extract_credentials_from_file(self, file_path):
         try:
             with open(file_path, 'r') as file:
-                access_key_id, secret_access_key, session_token = None, None, None
+                provider, access_key_id, secret_access_key, session_token = None, None, None, None
                 lines = file.readlines()
                 for line in lines:
-                    if line.startswith("aws_access_key_id ="):
+                    if line.startswith("provider ="):
+                        provider = line.split("=")[1].strip()
+                    elif line.startswith("drives_access_key_id ="):
                         access_key_id = line.split("=")[1].strip()
-                    elif line.startswith("aws_secret_access_key ="):
+                    elif line.startswith("drives_secret_access_key ="):
                         secret_access_key = line.split("=")[1].strip()
-                    elif line.startswith("session_token ="):
+                    elif line.startswith("drives_session_token ="):
                         session_token = line.split("=")[1].strip()
-                return access_key_id, secret_access_key, session_token
+                return provider, access_key_id, secret_access_key, session_token
         except Exception as e:
             print(f"Failed loading credentials from {file_path}: {e}")
         return
