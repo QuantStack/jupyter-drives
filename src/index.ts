@@ -218,7 +218,7 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 
     // create drive for drive file browser
     const drive = new Drive({
-      name: 'jupyter-drives',
+      name: 's3',
       drivesList: drivesList
     });
 
