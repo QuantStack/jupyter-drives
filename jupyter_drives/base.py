@@ -104,6 +104,8 @@ class DrivesConfig(Configurable):
             self.secret_access_key = os.environ["JP_DRIVES_SECRET_ACCESS_KEY"]
             if "JP_DRIVES_SESSION_TOKEN" in os.environ:
                 self.session_token = os.environ["JP_DRIVES_SESSION_TOKEN"]
+            if "JP_DRIVES_PROVIDER" in os.environ:
+                self.provider = os.environ["JP_DRIVES_PROVIDER"]
             return
         
     def _extract_credentials_from_file(self, file_path):
