@@ -61,6 +61,7 @@ export JP_DRIVES_ACCESS_KEY_ID="<Drives Access Key ID>"
 export JP_DRIVES_SECRET_ACCESS_KEY="<Drives Secret Access Key>"
 export JP_DRIVES_SESSION_TOKEN="<Drives Session Token (optional)>"
 export JP_DRIVES_CUSTOM_CREDENTIALS_PATH="<Path to local file which contains credentials (optional)>"
+```
 
 
 ## Uninstall
