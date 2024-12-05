@@ -55,7 +55,7 @@ c.DrivesConfig.custom_credentials_path = "path/to/file/containing/credentials"
 
 The credentials can also be set through environment variables that will be automatically extracted.
 
-````bash
+```bash
 export JP_DRIVES_PROVIDER="<Drives provider e.g.: s3, gcs>"
 export JP_DRIVES_ACCESS_KEY_ID="<Drives Access Key ID>"
 export JP_DRIVES_SECRET_ACCESS_KEY="<Drives Secret Access Key>"
@@ -63,14 +63,13 @@ export JP_DRIVES_SESSION_TOKEN="<Drives Session Token (optional)>"
 export JP_DRIVES_CUSTOM_CREDENTIALS_PATH="<Path to local file which contains credentials (optional)>"
 ```
 
-
 ## Uninstall
 
 To remove the extension, execute:
 
 ```bash
 pip uninstall jupyter_drives
-````
+```
 
 ## Troubleshoot
 
