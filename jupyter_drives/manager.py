@@ -45,7 +45,10 @@ class JupyterDrivesManager():
         if self._config.provider == 's3':
             self._s3_clients = {}
             if self._config.access_key_id and self._config.secret_access_key:
-                self._s3_session = boto3.Session(aws_access_key_id = self._config.access_key_id, aws_secret_access_key = self._config.secret_access_key)
+                if self._config.session_token is None:
+                    self._s3_session = boto3.Session(aws_access_key_id = self._config.access_key_id, aws_secret_access_key = self._config.secret_access_key)
+                else:
+                    self._s3_session = boto3.Session(aws_access_key_id = self._config.access_key_id, aws_secret_access_key = self._config.secret_access_key, aws_session_token = self._config.session_token)
             else:
                 raise tornado.web.HTTPError(
                 status_code= httpx.codes.BAD_REQUEST,
@@ -134,7 +137,20 @@ class JupyterDrivesManager():
             # check if content manager doesn't already exist
             if drive_name not in self._content_managers or self._content_managers[drive_name] is None:
                 if provider == 's3':
-                    store = obs.store.S3Store.from_url("s3://" + drive_name + "/", config = {"aws_access_key_id": self._config.access_key_id, "aws_secret_access_key": self._config.secret_access_key, "aws_region": region})
+                    if self._config.session_token is None:
+                        configuration = {
+                            "aws_access_key_id": self._config.access_key_id,
+                            "aws_secret_access_key": self._config.secret_access_key,
+                            "aws_region": region
+                            }
+                    else:
+                        configuration = {
+                            "aws_access_key_id": self._config.access_key_id,
+                            "aws_secret_access_key": self._config.secret_access_key,
+                            "aws_session_token": self._config.session_token,
+                            "aws_region": region
+                            }
+                    store = obs.store.S3Store.from_url("s3://" + drive_name + "/", config = configuration)
                 elif provider == 'gcs':
                     store = obs.store.GCSStore.from_url("gs://" + drive_name + "/", config = {}) # add gcs config
                 elif provider == 'http':
