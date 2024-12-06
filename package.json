@@ -1,5 +1,5 @@
 {
-    "name": "@jupyter/drives",
+    "name": "jupyter-drives",
     "version": "0.0.1-a1",
     "description": "A Jupyter extension to support drives in the backend.",
     "keywords": [

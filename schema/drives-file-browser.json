@@ -35,7 +35,7 @@
       }
     ]
   },
-  "jupyter.lab.setting-icon": "@jupyter/drives:drive-browser",
+  "jupyter.lab.setting-icon": "jupyter-drives:drive-browser",
   "jupyter.lab.setting-icon-label": "Drive Browser",
   "type": "object",
   "jupyter.lab.transform": true,

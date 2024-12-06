@@ -49,7 +49,7 @@ const FILE_BROWSER_FACTORY = 'DriveBrowser';
 const FILTERBOX_CLASS = 'jp-drive-browser-search-box';
 
 const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
-  id: '@jupyter/drives:widget',
+  id: 'jupyter-drives:widget',
   description: 'Open a dialog to select drives to be added in the filebrowser.',
   requires: [IFileBrowserFactory, ITranslator],
   autoStart: true,
@@ -156,7 +156,7 @@ const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
  * The drives list provider.
  */
 const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
-  id: '@jupyter/drives:drives-list',
+  id: 'jupyter-drives:drives-list',
   description: 'The drives list provider.',
   provides: IDrivesList,
   activate: async (_: JupyterFrontEnd): Promise<IDriveInfo[]> => {
@@ -183,7 +183,7 @@ const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
  * The drive file browser factory provider.
  */
 const driveFileBrowser: JupyterFrontEndPlugin<void> = {
-  id: '@jupyter/drives:drives-file-browser',
+  id: 'jupyter-drives:drives-file-browser',
   description: 'The drive file browser factory provider.',
   autoStart: true,
   requires: [
@@ -212,7 +212,7 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     restorer: ILayoutRestorer | null
   ): Promise<void> => {
     console.log(
-      'JupyterLab extension @jupyter/drives:drives-file-browser is activated!'
+      'JupyterLab extension jupyter-drives:drives-file-browser is activated!'
     );
     const { commands } = app;
 
