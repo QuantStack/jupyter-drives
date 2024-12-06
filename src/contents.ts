@@ -45,7 +45,6 @@ export class Drive implements Contents.IDrive {
     this._serverSettings = ServerConnection.makeSettings();
     this._name = options.name ?? '';
     this._drivesList = options.drivesList ?? [];
-    //this._apiEndpoint = options.apiEndpoint ?? SERVICE_DRIVE_URL;
   }
 
   /**
@@ -719,16 +718,6 @@ export class Drive implements Contents.IDrive {
     }
   }
 
-  /**
-   * Get a REST url for a file given a path.
-   */
-  /*private _getUrl(...args: string[]): string {
-    const parts = args.map(path => URLExt.encodeParts(path));
-    const baseUrl = this.serverSettings.baseUrl;
-    return URLExt.join(baseUrl, this._apiEndpoint, ...parts);
-  }*/
-
-  // private _apiEndpoint: string;
   private _drivesList: IDriveInfo[] = [];
   private _serverSettings: ServerConnection.ISettings;
   private _name: string = '';
@@ -771,17 +760,3 @@ export namespace Drive {
     apiEndpoint?: string;
   }
 }
-
-/*namespace Private {
-  /**
-   * Normalize a file extension to be of the type `'.foo'`.
-   *
-   * Adds a leading dot if not present and converts to lower case.
-   */
-/*export function normalizeExtension(extension: string): string {
-    if (extension.length > 0 && extension.indexOf('.') !== 0) {
-      extension = `.${extension}`;
-    }
-    return extension;
-  }
-}*/
