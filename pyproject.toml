@@ -22,7 +22,8 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "obstore>=0.2.0,<0.3",
+    "obstore>=0.3.0b,<0.4",
+    "arro3-core>=0.2.1,<0.3",
     "pyarrow>=18.0.0,<19.0.0",
     "jupyter_server>=2.14.2,<3",
     "s3contents>=0.11.1,<0.12.0",
