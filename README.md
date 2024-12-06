@@ -40,7 +40,7 @@ c.DrivesConfig.access_key_id = "<Drives Access Key ID / IAM Access Key ID>"
 c.DrivesConfig.secret_access_key = "<Drives Secret Access Key / IAM Secret>"
 c.DrivesConfig.session_token = "<Drives Session Token / IAM Session Token (optional)>"
 c.DrivesConfig.provider = "<Drives provider e.g.: s3, gcs>"
-c.DrivesConfig.max_files_shown = "<Integer repersenting maximum number of files that can be shown in a listing, given any path (optional)>"
+c.DrivesConfig.max_files_listed = "<Integer repersenting maximum number of files that can be shown in a listing, given any path (optional)>"
 ```
 
 ### Custom credentials file path
@@ -63,7 +63,7 @@ export JP_DRIVES_ACCESS_KEY_ID="<Drives Access Key ID>"
 export JP_DRIVES_SECRET_ACCESS_KEY="<Drives Secret Access Key>"
 export JP_DRIVES_SESSION_TOKEN="<Drives Session Token (optional)>"
 export JP_DRIVES_CUSTOM_CREDENTIALS_PATH="<Path to local file which contains credentials (optional)>"
-export JP_DRIVES_MAX_FILES_SHOWN="<Integer repersenting maximum number of files that can be shown in a listing, given any path (optional)>"
+export JP_DRIVES_MAX_FILES_LISTED="<Integer repersenting maximum number of files that can be shown in a listing, given any path (optional)>"
 ```
 
 ## Uninstall

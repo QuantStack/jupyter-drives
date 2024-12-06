@@ -194,9 +194,9 @@ class JupyterDrivesManager():
             emptyDir = True # assume we are dealing with an empty directory
 
             chunk_size = 100
-            if self._config.max_files_shown < chunk_size:
-                chunk_size = self._config.max_files_shown
-            no_batches = int(self._config.max_files_shown/chunk_size)
+            if self._config.max_files_listed < chunk_size:
+                chunk_size = self._config.max_files_listed
+            no_batches = int(self._config.max_files_listed/chunk_size)
 
             # using Arrow lists as they are recommended for large results
             # stream will be an async iterable of RecordBatch
@@ -206,7 +206,7 @@ class JupyterDrivesManager():
                 current_batch += 1
                 # reached last batch that can be shown (partially)
                 if current_batch == no_batches + 1:
-                    remaining_files = self._config.max_files_shown - no_batches*chunk_size
+                    remaining_files = self._config.max_files_listed - no_batches*chunk_size
                     
                 # if content exists we are dealing with a directory
                 if isDir is False and batch: 
