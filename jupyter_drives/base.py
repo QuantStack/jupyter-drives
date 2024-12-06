@@ -1,7 +1,7 @@
 import os
 from sys import platform
 import entrypoints
-from traitlets import Enum, Unicode, default
+from traitlets import Enum, Unicode, default, Int
 from traitlets.config import Configurable
 
 # Supported third-party services
@@ -59,7 +59,7 @@ class DrivesConfig(Configurable):
         help="Custom path of file where credentials are located. Extension automatically checks jupyter_notebook_config.py or directly in ~/.aws/credentials for AWS CLI users."
     )
 
-    max_files_shown = Unicode(
+    max_files_shown = Int(
         None,
         config = True,
         allow_none = True,

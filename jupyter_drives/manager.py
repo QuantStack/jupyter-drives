@@ -193,10 +193,21 @@ class JupyterDrivesManager():
             isDir = False
             emptyDir = True # assume we are dealing with an empty directory
 
+            chunk_size = 100
+            if self._config.max_files_shown < chunk_size:
+                chunk_size = self._config.max_files_shown
+            no_batches = int(self._config.max_files_shown/chunk_size)
+
             # using Arrow lists as they are recommended for large results
             # stream will be an async iterable of RecordBatch
-            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=100, return_arrow=True)
+            current_batch = 0
+            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=chunk_size, return_arrow=True)
             async for batch in stream:
+                current_batch += 1
+                # reached last batch that can be shown (partially)
+                if current_batch == no_batches + 1:
+                    remaining_files = self._config.max_files_shown - no_batches*chunk_size
+                    
                 # if content exists we are dealing with a directory
                 if isDir is False and batch: 
                     isDir = True
@@ -204,11 +215,20 @@ class JupyterDrivesManager():
                     
                 contents_list = pyarrow.record_batch(batch).to_pylist()
                 for object in contents_list:
+                    # when listing the last batch (partially), make sure we don't exceed limit
+                    if current_batch == no_batches + 1:
+                        if remaining_files <= 0:
+                            break
+                        remaining_files -= 1
                     data.append({
                         "path": object["path"],
                         "last_modified": object["last_modified"].isoformat(),
                         "size": object["size"],
                     })
+                
+                # check if we reached the limit of files that can be listed
+                if current_batch == no_batches + 1:
+                    break
                 
             # check if we are dealing with an empty drive
             if isDir is False and path != '':
