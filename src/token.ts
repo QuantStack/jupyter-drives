@@ -5,7 +5,7 @@ import { Contents } from '@jupyterlab/services';
  * A token for the plugin that provides the list of drives.
  */
 export const IDrivesList = new Token<IDriveInfo[]>(
-  '@jupyter/drives:drives-list-provider'
+  'jupyter-drives:drives-list-provider'
 );
 
 /**

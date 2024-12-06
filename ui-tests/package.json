@@ -1,7 +1,7 @@
 {
-  "name": "@jupyter/drives-ui-tests",
+  "name": "jupyter-drives-ui-tests",
   "version": "1.0.0",
-  "description": "JupyterLab @jupyter/drives Integration Tests",
+  "description": "JupyterLab jupyter-drives Integration Tests",
   "private": true,
   "scripts": {
     "start": "jupyter lab --config jupyter_server_test_config.py",

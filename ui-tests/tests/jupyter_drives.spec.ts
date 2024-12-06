@@ -19,7 +19,7 @@ test('should emit an activation console message', async ({ page }) => {
     logs.filter(
       s =>
         s ===
-        'JupyterLab extension @jupyter/drives:drives-file-browser is activated!'
+        'JupyterLab extension jupyter-drives:drives-file-browser is activated!'
     )
   ).toHaveLength(1);
 });

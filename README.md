@@ -4,7 +4,7 @@
 A Jupyter extension to support drives in the backend.
 
 This extension is composed of a Python package named `jupyter_drives`
-for the server extension and a NPM package named `@jupyter/drives`
+for the server extension and a NPM package named `jupyter-drives`
 for the frontend extension.
 
 ## Requirements
@@ -138,7 +138,7 @@ pip uninstall jupyter_drives
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `@jupyter/drives` within that folder.
+folder is located. Then you can remove the symlink named `jupyter-drives` within that folder.
 
 ### Testing the extension
 
