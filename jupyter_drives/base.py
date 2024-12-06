@@ -1,7 +1,7 @@
 import os
 from sys import platform
 import entrypoints
-from traitlets import Enum, Unicode, default, Int
+from traitlets import Enum, Unicode, default
 from traitlets.config import Configurable
 
 # Supported third-party services
