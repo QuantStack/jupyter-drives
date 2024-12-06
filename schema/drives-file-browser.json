@@ -1,5 +1,5 @@
 {
-  "title": "Jupyter Drives Settings",
+  "title": "Drives Browser Settings",
   "description": "jupyter-drives settings.",
   "jupyter.lab.toolbars": {
     "DriveBrowser": [
@@ -40,6 +40,12 @@
   "type": "object",
   "jupyter.lab.transform": true,
   "properties": {
+    "maxFilesListed": {
+      "type": "integer",
+      "title": "Maximum number of objects listed",
+      "description": "Configure maximum number of objects that will be shown in a listing, given any path.",
+      "default": 1000
+    },
     "toolbar": {
       "title": "Drive browser toolbar items",
       "description": "Note: To disable a toolbar item,\ncopy it to User Preferences and add the\n\"disabled\" key.",

@@ -38,7 +38,8 @@ c = get_config()
 
 c.DrivesConfig.access_key_id = "<Drives Access Key ID / IAM Access Key ID>"
 c.DrivesConfig.secret_access_key = "<Drives Secret Access Key / IAM Secret>"
-c.DrivesConfig.session_token = "<Drives Session Token / IAM Session Token>"
+c.DrivesConfig.session_token = "<Drives Session Token / IAM Session Token (optional)>"
+c.DrivesConfig.provider = "<Drives provider e.g.: s3, gcs>"
 ```
 
 ### Custom credentials file path

@@ -42,6 +42,19 @@ class JupyterDrivesAPIHandler(APIHandler):
                 reply["error"] = "".join(traceback.format_exception(*exc_info))
         self.finish(json.dumps(reply))
 
+class ConfigJupyterDrivesHandler(JupyterDrivesAPIHandler):
+    """
+    Set certain configuration variables in drives manager.
+    """
+    def initialize(self, logger: logging.Logger, manager: JupyterDrivesManager):
+        return super().initialize(logger, manager)
+    
+    @tornado.web.authenticated
+    async def post(self):
+        body = self.get_json_body()
+        result = self._manager.set_listing_limit(**body)
+        self.finish(result)
+
 class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     """
     List available drives. Mounts drives.
@@ -106,7 +119,8 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
         self.finish(result)
 
 handlers = [
-    ("drives", ListJupyterDrivesHandler)
+    ("drives", ListJupyterDrivesHandler),
+    ("drives/config", ConfigJupyterDrivesHandler),
 ]
 
 handlers_with_path = [

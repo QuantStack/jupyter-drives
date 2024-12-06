@@ -40,12 +40,16 @@ class JupyterDrivesManager():
         self._config = DrivesConfig(config=config)
         self._client = httpx.AsyncClient()
         self._content_managers = {}
+        self._max_files_listed = 1000
 
          # initiate boto3 session if we are dealing with S3 drives
         if self._config.provider == 's3':
             self._s3_clients = {}
             if self._config.access_key_id and self._config.secret_access_key:
-                self._s3_session = boto3.Session(aws_access_key_id = self._config.access_key_id, aws_secret_access_key = self._config.secret_access_key)
+                if self._config.session_token is None:
+                    self._s3_session = boto3.Session(aws_access_key_id = self._config.access_key_id, aws_secret_access_key = self._config.secret_access_key)
+                else:
+                    self._s3_session = boto3.Session(aws_access_key_id = self._config.access_key_id, aws_secret_access_key = self._config.secret_access_key, aws_session_token = self._config.session_token)
             else:
                 raise tornado.web.HTTPError(
                 status_code= httpx.codes.BAD_REQUEST,
@@ -70,6 +74,22 @@ class JupyterDrivesManager():
             None: the provider does not support pagination
         """
         return ("per_page", 100)
+    
+    def set_listing_limit(self, new_limit):
+        """Set new limit for listing.
+
+        Args:
+            new_limit: new maximum to be set
+        """
+        try:
+            self._max_files_listed = new_limit
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason= f"The following error occured when setting the new listing limit: {e}"
+            )
+
+        return
     
     async def list_drives(self): 
         """Get list of available drives.
@@ -126,15 +146,25 @@ class JupyterDrivesManager():
 
         Args:
             drive_name: name of drive to mount
-
-        Returns:
-            The content manager for the drive.
         """
         try: 
             # check if content manager doesn't already exist
             if drive_name not in self._content_managers or self._content_managers[drive_name] is None:
                 if provider == 's3':
-                    store = obs.store.S3Store.from_url("s3://" + drive_name + "/", config = {"aws_access_key_id": self._config.access_key_id, "aws_secret_access_key": self._config.secret_access_key, "aws_region": region})
+                    if self._config.session_token is None:
+                        configuration = {
+                            "aws_access_key_id": self._config.access_key_id,
+                            "aws_secret_access_key": self._config.secret_access_key,
+                            "aws_region": region
+                            }
+                    else:
+                        configuration = {
+                            "aws_access_key_id": self._config.access_key_id,
+                            "aws_secret_access_key": self._config.secret_access_key,
+                            "aws_session_token": self._config.session_token,
+                            "aws_region": region
+                            }
+                    store = obs.store.S3Store.from_url("s3://" + drive_name + "/", config = configuration)
                 elif provider == 'gcs':
                     store = obs.store.GCSStore.from_url("gs://" + drive_name + "/", config = {}) # add gcs config
                 elif provider == 'http':
@@ -193,10 +223,21 @@ class JupyterDrivesManager():
             isDir = False
             emptyDir = True # assume we are dealing with an empty directory
 
+            chunk_size = 100
+            if self._max_files_listed < chunk_size:
+                chunk_size = self._max_files_listed
+            no_batches = int(self._max_files_listed/chunk_size)
+
             # using Arrow lists as they are recommended for large results
             # stream will be an async iterable of RecordBatch
-            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=100, return_arrow=True)
+            current_batch = 0
+            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=chunk_size, return_arrow=True)
             async for batch in stream:
+                current_batch += 1
+                # reached last batch that can be shown (partially)
+                if current_batch == no_batches + 1:
+                    remaining_files = self._max_files_listed - no_batches*chunk_size
+                    
                 # if content exists we are dealing with a directory
                 if isDir is False and batch: 
                     isDir = True
@@ -204,11 +245,20 @@ class JupyterDrivesManager():
                     
                 contents_list = pyarrow.record_batch(batch).to_pylist()
                 for object in contents_list:
+                    # when listing the last batch (partially), make sure we don't exceed limit
+                    if current_batch == no_batches + 1:
+                        if remaining_files <= 0:
+                            break
+                        remaining_files -= 1
                     data.append({
                         "path": object["path"],
                         "last_modified": object["last_modified"].isoformat(),
                         "size": object["size"],
                     })
+                
+                # check if we reached the limit of files that can be listed
+                if current_batch == no_batches + 1:
+                    break
                 
             # check if we are dealing with an empty drive
             if isDir is False and path != '':

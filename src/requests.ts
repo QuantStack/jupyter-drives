@@ -22,6 +22,17 @@ let data: Contents.IModel = {
 };
 
 /**
+ * Set new limit for number of objects to be listed inside the DriveBrowser, given any path.
+ *
+ * @returns
+ */
+export async function setListingLimit(newLimit: number) {
+  await requestAPI<any>('drives/config', 'POST', {
+    new_limit: newLimit
+  });
+}
+
+/**
  * Fetch the list of available drives.
  * @returns The list of available drives.
  */

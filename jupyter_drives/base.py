@@ -80,7 +80,7 @@ class DrivesConfig(Configurable):
         super().__init__(**kwargs)
         self._load_credentials()
     
-    def _load_credentials(self):
+    def _load_credentials(self):        
         # check if credentials were already set in jupyter_notebook_config.py
         if self.access_key_id is not None and self.secret_access_key is not None:
             return
@@ -114,7 +114,7 @@ class DrivesConfig(Configurable):
                 provider, access_key_id, secret_access_key, session_token = None, None, None, None
                 lines = file.readlines()
                 for line in lines:
-                    if line.startswith("provider ="):
+                    if line.startswith("drives_provider ="):
                         provider = line.split("=")[1].strip()
                     elif line.startswith("drives_access_key_id ="):
                         access_key_id = line.split("=")[1].strip()

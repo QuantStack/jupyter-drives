@@ -26,7 +26,7 @@ import { CommandRegistry } from '@lumino/commands';
 import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon, driveBrowserIcon } from './icons';
 import { Drive } from './contents';
-import { getDrivesList } from './requests';
+import { getDrivesList, setListingLimit } from './requests';
 import { IDriveInfo, IDrivesList } from './token';
 
 /**
@@ -288,6 +288,34 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
         translator
       )
     );
+
+    /**
+     * Load the settings for this extension
+     *
+     * @param setting Extension settings
+     */
+    function loadSetting(setting: ISettingRegistry.ISettings): void {
+      // Read the settings and convert to the correct type
+      const maxFilesListed = setting.get('maxFilesListed').composite as number;
+      // Set new limit.
+      setListingLimit(maxFilesListed);
+    }
+
+    // Wait for the application to be restored and
+    // for the settings for this plugin to be loaded
+    Promise.all([app.restored, settingsRegistry.load(driveFileBrowser.id)])
+      .then(([, setting]) => {
+        // Read the settings
+        loadSetting(setting);
+
+        // Listen for your plugin setting changes using Signal
+        setting.changed.connect(loadSetting);
+      })
+      .catch(reason => {
+        console.error(
+          `Something went wrong when reading the settings.\n${reason}`
+        );
+      });
   }
 };
 
