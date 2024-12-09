@@ -55,7 +55,7 @@ async def test_ListJupyterDrives_s3_empty_list(jp_fetch, s3_base):
 
         # Then
         assert response.code == 200
-        payload = json.loads(response)
+        payload = json.loads(response.body)
         assert len(payload) == 0 
 
 @pytest.mark.skip(reason="FIX")
