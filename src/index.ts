@@ -160,18 +160,9 @@ const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
   description: 'The drives list provider.',
   provides: IDrivesList,
   activate: async (_: JupyterFrontEnd): Promise<IDriveInfo[]> => {
-    const drives: IDriveInfo[] = [];
+    let drives: IDriveInfo[] = [];
     try {
-      const response = await getDrivesList();
-      for (const drive of response.data) {
-        drives.push({
-          name: drive.name,
-          region: drive.region,
-          provider: drive.provider,
-          creationDate: drive.creation_date,
-          mounted: drive.mounted
-        });
-      }
+      drives = await getDrivesList();
     } catch (error) {
       console.log('Failed loading available drives list, with error: ', error);
     }

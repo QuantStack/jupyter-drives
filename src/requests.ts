@@ -3,7 +3,12 @@ import { Contents } from '@jupyterlab/services';
 import { PathExt } from '@jupyterlab/coreutils';
 
 import { requestAPI } from './handler';
-import { getFileType, IRegisteredFileTypes, IContentsList } from './token';
+import {
+  getFileType,
+  IRegisteredFileTypes,
+  IContentsList,
+  IDriveInfo
+} from './token';
 
 /**
  * The data contents model.
@@ -37,7 +42,7 @@ export async function setListingLimit(newLimit: number) {
  * @returns The list of available drives.
  */
 export async function getDrivesList() {
-  return await requestAPI<any>('drives', 'GET');
+  return await requestAPI<IDriveInfo[]>('drives', 'GET');
 }
 
 /**
@@ -45,16 +50,14 @@ export async function getDrivesList() {
  *
  * @param driveName
  * @param options.provider The provider of the drive to be mounted.
- * @param options.region The region of the drive to be mounted.
  */
 export async function mountDrive(
   driveName: string,
-  options: { provider: string; region: string }
+  options: { provider: string } //region: string }
 ) {
   const body: ReadonlyJSONObject = {
     drive_name: driveName,
-    provider: options.provider,
-    region: options.region
+    provider: options.provider
   };
   return await requestAPI<any>('drives', 'POST', body);
 }
