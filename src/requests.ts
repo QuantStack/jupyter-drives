@@ -53,7 +53,7 @@ export async function getDrivesList() {
  */
 export async function mountDrive(
   driveName: string,
-  options: { provider: string } //region: string }
+  options: { provider: string }
 ) {
   const body: ReadonlyJSONObject = {
     drive_name: driveName,
