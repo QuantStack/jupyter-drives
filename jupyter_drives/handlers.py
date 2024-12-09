@@ -66,7 +66,7 @@ class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
     @tornado.web.authenticated
     async def get(self):
         result = await self._manager.list_drives()
-        self.finish(result)
+        self.finish(json.dumps(result["data"]))
     
     @tornado.web.authenticated
     async def post(self):

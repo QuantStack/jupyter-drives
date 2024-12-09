@@ -229,8 +229,7 @@ export class Drive implements Contents.IDrive {
       if (currentDrive.mounted === false) {
         try {
           await mountDrive(localPath, {
-            provider: currentDrive.provider,
-            region: currentDrive.region
+            provider: currentDrive.provider
           });
           this._drivesList.filter(x => x.name === localPath)[0].mounted = true;
         } catch (e) {

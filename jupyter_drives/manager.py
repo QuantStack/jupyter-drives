@@ -118,14 +118,11 @@ class JupyterDrivesManager():
                 results += drive.list_containers()
             
             for result in results:
-                # in case of S3 drives get region of each drive
-                if self._config.provider == 's3':
-                    location = self._get_drive_location(result.name)
                 data.append(
                     {
                         "name": result.name,
-                        "region": location,
-                        "creation_date": result.extra["creation_date"],
+                        "region": self._config.region_name,
+                        "creationDate": result.extra["creation_date"],
                         "mounted": False if result.name not in self._content_managers else True,
                         "provider": self._config.provider
                     }
@@ -141,7 +138,7 @@ class JupyterDrivesManager():
         }
         return response
     
-    async def mount_drive(self, drive_name, provider, region):
+    async def mount_drive(self, drive_name, provider):
         """Mount a drive.
 
         Args:
@@ -151,6 +148,8 @@ class JupyterDrivesManager():
             # check if content manager doesn't already exist
             if drive_name not in self._content_managers or self._content_managers[drive_name] is None:
                 if provider == 's3':
+                    # get region of drive
+                    region = self._get_drive_location(drive_name)
                     if self._config.session_token is None:
                         configuration = {
                             "aws_access_key_id": self._config.access_key_id,
