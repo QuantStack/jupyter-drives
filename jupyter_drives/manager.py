@@ -42,10 +42,11 @@ class JupyterDrivesManager():
         self._content_managers = {}
         self._max_files_listed = 1000
 
-         # initiate aiobotocore session if we are dealing with S3 drives
+        # initiate aiobotocore session if we are dealing with S3 drives
         if self._config.provider == 's3':
-            self._s3_clients = {}
-            self._s3_session = get_session()
+            if self._config.access_key_id is not None and self._config.secret_access_key is not None:
+                self._s3_clients = {}
+                self._s3_session = get_session()
 
     @property
     def base_api_url(self) -> str:
