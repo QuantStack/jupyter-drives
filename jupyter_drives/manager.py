@@ -17,6 +17,8 @@ from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
 import pyarrow
 from aiobotocore.session import get_session
+import fsspec
+import s3fs
 
 from .log import get_logger
 from .base import DrivesConfig
@@ -41,12 +43,16 @@ class JupyterDrivesManager():
         self._client = httpx.AsyncClient()
         self._content_managers = {}
         self._max_files_listed = 1000
+        
+        # instate fsspec file system
+        self._file_system = fsspec.filesystem(self._config.provider, asynchronous=True)
 
         # initiate aiobotocore session if we are dealing with S3 drives
         if self._config.provider == 's3':
             if self._config.access_key_id and self._config.secret_access_key:
                 self._s3_clients = {}
                 self._s3_session = get_session()
+                self._file_system = s3fs.S3FileSystem(anon=False, asynchronous=True, key=self._config.access_key_id, secret=self._config.secret_access_key, token=self._config.session_token)
             else:
                 raise tornado.web.HTTPError(
                 status_code= httpx.codes.BAD_REQUEST,
