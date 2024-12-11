@@ -294,15 +294,9 @@ class JupyterDrivesManager():
 
             # dealing with the case of an empty directory, making sure it is not an empty file
             if emptyDir is True: 
-                ext_list = ['.R', '.bmp', '.csv', '.gif', '.html', '.ipynb', '.jl', '.jpeg', '.jpg', '.json', '.jsonl', '.md', '.ndjson', '.pdf', '.png', '.py', '.svg', '.tif', '.tiff', '.tsv', '.txt', '.webp', '.yaml', '.yml']
-                object_name = os.path.basename(path)
-                # if object doesn't contain . or doesn't end in one of the registered extensions
-                if object_name.find('.') == -1 or ext_list.count(os.path.splitext(object_name)[1]) == 0:
+                check = await self._check_object(drive_name, path)
+                if check == True:
                     data = []
-                
-                # remove upper logic once directories are fixed
-                check = self._check_object(drive_name, path)
-                print(check)
 
             response = {
                 "data": data
@@ -578,7 +572,7 @@ class JupyterDrivesManager():
     
         return location
     
-    def _check_object(self, drive_name, path):
+    async def _check_object(self, drive_name, path):
         """Helping function to check if we are dealing with an empty file or directory.
 
         Args:
@@ -587,17 +581,13 @@ class JupyterDrivesManager():
         """
         isDir = False
         try:
-            location = self._content_managers[drive_name]["location"]
-            if location not in self._s3_clients:
-                self._s3_clients[location] = self._s3_session.client('s3', location)
-
-            listing = self._s3_clients[location].list_objects_v2(Bucket = drive_name, Prefix = path + '/')
-            if 'Contents' in listing:
-                isDir = True
+           response = await self._file_system._info(drive_name + '/' + path)
+           if response["type"]=='directory':
+               isDir = True
         except Exception as e:
              raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
-            reason=f"The following error occured when retriving the drive location: {e}",
+            reason=f"The following error occured when checking the object information: {e}",
             )
         
         return isDir
