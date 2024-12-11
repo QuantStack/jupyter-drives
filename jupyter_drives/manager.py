@@ -44,9 +44,14 @@ class JupyterDrivesManager():
 
         # initiate aiobotocore session if we are dealing with S3 drives
         if self._config.provider == 's3':
-            if self._config.access_key_id is not None and self._config.secret_access_key is not None:
+            if self._config.access_key_id and self._config.secret_access_key:
                 self._s3_clients = {}
                 self._s3_session = get_session()
+            else:
+                raise tornado.web.HTTPError(
+                status_code= httpx.codes.BAD_REQUEST,
+                reason="No credentials specified. Please set them in your user jupyter_server_config file.",
+                )
 
     @property
     def base_api_url(self) -> str:
