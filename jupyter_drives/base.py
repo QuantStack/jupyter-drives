@@ -76,6 +76,35 @@ class DrivesConfig(Configurable):
         self._load_credentials()
     
     def _load_credentials(self):  
+        # check if credentials were already set in jupyter_notebook_config.py
+        if self.access_key_id is not None and self.secret_access_key is not None:
+            return
+        
+        # automatically extract credentials for S3 drives
+        try:
+            s = boto3.Session()
+            c = s.get_credentials()
+            if c is not None:
+                self.access_key_id = c.access_key
+                self.secret_access_key = c.secret_key
+                self.region_name = s.region_name
+                self.session_token = c.token
+                self.provider = 's3'
+            return
+        except:
+            # S3 credentials couldn't automatically be extracted through boto
+            pass
+
+        # use environment variables
+        if "JP_DRIVES_ACCESS_KEY_ID" in os.environ and "JP_DRIVES_SECRET_ACCESS_KEY" in os.environ:
+            self.access_key_id = os.environ["JP_DRIVES_ACCESS_KEY_ID"]
+            self.secret_access_key = os.environ["JP_DRIVES_SECRET_ACCESS_KEY"]
+            if "JP_DRIVES_SESSION_TOKEN" in os.environ:
+                self.session_token = os.environ["JP_DRIVES_SESSION_TOKEN"]
+            if "JP_DRIVES_PROVIDER" in os.environ:
+                self.provider = os.environ["JP_DRIVES_PROVIDER"]
+            return
+
         s = boto3.Session()
         c = s.get_credentials()
         self.access_key_id = c.access_key
