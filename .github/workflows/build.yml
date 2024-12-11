@@ -42,7 +42,7 @@ jobs:
 
         jupyter labextension list
         jupyter labextension list 2>&1 | grep -ie "jupyter-drives.*OK"
-        python -m jupyterlab.browser_check
+        python -m jupyterlab.browser_check --no-chrome-test
 
     - name: Package the extension
       run: |

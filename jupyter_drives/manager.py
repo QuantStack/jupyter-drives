@@ -16,7 +16,7 @@ import obstore as obs
 from libcloud.storage.types import Provider
 from libcloud.storage.providers import get_driver
 import pyarrow
-import boto3
+from aiobotocore.session import get_session
 
 from .log import get_logger
 from .base import DrivesConfig
@@ -42,14 +42,11 @@ class JupyterDrivesManager():
         self._content_managers = {}
         self._max_files_listed = 1000
 
-         # initiate boto3 session if we are dealing with S3 drives
+        # initiate aiobotocore session if we are dealing with S3 drives
         if self._config.provider == 's3':
-            self._s3_clients = {}
             if self._config.access_key_id and self._config.secret_access_key:
-                if self._config.session_token is None:
-                    self._s3_session = boto3.Session(aws_access_key_id = self._config.access_key_id, aws_secret_access_key = self._config.secret_access_key)
-                else:
-                    self._s3_session = boto3.Session(aws_access_key_id = self._config.access_key_id, aws_secret_access_key = self._config.secret_access_key, aws_session_token = self._config.session_token)
+                self._s3_clients = {}
+                self._s3_session = get_session()
             else:
                 raise tornado.web.HTTPError(
                 status_code= httpx.codes.BAD_REQUEST,
@@ -149,7 +146,7 @@ class JupyterDrivesManager():
             if drive_name not in self._content_managers or self._content_managers[drive_name] is None:
                 if provider == 's3':
                     # get region of drive
-                    region = self._get_drive_location(drive_name)
+                    region = await self._get_drive_location(drive_name)
                     if self._config.session_token is None:
                         configuration = {
                             "aws_access_key_id": self._config.access_key_id,
@@ -555,7 +552,7 @@ class JupyterDrivesManager():
             }
         return response
     
-    def _get_drive_location(self, drive_name):
+    async def _get_drive_location(self, drive_name):
         """Helping function for getting drive region.
 
         Args:
@@ -564,10 +561,9 @@ class JupyterDrivesManager():
         location = 'eu-north-1'
         try:
             # set temporary client for location extraction
-            s3 = self._s3_session.client('s3')
-            result = s3.get_bucket_location(Bucket = drive_name)
-
-            location = result['LocationConstraint']
+            async with self._s3_session.create_client('s3', aws_secret_access_key=self._config.secret_access_key, aws_access_key_id=self._config.access_key_id, aws_session_token=self._config.session_token) as client:
+                result = await client.get_bucket_location(Bucket=drive_name)
+                location = result['LocationConstraint']
         except Exception as e:
              raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
