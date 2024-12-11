@@ -3,6 +3,7 @@ from sys import platform
 import entrypoints
 from traitlets import Enum, Unicode, default
 from traitlets.config import Configurable
+import boto3
 
 # Supported third-party services
 MANAGERS = {}
@@ -42,21 +43,15 @@ class DrivesConfig(Configurable):
     )
 
     region_name = Unicode(
-        "eu-north-1",
-        config = True, 
+        None,
+        config = True,
+        allow_none=True,
         help = "Region name.",
     )
     
     api_base_url = Unicode(
         config=True,
         help="Base URL of the provider service REST API.",
-    )
-
-    custom_credentials_path = Unicode(
-        None,
-        config = True,
-        allow_none = True,
-        help="Custom path of file where credentials are located. Extension automatically checks jupyter_notebook_config.py or directly in ~/.aws/credentials for AWS CLI users."
     )
 
     @default("api_base_url")
@@ -80,25 +75,27 @@ class DrivesConfig(Configurable):
         super().__init__(**kwargs)
         self._load_credentials()
     
-    def _load_credentials(self):        
+    def _load_credentials(self):  
         # check if credentials were already set in jupyter_notebook_config.py
         if self.access_key_id is not None and self.secret_access_key is not None:
             return
+        
+        # automatically extract credentials for S3 drives
+        try:
+            s = boto3.Session()
+            c = s.get_credentials()
+            if c is not None:
+                self.access_key_id = c.access_key
+                self.secret_access_key = c.secret_key
+                self.region_name = s.region_name
+                self.session_token = c.token
+                self.provider = 's3'
+            return
+        except:
+            # S3 credentials couldn't automatically be extracted through boto
+            pass
 
-       # check if user provided custom path for credentials extraction
-        if self.custom_credentials_path is None and "JP_DRIVES_CUSTOM_CREDENTIALS_PATH" in os.environ:
-            self.custom_credentials_path = os.environ["JP_DRIVES_CUSTOM_CREDENTIALS_PATH"]
-        if self.custom_credentials_path is not None:
-            self.provider, self.access_key_id, self.secret_access_key, self.session_token = self._extract_credentials_from_file(self.custom_credentials_path)
-            return
-        
-        # if not, try to load credentials from AWS CLI
-        aws_credentials_path = "~/.aws/credentials" #add read me about credentials path in windows: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
-        if os.path.exists(aws_credentials_path):
-            self.access_key_id, self.secret_access_key, self.session_token = self._extract_credentials_from_file(aws_credentials_path)
-            return
-        
-        # as a last resort, use environment variables
+        # use environment variables
         if "JP_DRIVES_ACCESS_KEY_ID" in os.environ and "JP_DRIVES_SECRET_ACCESS_KEY" in os.environ:
             self.access_key_id = os.environ["JP_DRIVES_ACCESS_KEY_ID"]
             self.secret_access_key = os.environ["JP_DRIVES_SECRET_ACCESS_KEY"]
@@ -107,22 +104,10 @@ class DrivesConfig(Configurable):
             if "JP_DRIVES_PROVIDER" in os.environ:
                 self.provider = os.environ["JP_DRIVES_PROVIDER"]
             return
-        
-    def _extract_credentials_from_file(self, file_path):
-        try:
-            with open(file_path, 'r') as file:
-                provider, access_key_id, secret_access_key, session_token = None, None, None, None
-                lines = file.readlines()
-                for line in lines:
-                    if line.startswith("drives_provider ="):
-                        provider = line.split("=")[1].strip()
-                    elif line.startswith("drives_access_key_id ="):
-                        access_key_id = line.split("=")[1].strip()
-                    elif line.startswith("drives_secret_access_key ="):
-                        secret_access_key = line.split("=")[1].strip()
-                    elif line.startswith("drives_session_token ="):
-                        session_token = line.split("=")[1].strip()
-                return provider, access_key_id, secret_access_key, session_token
-        except Exception as e:
-            print(f"Failed loading credentials from {file_path}: {e}")
-        return
+
+        s = boto3.Session()
+        c = s.get_credentials()
+        self.access_key_id = c.access_key
+        self.secret_access_key = c.secret_key
+        self.region_name = s.region_name
+        self.session_token = c.token
