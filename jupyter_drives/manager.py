@@ -2,7 +2,7 @@ import http
 import json
 import logging
 from typing import Dict, List, Optional, Tuple, Union, Any
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import os
 import tornado
@@ -309,27 +309,31 @@ class JupyterDrivesManager():
         
         return response
     
-    async def new_file(self, drive_name, path):
+    async def new_file(self, drive_name, path, type):
         """Create a new file or directory at the given path.
         
         Args:
             drive_name: name of drive where the new content is created
             path: path where new content should be created
+            type: whether we are dealing with a file or a directory
         """
         data = {}
         try:
             # eliminate leading and trailing backslashes
             path = path.strip('/')
 
-            # TO DO: switch to mode "created", which is not implemented yet
-            await obs.put_async(self._content_managers[drive_name]["store"], path, b"", mode = "overwrite")
-            metadata = await obs.head_async(self._content_managers[drive_name]["store"], path)
-
+            if type == 'directory' and self._config.provider == 's3':
+                await self._create_dir(drive_name, path)
+            else:
+                 await self._file_system._touch(drive_name + '/' + path)         
+            metadata = await self._file_system._info(drive_name + '/' + path)
+            
             data = {
                 "path": path,
                 "content": "",
-                "last_modified": metadata["last_modified"].isoformat(),
-                "size": metadata["size"]
+                "last_modified": metadata["LastModified"].isoformat() if metadata["type"]=='file' else datetime.now().isoformat(),
+                "size": metadata["size"],
+                "type": metadata["type"]
             }
         except Exception as e:
             raise tornado.web.HTTPError(
@@ -591,6 +595,24 @@ class JupyterDrivesManager():
             )
         
         return isDir
+    
+    async def _create_dir(self, drive_name, path):
+        """Helping function to create an empty directory.
+
+        Args:
+            drive_name: name of drive where object should be created
+            path: path to object to create
+        """
+        try:
+           async with self._s3_session.create_client('s3', aws_secret_access_key=self._config.secret_access_key, aws_access_key_id=self._config.access_key_id, aws_session_token=self._config.session_token) as client:
+               await client.put_object(Bucket=drive_name, Key=path + '/')
+        except Exception as e:
+             raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when creating the directory: {e}",
+            )
+        
+        return 
     
     async def _call_provider(
         self,

@@ -88,7 +88,8 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
 
     @tornado.web.authenticated
     async def post(self, drive: str = "", path: str = ""):
-        result = await self._manager.new_file(drive, path)
+        body = self.get_json_body()
+        result = await self._manager.new_file(drive, path, **body)
         self.finish(result)
 
     @tornado.web.authenticated

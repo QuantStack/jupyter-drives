@@ -218,6 +218,7 @@ export async function createObject(
   options: {
     name: string;
     path: string;
+    type: string;
     registeredFileTypes: IRegisteredFileTypes;
   }
 ) {
@@ -226,7 +227,10 @@ export async function createObject(
     : options.name;
   const response = await requestAPI<any>(
     'drives/' + driveName + '/' + path,
-    'POST'
+    'POST',
+    {
+      type: options.type
+    }
   );
 
   const [fileType, fileMimeType, fileFormat] = getFileType(
