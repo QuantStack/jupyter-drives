@@ -223,56 +223,47 @@ class JupyterDrivesManager():
 
         try :
             data = []
-            isDir = False
-            emptyDir = True # assume we are dealing with an empty directory
+            is_dir = await self._file_system._isdir(drive_name + '/' + path)
 
-            chunk_size = 100
-            if self._max_files_listed < chunk_size:
-                chunk_size = self._max_files_listed
-            no_batches = int(self._max_files_listed/chunk_size)
+            if is_dir == True:
+                chunk_size = 100
+                if self._max_files_listed < chunk_size:
+                    chunk_size = self._max_files_listed
+                no_batches = int(self._max_files_listed/chunk_size)
 
-            # using Arrow lists as they are recommended for large results
-            # stream will be an async iterable of RecordBatch
-            current_batch = 0
-            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=chunk_size, return_arrow=True)
-            async for batch in stream:
-                current_batch += 1
-                # reached last batch that can be shown (partially)
-                if current_batch == no_batches + 1:
-                    remaining_files = self._max_files_listed - no_batches*chunk_size
-                    
-                # if content exists we are dealing with a directory
-                if isDir is False and batch: 
-                    isDir = True
-                    emptyDir = False
-                    
-                contents_list = pyarrow.record_batch(batch).to_pylist()
-                for object in contents_list:
-                    # when listing the last batch (partially), make sure we don't exceed limit
+                # using Arrow lists as they are recommended for large results
+                # stream will be an async iterable of RecordBatch
+                current_batch = 0
+                stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=chunk_size, return_arrow=True)
+                async for batch in stream:
+                    current_batch += 1
+                    # reached last batch that can be shown (partially)
                     if current_batch == no_batches + 1:
-                        if remaining_files <= 0:
-                            break
-                        remaining_files -= 1
-                    data.append({
-                        "path": object["path"],
-                        "last_modified": object["last_modified"].isoformat(),
-                        "size": object["size"],
-                    })
+                        remaining_files = self._max_files_listed - no_batches*chunk_size
+                        
+                    contents_list = pyarrow.record_batch(batch).to_pylist()
+                    for object in contents_list:
+                        # when listing the last batch (partially), make sure we don't exceed limit
+                        if current_batch == no_batches + 1:
+                            if remaining_files <= 0:
+                                break
+                            remaining_files -= 1
+                        data.append({
+                            "path": object["path"],
+                            "last_modified": object["last_modified"].isoformat(),
+                            "size": object["size"],
+                        })
+                    
+                    # check if we reached the limit of files that can be listed
+                    if current_batch == no_batches + 1:
+                        break
                 
-                # check if we reached the limit of files that can be listed
-                if current_batch == no_batches + 1:
-                    break
-                
-            # check if we are dealing with an empty drive
-            if isDir is False and path != '':
+            else:
                 content = b""
                 # retrieve contents of object
                 obj = await obs.get_async(self._content_managers[drive_name]["store"], path)
                 stream = obj.stream(min_chunk_size=5 * 1024 * 1024) # 5MB sized chunks
                 async for buf in stream: 
-                    # if content exists we are dealing with a file
-                    if emptyDir is True and buf:
-                        emptyDir = False
                     content += buf
 
                 # retrieve metadata of object
@@ -292,12 +283,6 @@ class JupyterDrivesManager():
                     "last_modified": metadata["last_modified"].isoformat(),
                     "size": metadata["size"]
                 }
-
-            # dealing with the case of an empty directory, making sure it is not an empty file
-            if emptyDir is True: 
-                check = await self._file_system._isdir(drive_name + '/' + path)
-                if check == True:
-                    data = []
 
             response = {
                 "data": data
