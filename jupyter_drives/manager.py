@@ -295,7 +295,7 @@ class JupyterDrivesManager():
 
             # dealing with the case of an empty directory, making sure it is not an empty file
             if emptyDir is True: 
-                check = await self._check_object(drive_name, path)
+                check = await self._isdir(drive_name + '/' + path)
                 if check == True:
                     data = []
 
@@ -423,7 +423,7 @@ class JupyterDrivesManager():
             
             object_name = drive_name + '/' + path
             new_object_name = drive_name + '/' + new_path
-            is_dir = await self._check_object(drive_name, path)
+            is_dir = await self._isdir(object_name)
             if is_dir == True:
                 object_name = object_name + self._fixDir_suffix
                 new_object_name = new_object_name + self._fixDir_suffix
@@ -519,7 +519,7 @@ class JupyterDrivesManager():
             else:
                 to_object_name = to_drive + '/' + to_path
             
-            is_dir = await self._check_object(drive_name, path)
+            is_dir = await self._isdir(object_name)
             if is_dir == True:
                 object_name = object_name + self._fixDir_suffix
                 to_object_name = to_object_name + self._fixDir_suffix
@@ -593,26 +593,6 @@ class JupyterDrivesManager():
             )
     
         return location
-    
-    async def _check_object(self, drive_name, path):
-        """Helping function to check if we are dealing with a file or directory.
-
-        Args:
-            drive_name: name of drive where object exists
-            path: path of object to check
-        """
-        isDir = False
-        try:
-           response = await self._file_system._info(drive_name + '/' + path)
-           if response["type"]=='directory':
-               isDir = True
-        except Exception as e:
-            raise tornado.web.HTTPError(
-            status_code= httpx.codes.BAD_REQUEST,
-            reason=f"The following error occured when checking the object information: {e}",
-            )
-        
-        return isDir
     
     async def _fix_dir(self, drive_name, path, delete_only = False):
         """Helping function to fix a directory. It applies to the S3 folders created in the AWS console.
