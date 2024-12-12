@@ -327,14 +327,14 @@ class JupyterDrivesManager():
             # in the case of S3 directories, we need to add a suffix to feign the creation of a directory
             if type == 'directory' and self._config.provider == 's3':
                 object_name = object_name + self._fixDir_suffix
-                
+
             await self._file_system._touch(object_name)         
-            metadata = await self._file_system._info(drive_name + '/' + path)
+            metadata = await self._file_system._info(object_name)
             
             data = {
                 "path": path,
                 "content": "",
-                "last_modified": metadata["LastModified"].isoformat() if metadata["type"]=='file' else datetime.now().isoformat(),
+                "last_modified": metadata["LastModified"].isoformat(),
                 "size": metadata["size"],
                 "type": metadata["type"]
             }
