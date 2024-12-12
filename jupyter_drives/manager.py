@@ -421,12 +421,19 @@ class JupyterDrivesManager():
             # eliminate leading and trailing backslashes
             path = path.strip('/')
             
-            await obs.rename_async(self._content_managers[drive_name]["store"], path, new_path)
-            metadata = await obs.head_async(self._content_managers[drive_name]["store"], new_path)
+            object_name = drive_name + '/' + path
+            new_object_name = drive_name + '/' + new_path
+            is_dir = await self._check_object(drive_name, path)
+            if is_dir == True:
+                object_name = object_name + self._fixDir_suffix
+                new_object_name = new_object_name + self._fixDir_suffix
+            
+            await self._file_system._mv_file(object_name, new_object_name)
+            metadata = await self._file_system._info(new_object_name)
 
             data = {
                 "path": new_path,
-                "last_modified": metadata["last_modified"].isoformat(),
+                "last_modified": metadata["LastModified"].isoformat(),
                 "size": metadata["size"]
             }
         except Exception as e:
@@ -580,11 +587,11 @@ class JupyterDrivesManager():
         return location
     
     async def _check_object(self, drive_name, path):
-        """Helping function to check if we are dealing with an empty file or directory.
+        """Helping function to check if we are dealing with a file or directory.
 
         Args:
             drive_name: name of drive where object exists
-            path: path to object to check
+            path: path of object to check
         """
         isDir = False
         try:
