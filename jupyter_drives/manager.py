@@ -458,7 +458,17 @@ class JupyterDrivesManager():
         try: 
             # eliminate leading and trailing backslashes
             path = path.strip('/')
-            await obs.delete_async(self._content_managers[drive_name]["store"], path)
+            is_dir = await self._file_system._isdir(drive_name + '/' + path)
+            if is_dir == True:
+                await self._fix_dir(drive_name, path)
+            await self._file_system._rm(drive_name + '/' + path, recursive = True)
+
+            # checking for remaining directories and deleting them
+            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=100, return_arrow=True)
+            async for batch in stream:
+                contents_list = pyarrow.record_batch(batch).to_pylist()
+                for object in contents_list:
+                    await self._fix_dir(drive_name, object["path"], delete_only = True)               
 
         except Exception as e:
             raise tornado.web.HTTPError(
@@ -607,7 +617,7 @@ class JupyterDrivesManager():
         
         return isDir
     
-    async def _fix_dir(self, drive_name, path):
+    async def _fix_dir(self, drive_name, path, delete_only = False):
         """Helping function to fix a directory. It applies to the S3 folders created in the AWS console.
         
         Args:
@@ -622,6 +632,8 @@ class JupyterDrivesManager():
                 # delete original object
                 async with self._s3_session.create_client('s3', aws_secret_access_key=self._config.secret_access_key, aws_access_key_id=self._config.access_key_id, aws_session_token=self._config.session_token) as client:
                     await client.delete_object(Bucket=drive_name, Key=path+'/')
+                if delete_only == True:
+                    return 
                 # create new directory
                 await self._file_system._touch(drive_name + '/' + path + self._fixDir_suffix)
         except Exception as e:
