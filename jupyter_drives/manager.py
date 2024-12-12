@@ -427,6 +427,7 @@ class JupyterDrivesManager():
             if is_dir == True:
                 object_name = object_name + self._fixDir_suffix
                 new_object_name = new_object_name + self._fixDir_suffix
+                await self._fix_dir(drive_name, path)
             
             await self._file_system._mv_file(object_name, new_object_name)
             metadata = await self._file_system._info(new_object_name)
@@ -599,12 +600,37 @@ class JupyterDrivesManager():
            if response["type"]=='directory':
                isDir = True
         except Exception as e:
-             raise tornado.web.HTTPError(
+            raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
             reason=f"The following error occured when checking the object information: {e}",
             )
         
         return isDir
+    
+    async def _fix_dir(self, drive_name, path):
+        """Helping function to fix a directory. It applies to the S3 folders created in the AWS console.
+        
+        Args:
+            drive_name: name of drive where object exists
+            path: path of object to fix
+        """
+        try: 
+            check = await self._file_system._exists(drive_name + '/' + path + self._fixDir_suffix)
+            if check == True: # directory has right format
+                return 
+            else: # directory was created from console
+                # delete original object
+                async with self._s3_session.create_client('s3', aws_secret_access_key=self._config.secret_access_key, aws_access_key_id=self._config.access_key_id, aws_session_token=self._config.session_token) as client:
+                    await client.delete_object(Bucket=drive_name, Key=path+'/')
+                # create new directory
+                await self._file_system._touch(drive_name + '/' + path + self._fixDir_suffix)
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when fixing the directory object: {e}",
+            )
+        
+        return                    
     
     async def _call_provider(
         self,
