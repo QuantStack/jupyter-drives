@@ -511,29 +511,26 @@ class JupyterDrivesManager():
             # eliminate leading and trailing backslashes
             path = path.strip('/')
 
-            # copy object within same drive
+            object_name = drive_name + '/' + path
+            # copy objects within same drive
             if to_drive == drive_name:
-                await obs.copy_async(self._content_managers[drive_name]["store"], path, to_path)
-                metadata = await obs.head_async(self._content_managers[drive_name]["store"], to_path)
-            # copy object to another drive
+                to_object_name = drive_name + '/' + to_path
+            # copy objects to another drive
             else:
-                content = b''
-                try:
-                    # retrieving contents of file
-                    file = await obs.get_async(self._content_managers[drive_name]["store"], path)
-                    stream = file.stream(min_chunk_size=5 * 1024 * 1024) # 5MB sized chunks
-                    async for buf in stream: 
-                        content += buf
-                except: 
-                    # dealing with a directory, no contents to retrieve
-                    pass
-
-                await obs.put_async(self._content_managers[to_drive]["store"], to_path, content)                
-                metadata = await obs.head_async(self._content_managers[to_drive]["store"], to_path)
+                to_object_name = to_drive + '/' + to_path
+            
+            is_dir = await self._check_object(drive_name, path)
+            if is_dir == True:
+                object_name = object_name + self._fixDir_suffix
+                to_object_name = to_object_name + self._fixDir_suffix
+                await self._fix_dir(drive_name, path)
+           
+            await self._file_system._copy(object_name, to_object_name)
+            metadata = await self._file_system._info(to_object_name)
 
             data = {
                 "path": to_path,
-                "last_modified": metadata["last_modified"].isoformat(),
+                "last_modified": metadata["LastModified"].isoformat(),
                 "size": metadata["size"]
             }
         except Exception as e:
