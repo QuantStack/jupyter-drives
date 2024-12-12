@@ -295,7 +295,7 @@ class JupyterDrivesManager():
 
             # dealing with the case of an empty directory, making sure it is not an empty file
             if emptyDir is True: 
-                check = await self._isdir(drive_name + '/' + path)
+                check = await self._file_system._isdir(drive_name + '/' + path)
                 if check == True:
                     data = []
 
@@ -422,7 +422,7 @@ class JupyterDrivesManager():
             
             object_name = drive_name + '/' + path
             new_object_name = drive_name + '/' + new_path
-            is_dir = await self._isdir(object_name)
+            is_dir = await self._file_system._isdir(object_name)
             if is_dir == True:
                 object_name = object_name + self._fixDir_suffix
                 new_object_name = new_object_name + self._fixDir_suffix
@@ -518,7 +518,7 @@ class JupyterDrivesManager():
             else:
                 to_object_name = to_drive + '/' + to_path
             
-            is_dir = await self._isdir(object_name)
+            is_dir = await self._file_system._isdir(object_name)
             if is_dir == True:
                 object_name = object_name + self._fixDir_suffix
                 to_object_name = to_object_name + self._fixDir_suffix
