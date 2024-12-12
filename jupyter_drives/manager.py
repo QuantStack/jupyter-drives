@@ -50,6 +50,7 @@ class JupyterDrivesManager():
         # initiate aiobotocore session if we are dealing with S3 drives
         if self._config.provider == 's3':
             if self._config.access_key_id and self._config.secret_access_key:
+                self._fixDir_suffix = '/.jupyter-drives-fixDir' # fix for creating directories 
                 self._s3_clients = {}
                 self._s3_session = get_session()
                 self._file_system = s3fs.S3FileSystem(anon=False, asynchronous=True, key=self._config.access_key_id, secret=self._config.secret_access_key, token=self._config.session_token)
@@ -322,10 +323,12 @@ class JupyterDrivesManager():
             # eliminate leading and trailing backslashes
             path = path.strip('/')
 
+            object_name =  drive_name + '/' + path
+            # in the case of S3 directories, we need to add a suffix to feign the creation of a directory
             if type == 'directory' and self._config.provider == 's3':
-                await self._create_dir(drive_name, path)
-            else:
-                 await self._file_system._touch(drive_name + '/' + path)         
+                object_name = object_name + self._fixDir_suffix
+                
+            await self._file_system._touch(object_name)         
             metadata = await self._file_system._info(drive_name + '/' + path)
             
             data = {
@@ -595,24 +598,6 @@ class JupyterDrivesManager():
             )
         
         return isDir
-    
-    async def _create_dir(self, drive_name, path):
-        """Helping function to create an empty directory.
-
-        Args:
-            drive_name: name of drive where object should be created
-            path: path to object to create
-        """
-        try:
-           async with self._s3_session.create_client('s3', aws_secret_access_key=self._config.secret_access_key, aws_access_key_id=self._config.access_key_id, aws_session_token=self._config.session_token) as client:
-               await client.put_object(Bucket=drive_name, Key=path + '/')
-        except Exception as e:
-             raise tornado.web.HTTPError(
-            status_code= httpx.codes.BAD_REQUEST,
-            reason=f"The following error occured when creating the directory: {e}",
-            )
-        
-        return 
     
     async def _call_provider(
         self,
