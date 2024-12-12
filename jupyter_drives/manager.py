@@ -378,9 +378,8 @@ class JupyterDrivesManager():
                     byte_array = bytearray(slice_)
                     byte_arrays.append(byte_array)
                 
-                # combine byte arrays and wrap in a BytesIO object 
-                formatted_content = BytesIO(b"".join(byte_arrays))
-                formatted_content.seek(0)  # reset cursor for any further reading
+                # combine byte arrays
+                formatted_content = b"".join(byte_arrays)
             elif options_format == 'text':
                 formatted_content = content.encode("utf-8")
             else:
@@ -388,13 +387,13 @@ class JupyterDrivesManager():
             if formatted_content is None or formatted_content == '':
                 formatted_content = b''
 
-            await obs.put_async(self._content_managers[drive_name]["store"], path, formatted_content, mode = "overwrite")
-            metadata = await obs.head_async(self._content_managers[drive_name]["store"], path)
+            await self._file_system._pipe(drive_name + '/' + path, formatted_content)
+            metadata = await self._file_system._info(drive_name + '/' + path)
 
             data = {
                 "path": path,
                 "content": content,
-                "last_modified": metadata["last_modified"].isoformat(),
+                "last_modified": metadata["LastModified"].isoformat(),
                 "size": metadata["size"]
             }
         except Exception as e:
