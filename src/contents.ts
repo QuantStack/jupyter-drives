@@ -310,6 +310,7 @@ export class Drive implements Contents.IDrive {
         data = await createObject(currentDrive.name, {
           name: name,
           path: relativePath,
+          type: options.type,
           registeredFileTypes: this._registeredFileTypes
         });
       } else {
