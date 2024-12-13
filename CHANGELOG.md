@@ -2,6 +2,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.0
+
+([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.0.1...26e504aec6122d9f4b2ab854f48f1cd102062b59))
+
+### Enhancements made
+
+- Refactor backend [#50](https://github.com/QuantStack/jupyter-drives/pull/50) ([@DenisaCG](https://github.com/DenisaCG))
+- Switch to async logic for region extraction [#49](https://github.com/QuantStack/jupyter-drives/pull/49) ([@DenisaCG](https://github.com/DenisaCG))
+- Use boto3 to get credentials. [#39](https://github.com/QuantStack/jupyter-drives/pull/39) ([@ellisonbg](https://github.com/ellisonbg))
+
+### Bugs fixed
+
+- Get drive location when mounting [#48](https://github.com/QuantStack/jupyter-drives/pull/48) ([@DenisaCG](https://github.com/DenisaCG))
+- Update packages [#47](https://github.com/QuantStack/jupyter-drives/pull/47) ([@DenisaCG](https://github.com/DenisaCG))
+
+### Maintenance and upkeep improvements
+
+- Update dependencies for `v4.2.0` of `JupyterLab` [#51](https://github.com/QuantStack/jupyter-drives/pull/51) ([@DenisaCG](https://github.com/DenisaCG))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2024-12-06&to=2024-12-13&type=c))
+
+[@DenisaCG](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3ADenisaCG+updated%3A2024-12-06..2024-12-13&type=Issues) | [@ellisonbg](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Aellisonbg+updated%3A2024-12-06..2024-12-13&type=Issues) | [@github-actions](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agithub-actions+updated%3A2024-12-06..2024-12-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.0.1
 
 ([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/be448fe336f6ba194b7723500045f35106d7ec0d...53539f11b278785939a35d83f4de9df826734a2c))
@@ -44,5 +71,3 @@
 ([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2023-10-10&to=2024-12-06&type=c))
 
 [@DenisaCG](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3ADenisaCG+updated%3A2023-10-10..2024-12-06&type=Issues) | [@github-actions](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agithub-actions+updated%3A2023-10-10..2024-12-06&type=Issues) | [@HaudinFlorence](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3AHaudinFlorence+updated%3A2023-10-10..2024-12-06&type=Issues) | [@trungleduc](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Atrungleduc+updated%3A2023-10-10..2024-12-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->

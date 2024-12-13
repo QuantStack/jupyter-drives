@@ -1,6 +1,6 @@
 {
     "name": "jupyter-drives",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "A Jupyter extension to support drives in the backend.",
     "keywords": [
         "jupyter",
