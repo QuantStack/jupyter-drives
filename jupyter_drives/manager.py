@@ -25,6 +25,9 @@ from .base import DrivesConfig
 
 import re
 
+# constant used as suffix to deal with directory objects
+EMPTY_DIR_SUFFIX = '/.jupyter_drives_fix_dir'
+
 class JupyterDrivesManager():
     """
     Jupyter-drives manager class.
@@ -49,8 +52,7 @@ class JupyterDrivesManager():
 
         # initiate aiobotocore session if we are dealing with S3 drives
         if self._config.provider == 's3':
-            if self._config.access_key_id and self._config.secret_access_key:
-                self._fixDir_suffix = '/.jupyter-drives-fixDir' # fix for creating directories 
+            if self._config.access_key_id and self._config.secret_access_key: 
                 self._s3_clients = {}
                 self._s3_session = get_session()
                 self._file_system = s3fs.S3FileSystem(anon=False, asynchronous=True, key=self._config.access_key_id, secret=self._config.secret_access_key, token=self._config.session_token)
@@ -311,7 +313,7 @@ class JupyterDrivesManager():
             object_name =  drive_name + '/' + path
             # in the case of S3 directories, we need to add a suffix to feign the creation of a directory
             if type == 'directory' and self._config.provider == 's3':
-                object_name = object_name + self._fixDir_suffix
+                object_name = object_name + EMPTY_DIR_SUFFIX
 
             await self._file_system._touch(object_name)         
             metadata = await self._file_system._info(object_name)
@@ -409,8 +411,8 @@ class JupyterDrivesManager():
             new_object_name = drive_name + '/' + new_path
             is_dir = await self._file_system._isdir(object_name)
             if is_dir == True:
-                object_name = object_name + self._fixDir_suffix
-                new_object_name = new_object_name + self._fixDir_suffix
+                object_name = object_name + EMPTY_DIR_SUFFIX
+                new_object_name = new_object_name + EMPTY_DIR_SUFFIX
                 await self._fix_dir(drive_name, path)
             
             await self._file_system._mv_file(object_name, new_object_name)
@@ -486,8 +488,8 @@ class JupyterDrivesManager():
             
             is_dir = await self._file_system._isdir(object_name)
             if is_dir == True:
-                object_name = object_name + self._fixDir_suffix
-                to_object_name = to_object_name + self._fixDir_suffix
+                object_name = object_name + EMPTY_DIR_SUFFIX
+                to_object_name = to_object_name + EMPTY_DIR_SUFFIX
                 await self._fix_dir(drive_name, path)
            
             await self._file_system._copy(object_name, to_object_name)
@@ -567,7 +569,7 @@ class JupyterDrivesManager():
             path: path of object to fix
         """
         try: 
-            check = await self._file_system._exists(drive_name + '/' + path + self._fixDir_suffix)
+            check = await self._file_system._exists(drive_name + '/' + path + EMPTY_DIR_SUFFIX)
             if check == True: # directory has right format
                 return 
             else: # directory was created from console
@@ -577,7 +579,7 @@ class JupyterDrivesManager():
                 if delete_only == True:
                     return 
                 # create new directory
-                await self._file_system._touch(drive_name + '/' + path + self._fixDir_suffix)
+                await self._file_system._touch(drive_name + '/' + path + EMPTY_DIR_SUFFIX)
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
