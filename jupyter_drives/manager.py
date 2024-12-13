@@ -45,7 +45,7 @@ class JupyterDrivesManager():
         self._config = DrivesConfig(config=config)
         self._client = httpx.AsyncClient()
         self._content_managers = {}
-        self._max_files_listed = 1000
+        self._max_files_listed = 1025
         
         # instate fsspec file system
         self._file_system = fsspec.filesystem(self._config.provider, asynchronous=True)
