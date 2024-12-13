@@ -228,7 +228,7 @@ class JupyterDrivesManager():
             is_dir = await self._file_system._isdir(drive_name + '/' + path)
 
             if is_dir == True:
-                chunk_size = 100
+                chunk_size = 1024
                 if self._max_files_listed < chunk_size:
                     chunk_size = self._max_files_listed
                 no_batches = int(self._max_files_listed/chunk_size)
