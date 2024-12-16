@@ -547,12 +547,13 @@ class JupyterDrivesManager():
         Args:
             drive_name: name of drive to get the region of
         """
-        location = 'eu-north-1'
+        location = 'us-east-1'
         try:
             # set temporary client for location extraction
             async with self._s3_session.create_client('s3', aws_secret_access_key=self._config.secret_access_key, aws_access_key_id=self._config.access_key_id, aws_session_token=self._config.session_token) as client:
                 result = await client.get_bucket_location(Bucket=drive_name)
-                location = result['LocationConstraint']
+                if result['LocationConstraint'] is not None:
+                    location = result['LocationConstraint']
         except Exception as e:
              raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
