@@ -59,6 +59,7 @@
         "@jupyterlab/apputils": "^4.2.0",
         "@jupyterlab/coreutils": "^6.2.0",
         "@jupyterlab/filebrowser": "^4.2.0",
+        "@jupyterlab/launcher": "^4.3.3",
         "@jupyterlab/services": "^7.2.0",
         "@jupyterlab/settingregistry": "^4.2.0",
         "@jupyterlab/translation": "^4.2.0",
@@ -113,7 +114,10 @@
         },
         "extension": true,
         "outputDir": "jupyter_drives/labextension",
-        "schemaDir": "schema"
+        "schemaDir": "schema",
+        "disabledExtensions": [
+            "@jupyterlab/launcher-extension:plugin"
+        ]
     },
     "eslintIgnore": [
         "node_modules",

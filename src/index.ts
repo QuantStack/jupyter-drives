@@ -28,6 +28,7 @@ import { DriveIcon, driveBrowserIcon } from './icons';
 import { Drive } from './contents';
 import { getDrivesList, setListingLimit } from './requests';
 import { IDriveInfo, IDrivesList } from './token';
+import { launcherPlugin } from './launcher';
 
 /**
  * The command IDs used by the driveBrowser plugin.
@@ -313,7 +314,8 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 const plugins: JupyterFrontEndPlugin<any>[] = [
   driveFileBrowser,
   drivesListProvider,
-  openDriveDialogPlugin
+  openDriveDialogPlugin,
+  launcherPlugin
 ];
 export default plugins;
 
