@@ -231,7 +231,7 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     driveBrowser.node.setAttribute('aria-label', 'Drive Browser Section');
     driveBrowser.title.icon = driveBrowserIcon;
     driveBrowser.title.caption = 'Drive File Browser';
-    driveBrowser.id = 'Drive-File-Browser';
+    driveBrowser.id = 'drive-file-browser';
 
     void Private.restoreBrowser(driveBrowser, commands, router, tree, labShell);
 
