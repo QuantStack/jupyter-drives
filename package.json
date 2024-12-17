@@ -179,7 +179,8 @@
                 "all"
             ],
             "eqeqeq": "error",
-            "prefer-arrow-callback": "error"
+            "prefer-arrow-callback": "error",
+            "prefer-const": "off"
         }
     },
     "prettier": {
