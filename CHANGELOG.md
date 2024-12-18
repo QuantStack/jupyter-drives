@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.1
+
+([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.1.0...f789bf757e92268a917954e5da4ee26d32c85af5))
+
+### Enhancements made
+
+- Reorganize plugins structure [#63](https://github.com/QuantStack/jupyter-drives/pull/63) ([@DenisaCG](https://github.com/DenisaCG))
+
+### Bugs fixed
+
+- Update logic to check existence of object [#64](https://github.com/QuantStack/jupyter-drives/pull/64) ([@DenisaCG](https://github.com/DenisaCG))
+- Fix notebook uploading [#62](https://github.com/QuantStack/jupyter-drives/pull/62) ([@DenisaCG](https://github.com/DenisaCG))
+- Replace launcher plugin [#61](https://github.com/QuantStack/jupyter-drives/pull/61) ([@DenisaCG](https://github.com/DenisaCG))
+- Update location extraction logic [#59](https://github.com/QuantStack/jupyter-drives/pull/59) ([@DenisaCG](https://github.com/DenisaCG))
+- Add `boto3` dependency [#52](https://github.com/QuantStack/jupyter-drives/pull/52) ([@DenisaCG](https://github.com/DenisaCG))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2024-12-13&to=2024-12-18&type=c))
+
+[@DenisaCG](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3ADenisaCG+updated%3A2024-12-13..2024-12-18&type=Issues) | [@github-actions](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agithub-actions+updated%3A2024-12-13..2024-12-18&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.0
 
 ([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.0.1...26e504aec6122d9f4b2ab854f48f1cd102062b59))
@@ -26,8 +50,6 @@
 ([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2024-12-06&to=2024-12-13&type=c))
 
 [@DenisaCG](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3ADenisaCG+updated%3A2024-12-06..2024-12-13&type=Issues) | [@ellisonbg](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Aellisonbg+updated%3A2024-12-06..2024-12-13&type=Issues) | [@github-actions](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agithub-actions+updated%3A2024-12-06..2024-12-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.0.1
 
