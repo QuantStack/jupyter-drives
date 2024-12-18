@@ -12,12 +12,7 @@ import { find } from '@lumino/algorithm';
 import { ReadonlyPartialJSONObject } from '@lumino/coreutils';
 import { DockPanel, TabBar, Widget } from '@lumino/widgets';
 
-/**
- * The command IDs used by the launcher plugin.
- */
-namespace CommandIDs {
-  export const launcher = 'launcher:create';
-}
+import { CommandIDs } from '../token';
 
 /**
  * A service providing an interface to the the launcher.

@@ -9,15 +9,7 @@ import { Dialog, showDialog } from '@jupyterlab/apputils';
 
 import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
 import { DriveIcon } from '../icons';
-
-/**
- * The command IDs used by the driveBrowser plugin.
- */
-namespace CommandIDs {
-  export const openDrivesDialog = 'drives:open-drives-dialog';
-  export const openPath = 'drives:open-path';
-  export const toggleBrowser = 'drives:toggle-main';
-}
+import { CommandIDs } from '../token';
 
 export const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyter-drives:widget',

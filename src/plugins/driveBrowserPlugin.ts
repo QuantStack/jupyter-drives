@@ -23,16 +23,7 @@ import { CommandRegistry } from '@lumino/commands';
 import { driveBrowserIcon } from '../icons';
 import { Drive } from '../contents';
 import { getDrivesList, setListingLimit } from '../requests';
-import { IDriveInfo, IDrivesList } from '../token';
-
-/**
- * The command IDs used by the driveBrowser plugin.
- */
-namespace CommandIDs {
-  export const openDrivesDialog = 'drives:open-drives-dialog';
-  export const openPath = 'drives:open-path';
-  export const toggleBrowser = 'drives:toggle-main';
-}
+import { IDriveInfo, IDrivesList, CommandIDs } from '../token';
 
 /**
  * The file browser factory ID.
