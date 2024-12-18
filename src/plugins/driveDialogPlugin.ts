@@ -8,7 +8,7 @@ import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
 
 import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
-import { DriveIcon } from '../icons';
+import { driveBrowserIcon } from '../icons';
 import { CommandIDs } from '../token';
 
 export const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
@@ -108,7 +108,7 @@ export const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
         }
       },
 
-      icon: DriveIcon.bindprops({ stylesheet: 'menuItem' }),
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' }),
       caption: trans.__('Add drives to filebrowser.'),
       label: trans.__('Add Drives To Filebrowser')
     });
