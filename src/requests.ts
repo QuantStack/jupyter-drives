@@ -475,7 +475,7 @@ export const countObjectNameAppearances = async (
   path: string,
   originalName: string
 ): Promise<number> => {
-  let counter: number = 0;
+  let dirCount: { [fileName: string]: number } = {};
   path = path.substring(0, path.lastIndexOf('/'));
 
   const response = await requestAPI<any>(
@@ -489,11 +489,14 @@ export const countObjectNameAppearances = async (
       if (
         fileName.substring(0, originalName.length + 1).includes(originalName)
       ) {
-        counter += 1;
+        dirCount[fileName] = 1;
       }
     });
   }
-
+  const counter = Object.values(dirCount).reduce(
+    (sum, count) => sum + count,
+    0
+  );
   return counter;
 };
 

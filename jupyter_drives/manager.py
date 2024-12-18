@@ -542,6 +542,27 @@ class JupyterDrivesManager():
             }
         return response
     
+    async def check_file(self, drive_name, path):
+        """Check if an object already exists within a drive.
+        
+        Args:
+            drive_name: name of drive where object exists
+            path: path where content is located
+        """
+        # eliminate leading and trailing backslashes
+        path = path.strip('/')
+        check = await self._file_system._exists(drive_name + '/' + path)
+        if check == False:
+            # check if we are dealing with a directory
+            check = await self._file_system._exists(drive_name + '/' + path + EMPTY_DIR_SUFFIX)
+            if check == False:
+                raise tornado.web.HTTPError(
+                    status_code= httpx.codes.NOT_FOUND,
+                    reason="Object does not already exist within drive.",
+                )
+
+        return 
+    
     async def _get_drive_location(self, drive_name):
         """Helping function for getting drive region.
 
