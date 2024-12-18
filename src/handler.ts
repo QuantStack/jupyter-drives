@@ -2,8 +2,6 @@ import { URLExt } from '@jupyterlab/coreutils';
 import { ServerConnection } from '@jupyterlab/services';
 import { ReadonlyJSONObject } from '@lumino/coreutils';
 
-// import { DrivesResponseError } from './drivesError';
-
 /**
  * Array of Jupyter Drives Auth Error Messages.
  */
