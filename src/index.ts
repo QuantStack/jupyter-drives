@@ -28,6 +28,7 @@ import { DriveIcon, driveBrowserIcon } from './icons';
 import { Drive } from './contents';
 import { getDrivesList, setListingLimit } from './requests';
 import { IDriveInfo, IDrivesList } from './token';
+import { launcherPlugin } from './launcher';
 
 /**
  * The command IDs used by the driveBrowser plugin.
@@ -230,7 +231,7 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     driveBrowser.node.setAttribute('aria-label', 'Drive Browser Section');
     driveBrowser.title.icon = driveBrowserIcon;
     driveBrowser.title.caption = 'Drive File Browser';
-    driveBrowser.id = 'Drive-File-Browser';
+    driveBrowser.id = 'drive-file-browser';
 
     void Private.restoreBrowser(driveBrowser, commands, router, tree, labShell);
 
@@ -313,7 +314,8 @@ const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 const plugins: JupyterFrontEndPlugin<any>[] = [
   driveFileBrowser,
   drivesListProvider,
-  openDriveDialogPlugin
+  openDriveDialogPlugin,
+  launcherPlugin
 ];
 export default plugins;
 
