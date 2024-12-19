@@ -107,7 +107,7 @@ class JupyterDrivesManager():
         if self._config.access_key_id and self._config.secret_access_key:
             if self._config.provider == "s3":
                 S3Drive = get_driver(Provider.S3)
-                drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key)]
+                drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key, True, None, None, None, self._config.session_token)]
 
             elif self._config.provider == 'gcs':
                 GCSDrive = get_driver(Provider.GOOGLE_STORAGE)
