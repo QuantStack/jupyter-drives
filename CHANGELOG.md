@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.2
+
+([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.1.1...cf120affc369836154c4dd277493086c01dbe7f0))
+
+### Bugs fixed
+
+- Provide s3 driver with session token [#65](https://github.com/QuantStack/jupyter-drives/pull/65) ([@gogakoreli](https://github.com/gogakoreli))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2024-12-18&to=2025-01-06&type=c))
+
+[@gogakoreli](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agogakoreli+updated%3A2024-12-18..2025-01-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.1
 
 ([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.1.0...f789bf757e92268a917954e5da4ee26d32c85af5))
@@ -23,8 +39,6 @@
 ([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2024-12-13&to=2024-12-18&type=c))
 
 [@DenisaCG](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3ADenisaCG+updated%3A2024-12-13..2024-12-18&type=Issues) | [@github-actions](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agithub-actions+updated%3A2024-12-13..2024-12-18&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.0
 
