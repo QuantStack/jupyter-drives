@@ -22,8 +22,8 @@ import { CommandRegistry } from '@lumino/commands';
 
 import { driveBrowserIcon } from '../icons';
 import { Drive } from '../contents';
-import { getDrivesList, setListingLimit } from '../requests';
-import { IDriveInfo, IDrivesList, CommandIDs } from '../token';
+import { setListingLimit } from '../requests';
+import { CommandIDs } from '../token';
 
 /**
  * The file browser factory ID.
@@ -36,24 +36,6 @@ const FILE_BROWSER_FACTORY = 'DriveBrowser';
 const FILTERBOX_CLASS = 'jp-drive-browser-search-box';
 
 /**
- * The drives list provider.
- */
-export const drivesListProvider: JupyterFrontEndPlugin<IDriveInfo[]> = {
-  id: 'jupyter-drives:drives-list',
-  description: 'The drives list provider.',
-  provides: IDrivesList,
-  activate: async (_: JupyterFrontEnd): Promise<IDriveInfo[]> => {
-    let drives: IDriveInfo[] = [];
-    try {
-      drives = await getDrivesList();
-    } catch (error) {
-      console.log('Failed loading available drives list, with error: ', error);
-    }
-    return drives;
-  }
-};
-
-/**
  * The drive file browser factory provider.
  */
 export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
@@ -64,8 +46,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     IFileBrowserFactory,
     IToolbarWidgetRegistry,
     ISettingRegistry,
-    ITranslator,
-    IDrivesList
+    ITranslator
   ],
   optional: [
     IRouter,
@@ -79,7 +60,6 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     toolbarRegistry: IToolbarWidgetRegistry,
     settingsRegistry: ISettingRegistry,
     translator: ITranslator,
-    drivesList: IDriveInfo[],
     router: IRouter | null,
     tree: JupyterFrontEnd.ITreeResolver | null,
     labShell: ILabShell | null,
@@ -92,8 +72,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 
     // create drive for drive file browser
     const drive = new Drive({
-      name: 's3',
-      drivesList: drivesList
+      name: 's3'
     });
 
     app.serviceManager.contents.addDrive(drive);
