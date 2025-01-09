@@ -90,7 +90,7 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
     async def post(self, drive: str = "", path: str = ""):
         body = self.get_json_body()
         if 'location' in body:
-            result = await self._manager.new_drive(**body)
+            result = await self._manager.new_drive(drive, **body)
         else:
             result = await self._manager.new_file(drive, path, **body)
         self.finish(result)

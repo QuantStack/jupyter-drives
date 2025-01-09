@@ -19,7 +19,8 @@ import {
   countObjectNameAppearances,
   renameObjects,
   copyObjects,
-  presignedLink
+  presignedLink,
+  createDrive
 } from './requests';
 
 let data: Contents.IModel = {
@@ -622,6 +623,31 @@ export class Drive implements Contents.IDrive {
       newValue: data
     });
     Contents.validateContentsModel(data);
+    return data;
+  }
+
+  /**
+   * Create a new drive.
+   *
+   * @param options: The options used to create the drive.
+   *
+   * @returns A promise which resolves with the contents model.
+   */
+  async newDrive(
+    newDriveName: string,
+    region: string
+  ): Promise<Contents.IModel> {
+    data = await createDrive(newDriveName, {
+      location: region
+    });
+
+    Contents.validateContentsModel(data);
+    this._fileChanged.emit({
+      type: 'new',
+      oldValue: null,
+      newValue: data
+    });
+
     return data;
   }
 
