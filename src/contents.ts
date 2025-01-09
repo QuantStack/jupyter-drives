@@ -390,16 +390,11 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves when the file is deleted.
    */
   async delete(localPath: string): Promise<void> {
-    if (localPath !== '') {
-      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
+    const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
-      await deleteObjects(currentDrive.name, {
-        path: formatPath(localPath)
-      });
-    } else {
-      // create new element at root would mean modifying a drive
-      console.warn('Operation not supported.');
-    }
+    await deleteObjects(currentDrive.name, {
+      path: formatPath(localPath)
+    });
 
     this._fileChanged.emit({
       type: 'delete',
