@@ -563,6 +563,23 @@ class JupyterDrivesManager():
 
         return 
     
+    async def new_drive(self, new_drive_name, location='us-east-1'):
+        """Create a new drive in the given location.
+        
+        Args:
+            new_drive_name: name of new drive to create
+            location: (optional) region of bucket
+        """
+        try:
+            await self._file_system._mkdir(new_drive_name, region_name = location)      
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when creating the new drive: {e}",
+            )
+        
+        return
+    
     async def _get_drive_location(self, drive_name):
         """Helping function for getting drive region.
 
