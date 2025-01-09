@@ -14,11 +14,14 @@ import { ITranslator } from '@jupyterlab/translation';
 import {
   createToolbarFactory,
   IToolbarWidgetRegistry,
-  setToolbar
+  setToolbar,
+  showDialog,
+  Dialog
 } from '@jupyterlab/apputils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { FilenameSearcher, IScore } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
+import { Widget } from '@lumino/widgets';
 
 import { driveBrowserIcon } from '../icons';
 import { Drive } from '../contents';
@@ -34,6 +37,16 @@ const FILE_BROWSER_FACTORY = 'DriveBrowser';
  * The class name added to the  drive filebrowser filterbox node.
  */
 const FILTERBOX_CLASS = 'jp-drive-browser-search-box';
+
+/**
+ * The class name added to dialogs.
+ */
+const FILE_DIALOG_CLASS = 'jp-FileDialog';
+
+/**
+ * The class name added for the new drive label in the creating new drive dialog.
+ */
+const CREATE_DRIVE_TITLE_CLASS = 'jp-new-drive-title';
 
 /**
  * The drives list provider.
@@ -184,6 +197,9 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 
         // Listen for your plugin setting changes using Signal
         setting.changed.connect(loadSetting);
+
+        // Add commands
+        Private.addCommands(app, drive);
       })
       .catch(reason => {
         console.error(
@@ -245,5 +261,102 @@ namespace Private {
       }
     };
     router.routed.connect(listener);
+  }
+
+  /**
+   * Create the node for a creating a new drive handler.
+   */
+  const createNewDriveNode = (newDriveName: string): HTMLElement => {
+    const body = document.createElement('div');
+
+    const drive = document.createElement('label');
+    drive.textContent = 'Name';
+    drive.className = CREATE_DRIVE_TITLE_CLASS;
+    const driveName = document.createElement('input');
+
+    const region = document.createElement('label');
+    region.textContent = 'Region';
+    region.className = CREATE_DRIVE_TITLE_CLASS;
+    const regionName = document.createElement('input');
+    regionName.placeholder = 'us-east-1';
+
+    body.appendChild(drive);
+    body.appendChild(driveName);
+    body.appendChild(region);
+    body.appendChild(regionName);
+    return body;
+  };
+
+  /**
+   * A widget used to create a new drive.
+   */
+  export class CreateDriveHandler extends Widget {
+    /**
+     * Construct a new "create-drive" dialog.
+     */
+    constructor(newDriveName: string) {
+      super({ node: createNewDriveNode(newDriveName) });
+      this.onAfterAttach();
+    }
+
+    protected onAfterAttach(): void {
+      this.addClass(FILE_DIALOG_CLASS);
+      const drive = this.driveInput.value;
+      this.driveInput.setSelectionRange(0, drive.length);
+      const region = this.regionInput.value;
+      this.regionInput.setSelectionRange(0, region.length);
+    }
+
+    /**
+     * Get the input text node for drive name.
+     */
+    get driveInput(): HTMLInputElement {
+      return this.node.getElementsByTagName('input')[0] as HTMLInputElement;
+    }
+
+    /**
+     * Get the input text node for region.
+     */
+    get regionInput(): HTMLInputElement {
+      return this.node.getElementsByTagName('input')[1] as HTMLInputElement;
+    }
+
+    /**
+     * Get the value of the widget.
+     */
+    getValue(): string[] {
+      return [this.driveInput.value, this.regionInput.value];
+    }
+  }
+
+  export function addCommands(app: JupyterFrontEnd, drive: Drive): void {
+    app.commands.addCommand(CommandIDs.createNewDrive, {
+      execute: async () => {
+        return showDialog({
+          title: 'Create New Drive',
+          body: new Private.CreateDriveHandler(drive.name),
+          focusNodeSelector: 'input',
+          buttons: [
+            Dialog.cancelButton(),
+            Dialog.okButton({
+              label: 'Create',
+              ariaLabel: 'Create New Drive'
+            })
+          ]
+        }).then(result => {
+          if (result.value) {
+            drive.newDrive(result.value[0], result.value[1]);
+          }
+        });
+      },
+      label: 'Create New Drive',
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.createNewDrive,
+      selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
+      rank: 10
+    });
   }
 }

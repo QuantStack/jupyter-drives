@@ -8,6 +8,7 @@ export namespace CommandIDs {
   export const openDrivesDialog = 'drives:open-drives-dialog';
   export const openPath = 'drives:open-path';
   export const toggleBrowser = 'drives:toggle-main';
+  export const createNewDrive = 'drives:create-new-drive';
   export const launcher = 'launcher:create';
 }
 

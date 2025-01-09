@@ -19,7 +19,8 @@ import {
   countObjectNameAppearances,
   renameObjects,
   copyObjects,
-  presignedLink
+  presignedLink,
+  createDrive
 } from './requests';
 
 let data: Contents.IModel = {
@@ -390,16 +391,11 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves when the file is deleted.
    */
   async delete(localPath: string): Promise<void> {
-    if (localPath !== '') {
-      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
+    const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
-      await deleteObjects(currentDrive.name, {
-        path: formatPath(localPath)
-      });
-    } else {
-      // create new element at root would mean modifying a drive
-      console.warn('Operation not supported.');
-    }
+    await deleteObjects(currentDrive.name, {
+      path: formatPath(localPath)
+    });
 
     this._fileChanged.emit({
       type: 'delete',
@@ -627,6 +623,31 @@ export class Drive implements Contents.IDrive {
       newValue: data
     });
     Contents.validateContentsModel(data);
+    return data;
+  }
+
+  /**
+   * Create a new drive.
+   *
+   * @param options: The options used to create the drive.
+   *
+   * @returns A promise which resolves with the contents model.
+   */
+  async newDrive(
+    newDriveName: string,
+    region: string
+  ): Promise<Contents.IModel> {
+    data = await createDrive(newDriveName, {
+      location: region
+    });
+
+    Contents.validateContentsModel(data);
+    this._fileChanged.emit({
+      type: 'new',
+      oldValue: null,
+      newValue: data
+    });
+
     return data;
   }
 
