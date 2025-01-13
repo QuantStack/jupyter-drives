@@ -245,7 +245,7 @@ namespace Private {
   /**
    * Create the node for a creating a new drive handler.
    */
-  const createNewDriveNode = (newDriveName: string): HTMLElement => {
+  const createNewDriveNode = (): HTMLElement => {
     const body = document.createElement('div');
 
     const drive = document.createElement('label');
@@ -274,7 +274,7 @@ namespace Private {
      * Construct a new "create-drive" dialog.
      */
     constructor(newDriveName: string) {
-      super({ node: createNewDriveNode(newDriveName) });
+      super({ node: createNewDriveNode() });
       this.onAfterAttach();
     }
 
