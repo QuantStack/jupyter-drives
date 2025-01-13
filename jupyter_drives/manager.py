@@ -445,17 +445,22 @@ class JupyterDrivesManager():
         try: 
             # eliminate leading and trailing backslashes
             path = path.strip('/')
-            is_dir = await self._file_system._isdir(drive_name + '/' + path)
-            if is_dir == True:
-                await self._fix_dir(drive_name, path)
-            await self._file_system._rm(drive_name + '/' + path, recursive = True)
+            object_name = drive_name # in case we are only deleting the drive itself
+            if path != '':
+                # deleting objects within a drive
+                is_dir = await self._file_system._isdir(drive_name + '/' + path)
+                if is_dir == True:
+                    await self._fix_dir(drive_name, path)
+                object_name = drive_name + '/' + path
+            await self._file_system._rm(object_name, recursive = True)
 
             # checking for remaining directories and deleting them
-            stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=100, return_arrow=True)
-            async for batch in stream:
-                contents_list = pyarrow.record_batch(batch).to_pylist()
-                for object in contents_list:
-                    await self._fix_dir(drive_name, object["path"], delete_only = True)               
+            if object_name != drive_name:
+                stream = obs.list(self._content_managers[drive_name]["store"], path, chunk_size=100, return_arrow=True)
+                async for batch in stream:
+                    contents_list = pyarrow.record_batch(batch).to_pylist()
+                    for object in contents_list:
+                        await self._fix_dir(drive_name, object["path"], delete_only = True)               
 
         except Exception as e:
             raise tornado.web.HTTPError(
@@ -562,6 +567,23 @@ class JupyterDrivesManager():
                 )
 
         return 
+    
+    async def new_drive(self, new_drive_name, location='us-east-1'):
+        """Create a new drive in the given location.
+        
+        Args:
+            new_drive_name: name of new drive to create
+            location: (optional) region of bucket
+        """
+        try:
+            await self._file_system._mkdir(new_drive_name, region_name = location)      
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason=f"The following error occured when creating the new drive: {e}",
+            )
+        
+        return
     
     async def _get_drive_location(self, drive_name):
         """Helping function for getting drive region.

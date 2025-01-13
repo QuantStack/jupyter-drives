@@ -20,6 +20,7 @@ import {
   renameObjects,
   copyObjects,
   presignedLink,
+  createDrive,
   getDrivesList
 } from './requests';
 
@@ -245,22 +246,29 @@ export class Drive implements Contents.IDrive {
     } else {
       // retriving list of contents from root
       // in our case: list available drives
-      const drivesList: Contents.IModel[] = [];
+      const drivesListInfo: Contents.IModel[] = [];
       // fetch list of available drives
-      this._drivesList = await getDrivesList();
-      for (const drive of this._drivesList) {
-        drivesList.push({
-          name: drive.name,
-          path: drive.name,
-          last_modified: '',
-          created: drive.creationDate,
-          content: [],
-          format: 'json',
-          mimetype: '',
-          size: undefined,
-          writable: true,
-          type: 'directory'
-        });
+      try {
+        this._drivesList = await getDrivesList();
+        for (const drive of this._drivesList) {
+          drivesListInfo.push({
+            name: drive.name,
+            path: drive.name,
+            last_modified: '',
+            created: drive.creationDate,
+            content: [],
+            format: 'json',
+            mimetype: '',
+            size: undefined,
+            writable: true,
+            type: 'directory'
+          });
+        }
+      } catch (error) {
+        console.log(
+          'Failed loading available drives list, with error: ',
+          error
+        );
       }
 
       data = {
@@ -268,7 +276,7 @@ export class Drive implements Contents.IDrive {
         path: this._name,
         last_modified: '',
         created: '',
-        content: drivesList,
+        content: drivesListInfo,
         format: 'json',
         mimetype: '',
         size: undefined,
@@ -393,16 +401,11 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves when the file is deleted.
    */
   async delete(localPath: string): Promise<void> {
-    if (localPath !== '') {
-      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
+    const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
-      await deleteObjects(currentDrive.name, {
-        path: formatPath(localPath)
-      });
-    } else {
-      // create new element at root would mean modifying a drive
-      console.warn('Operation not supported.');
-    }
+    await deleteObjects(currentDrive.name, {
+      path: formatPath(localPath)
+    });
 
     this._fileChanged.emit({
       type: 'delete',
@@ -630,6 +633,31 @@ export class Drive implements Contents.IDrive {
       newValue: data
     });
     Contents.validateContentsModel(data);
+    return data;
+  }
+
+  /**
+   * Create a new drive.
+   *
+   * @param options: The options used to create the drive.
+   *
+   * @returns A promise which resolves with the contents model.
+   */
+  async newDrive(
+    newDriveName: string,
+    region: string
+  ): Promise<Contents.IModel> {
+    data = await createDrive(newDriveName, {
+      location: region
+    });
+
+    Contents.validateContentsModel(data);
+    this._fileChanged.emit({
+      type: 'new',
+      oldValue: null,
+      newValue: data
+    });
+
     return data;
   }
 
