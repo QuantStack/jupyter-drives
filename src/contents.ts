@@ -20,7 +20,8 @@ import {
   renameObjects,
   copyObjects,
   presignedLink,
-  createDrive
+  createDrive,
+  getDrivesList
 } from './requests';
 
 let data: Contents.IModel = {
@@ -246,6 +247,8 @@ export class Drive implements Contents.IDrive {
       // retriving list of contents from root
       // in our case: list available drives
       const drivesList: Contents.IModel[] = [];
+      // fetch list of available drives
+      this._drivesList = await getDrivesList();
       for (const drive of this._drivesList) {
         drivesList.push({
           name: drive.name,
