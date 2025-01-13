@@ -333,7 +333,7 @@ namespace Private {
     app.commands.addCommand(CommandIDs.createNewDrive, {
       execute: async () => {
         return showDialog({
-          title: 'Create New Drive',
+          title: 'New Drive',
           body: new Private.CreateDriveHandler(drive.name),
           focusNodeSelector: 'input',
           buttons: [
@@ -349,14 +349,14 @@ namespace Private {
           }
         });
       },
-      label: 'Create New Drive',
+      label: 'New Drive',
       icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
     });
 
     app.contextMenu.addItem({
       command: CommandIDs.createNewDrive,
       selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
-      rank: 10
+      rank: 100
     });
   }
 }
