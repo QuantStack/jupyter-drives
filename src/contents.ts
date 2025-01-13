@@ -246,22 +246,29 @@ export class Drive implements Contents.IDrive {
     } else {
       // retriving list of contents from root
       // in our case: list available drives
-      const drivesList: Contents.IModel[] = [];
+      const drivesListInfo: Contents.IModel[] = [];
       // fetch list of available drives
-      this._drivesList = await getDrivesList();
-      for (const drive of this._drivesList) {
-        drivesList.push({
-          name: drive.name,
-          path: drive.name,
-          last_modified: '',
-          created: drive.creationDate,
-          content: [],
-          format: 'json',
-          mimetype: '',
-          size: undefined,
-          writable: true,
-          type: 'directory'
-        });
+      try {
+        this._drivesList = await getDrivesList();
+        for (const drive of this._drivesList) {
+          drivesListInfo.push({
+            name: drive.name,
+            path: drive.name,
+            last_modified: '',
+            created: drive.creationDate,
+            content: [],
+            format: 'json',
+            mimetype: '',
+            size: undefined,
+            writable: true,
+            type: 'directory'
+          });
+        }
+      } catch (error) {
+        console.log(
+          'Failed loading available drives list, with error: ',
+          error
+        );
       }
 
       data = {
@@ -269,7 +276,7 @@ export class Drive implements Contents.IDrive {
         path: this._name,
         last_modified: '',
         created: '',
-        content: drivesList,
+        content: drivesListInfo,
         format: 'json',
         mimetype: '',
         size: undefined,
