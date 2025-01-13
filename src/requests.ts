@@ -500,6 +500,39 @@ export const countObjectNameAppearances = async (
   return counter;
 };
 
+/**
+ * Create a new drive.
+ *
+ * @param newDriveName The new drive name.
+ * @param options.location The region where drive should be located.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function createDrive(
+  newDriveName: string,
+  options: {
+    location: string;
+  }
+) {
+  await requestAPI<any>('drives/' + newDriveName + '/', 'POST', {
+    location: options.location
+  });
+
+  data = {
+    name: newDriveName,
+    path: newDriveName,
+    last_modified: '',
+    created: '',
+    content: [],
+    format: 'json',
+    mimetype: '',
+    size: 0,
+    writable: true,
+    type: 'directory'
+  };
+  return data;
+}
+
 namespace Private {
   /**
    * Helping function for renaming files inside
