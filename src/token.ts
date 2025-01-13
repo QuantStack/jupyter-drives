@@ -1,4 +1,3 @@
-import { Token } from '@lumino/coreutils';
 import { Contents } from '@jupyterlab/services';
 
 /**
@@ -11,13 +10,6 @@ export namespace CommandIDs {
   export const createNewDrive = 'drives:create-new-drive';
   export const launcher = 'launcher:create';
 }
-
-/**
- * A token for the plugin that provides the list of drives.
- */
-export const IDrivesList = new Token<IDriveInfo[]>(
-  'jupyter-drives:drives-list-provider'
-);
 
 /**
  * An interface that stores the drive information.
