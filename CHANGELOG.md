@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.3
+
+([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.1.2...46817de58321fb8f2868abf8b7a69e62a0fadf21))
+
+### Enhancements made
+
+- Add drive handling operations [#67](https://github.com/QuantStack/jupyter-drives/pull/67) ([@DenisaCG](https://github.com/DenisaCG))
+- Remove drives list provider plugin [#66](https://github.com/QuantStack/jupyter-drives/pull/66) ([@DenisaCG](https://github.com/DenisaCG))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2025-01-06&to=2025-01-14&type=c))
+
+[@DenisaCG](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3ADenisaCG+updated%3A2025-01-06..2025-01-14&type=Issues) | [@github-actions](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agithub-actions+updated%3A2025-01-06..2025-01-14&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.2
 
 ([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.1.1...cf120affc369836154c4dd277493086c01dbe7f0))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2024-12-18&to=2025-01-06&type=c))
 
 [@gogakoreli](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agogakoreli+updated%3A2024-12-18..2025-01-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.1
 
