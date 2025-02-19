@@ -25,8 +25,13 @@ from .base import DrivesConfig
 
 import re
 
+from tornado.ioloop import PeriodicCallback
+
 # constant used as suffix to deal with directory objects
 EMPTY_DIR_SUFFIX = '/.jupyter_drives_fix_dir'
+
+# 15 minutes
+CREDENTIALS_REFRESH = 15 * 60 * 1000
 
 class JupyterDrivesManager():
     """
@@ -46,21 +51,12 @@ class JupyterDrivesManager():
         self._client = httpx.AsyncClient()
         self._content_managers = {}
         self._max_files_listed = 1025
+        self._drives = None
         
         # instate fsspec file system
         self._file_system = fsspec.filesystem(self._config.provider, asynchronous=True)
 
-        # initiate aiobotocore session if we are dealing with S3 drives
-        if self._config.provider == 's3':
-            if self._config.access_key_id and self._config.secret_access_key: 
-                self._s3_clients = {}
-                self._s3_session = get_session()
-                self._file_system = s3fs.S3FileSystem(anon=False, asynchronous=True, key=self._config.access_key_id, secret=self._config.secret_access_key, token=self._config.session_token)
-            else:
-                raise tornado.web.HTTPError(
-                status_code= httpx.codes.BAD_REQUEST,
-                reason="No credentials specified. Please set them in your user jupyter_server_config file.",
-                )
+        self._initialize_credentials_refresh()
 
     @property
     def base_api_url(self) -> str:
@@ -81,6 +77,45 @@ class JupyterDrivesManager():
         """
         return ("per_page", 100)
     
+    def _initialize_credentials_refresh(self):
+        self._drives_refresh_callback()
+        if not self._config.credentials_already_set:
+            self._drives_refresh_timer = PeriodicCallback(
+                self._drives_refresh_callback, CREDENTIALS_REFRESH
+            )
+            self._drives_refresh_timer.start()
+
+    def _drives_refresh_callback(self):
+        self._config.load_credentials()
+        self._initialize_s3_file_system()
+        self._initialize_drives()
+
+    def _initialize_s3_file_system(self):
+        # initiate aiobotocore session if we are dealing with S3 drives
+        if self._config.provider == 's3':
+            if self._config.access_key_id and self._config.secret_access_key: 
+                self._s3_session = get_session()
+                self._file_system = s3fs.S3FileSystem(
+                    anon=False,
+                    asynchronous=True,
+                    key=self._config.access_key_id,
+                    secret=self._config.secret_access_key,
+                    token=self._config.session_token,
+                )
+            else:
+                raise tornado.web.HTTPError(
+                    status_code=httpx.codes.BAD_REQUEST,
+                    reason="No credentials specified. Please set them in your user jupyter_server_config file.",
+                )
+
+    def _initialize_drives(self):
+        if self._config.provider == "s3":
+            S3Drive = get_driver(Provider.S3)
+            self._drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key, True, None, None, None, self._config.session_token)]
+        elif self._config.provider == 'gcs':
+            GCSDrive = get_driver(Provider.GOOGLE_STORAGE)
+            self._drives = [GCSDrive(self._config.access_key_id, self._config.secret_access_key)] # verfiy credentials needed
+
     def set_listing_limit(self, new_limit):
         """Set new limit for listing.
 
@@ -105,23 +140,21 @@ class JupyterDrivesManager():
         """
         data = []
         if self._config.access_key_id and self._config.secret_access_key:
-            if self._config.provider == "s3":
-                S3Drive = get_driver(Provider.S3)
-                drives = [S3Drive(self._config.access_key_id, self._config.secret_access_key, True, None, None, None, self._config.session_token)]
-
-            elif self._config.provider == 'gcs':
-                GCSDrive = get_driver(Provider.GOOGLE_STORAGE)
-                drives = [GCSDrive(self._config.access_key_id, self._config.secret_access_key)] # verfiy credentials needed
-            
-            else: 
+            if self._drives is None:
                raise tornado.web.HTTPError(
                 status_code= httpx.codes.NOT_IMPLEMENTED,
                 reason="Listing drives not supported for given provider.",
                 )
 
             results = []
-            for drive in drives:
-                results += drive.list_containers()
+            for drive in self._drives:
+                try:
+                    results += drive.list_containers()
+                except Exception as e:
+                    raise tornado.web.HTTPError(
+                        status_code=httpx.codes.BAD_REQUEST,
+                        reason=f"The following error occured when listing drives: {e}",
+                    )
             
             for result in results:
                 data.append(

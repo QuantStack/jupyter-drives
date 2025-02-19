@@ -4,13 +4,9 @@ import entrypoints
 from traitlets import Enum, Unicode, default
 from traitlets.config import Configurable
 import boto3
-from tornado.ioloop import PeriodicCallback
 
 # Supported third-party services
 MANAGERS = {}
-
-# 15 minutes
-CREDENTIALS_REFRESH = 15 * 60 * 1000
 
 # Moved to the architecture of having one provider independent manager.
 # Keeping the loop in case of future developments that need this feature.
@@ -23,7 +19,6 @@ PROVIDERS = ['s3', 'gcs', 'http']
 class DrivesConfig(Configurable):
     """
     Allows configuration of supported drives via jupyter_notebook_config.py
-    Implements singleton pattern
     """
 
     session_token = Unicode(
@@ -53,7 +48,7 @@ class DrivesConfig(Configurable):
         allow_none=True,
         help = "Region name.",
     )
-
+    
     api_base_url = Unicode(
         config=True,
         help="Base URL of the provider service REST API.",
@@ -64,7 +59,7 @@ class DrivesConfig(Configurable):
         # for AWS S3 drives
         if self.provider == "s3":
             return "https://s3.amazonaws.com/" # region? https://s3.<region>.amazonaws.com/
-
+        
         # for Google Cloud Storage drives
         elif self.provider == "gcs":
             return "https://www.googleapis.com/"   
@@ -76,34 +71,16 @@ class DrivesConfig(Configurable):
         help="The source control provider.",
     )
 
-    _instance = None
-
-    def __new__(cls, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(DrivesConfig, cls).__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
-
     def __init__(self, **kwargs):
-        if self._initialized:
-            return
-
         super().__init__(**kwargs)
-        self._initialize_credentials_refresh()
-        self._initialized = True
-
-    def _initialize_credentials_refresh(self):
         # check if credentials were already set in jupyter_notebook_config.py
-        if self.access_key_id is not None and self.secret_access_key is not None:
+        self.credentials_already_set = self.access_key_id is not None and self.secret_access_key is not None
+        self.load_credentials()
+    
+    def load_credentials(self):
+        if self.credentials_already_set:
             return
-
-        self._load_credentials()
-        self._credential_refresh = PeriodicCallback(
-            self._load_credentials, CREDENTIALS_REFRESH
-        )
-        self._credential_refresh.start()
-
-    def _load_credentials(self):
+        
         # automatically extract credentials for S3 drives
         try:
             s = boto3.Session()
