@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.1.4
+
+([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.1.3...ad898413e4d4c9db68c6dc466cbdd7eff6a6dc96))
+
+### Bugs fixed
+
+- refresh drives config credentials using a timer [#78](https://github.com/QuantStack/jupyter-drives/pull/78) ([@gogakoreli](https://github.com/gogakoreli))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2025-01-14&to=2025-02-26&type=c))
+
+[@gogakoreli](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agogakoreli+updated%3A2025-01-14..2025-02-26&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.3
 
 ([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.1.2...46817de58321fb8f2868abf8b7a69e62a0fadf21))
@@ -16,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2025-01-06&to=2025-01-14&type=c))
 
 [@DenisaCG](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3ADenisaCG+updated%3A2025-01-06..2025-01-14&type=Issues) | [@github-actions](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agithub-actions+updated%3A2025-01-06..2025-01-14&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.2
 
