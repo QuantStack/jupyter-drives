@@ -73,11 +73,12 @@ class DrivesConfig(Configurable):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._load_credentials()
-    
-    def _load_credentials(self):  
         # check if credentials were already set in jupyter_notebook_config.py
-        if self.access_key_id is not None and self.secret_access_key is not None:
+        self.credentials_already_set = self.access_key_id is not None and self.secret_access_key is not None
+        self.load_credentials()
+    
+    def load_credentials(self):
+        if self.credentials_already_set:
             return
         
         # automatically extract credentials for S3 drives

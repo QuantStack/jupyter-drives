@@ -230,10 +230,11 @@ export class Drive implements Contents.IDrive {
       // when accessed the first time, mount drive
       if (currentDrive.mounted === false) {
         try {
-          await mountDrive(localPath, {
+          const driveName = currentDrive.name;
+          await mountDrive(driveName, {
             provider: currentDrive.provider
           });
-          this._drivesList.filter(x => x.name === localPath)[0].mounted = true;
+          this._drivesList.filter(x => x.name === driveName)[0].mounted = true;
         } catch (e) {
           // it will give an error if drive is already mounted
         }
