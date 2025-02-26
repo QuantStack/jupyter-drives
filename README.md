@@ -13,10 +13,24 @@ for the frontend extension.
 
 ## Install
 
-To install the extension, execute:
+1. To install the extension, execute:
 
 ```bash
 pip install jupyter_drives
+```
+
+2. Restart JupyterLab
+
+- Local JupyterLab - stop and run jupyter lab command again
+
+```bash
+jupyter lab
+```
+
+- Sagemaker Studio JupyterLab - execute the following restart command
+
+```bash
+restart-jupyter-server
 ```
 
 ## Configure Credentials
