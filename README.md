@@ -43,9 +43,9 @@ For those working with `S3` drives using the `AWS` CLI, the credentials will be 
 
 ### Configuration file
 
-Otherwise, you can add your credentials to the server configuration file. Create a `jupyter_notebook_config.py` file in one of the
+Otherwise, you can add your credentials to the server configuration file. Create a `jupyter_server_config.py` file in one of the
 [Jupyter config directories](https://jupyter.readthedocs.io/en/latest/use/jupyter-directories.html#id1),
-for example: `~/.jupyter/jupyter_notebook_config.py`, and specify your long-term or short-term credentials.
+for example: `~/.jupyter/jupyter_server_config.py`, and specify your long-term or short-term credentials.
 
 ```python
 c = get_config()
