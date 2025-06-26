@@ -19,7 +19,10 @@ import {
   Dialog
 } from '@jupyterlab/apputils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { FilenameSearcher, IScore } from '@jupyterlab/ui-components';
+import {
+  FilenameSearcher,
+  IScore
+} from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
 
@@ -178,7 +181,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
         setting.changed.connect(loadSetting);
 
         // Add commands
-        Private.addCommands(app, drive);
+        Private.addCommands(app, drive, driveBrowser);
       })
       .catch(reason => {
         console.error(
@@ -308,7 +311,11 @@ namespace Private {
     }
   }
 
-  export function addCommands(app: JupyterFrontEnd, drive: Drive): void {
+  export function addCommands(
+    app: JupyterFrontEnd,
+    drive: Drive,
+    browser: FileBrowser
+  ): void {
     app.commands.addCommand(CommandIDs.createNewDrive, {
       execute: async () => {
         return showDialog({
@@ -336,6 +343,20 @@ namespace Private {
       command: CommandIDs.createNewDrive,
       selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
       rank: 100
+    });
+
+    app.commands.addCommand(CommandIDs.toggleFileFilter, {
+      execute: () => {
+        // Update toggled state, then let the toolbar button update
+        browser.showFileFilter = !browser.showFileFilter;
+        app.commands.notifyCommandChanged(CommandIDs.toggleFileFilter);
+      },
+      isToggled: () => {
+        const toggled = browser.showFileFilter;
+        return toggled;
+      },
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'Toggle File Filter'
     });
   }
 }
