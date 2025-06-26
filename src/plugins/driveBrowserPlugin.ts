@@ -19,10 +19,7 @@ import {
   Dialog
 } from '@jupyterlab/apputils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import {
-  FilenameSearcher,
-  IScore
-} from '@jupyterlab/ui-components';
+import { FilenameSearcher, IScore } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
 
