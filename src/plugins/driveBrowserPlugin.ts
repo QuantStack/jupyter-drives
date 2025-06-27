@@ -23,7 +23,8 @@ import {
   filterIcon,
   FilenameSearcher,
   IScore,
-  newFolderIcon
+  newFolderIcon,
+  fileIcon
 } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
@@ -383,6 +384,17 @@ namespace Private {
       },
       icon: newFolderIcon.bindprops({ stylesheet: 'menuItem' }),
       label: 'New Folder'
+    });
+
+    app.commands.addCommand(CommandIDs.createNewFile, {
+      isVisible: () => {
+        return browser.model.path !== 's3:';
+      },
+      execute: () => {
+        app.commands.execute('filebrowser:create-new-file');
+      },
+      icon: fileIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'New File'
     });
   }
 }
