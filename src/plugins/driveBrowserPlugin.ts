@@ -19,7 +19,11 @@ import {
   Dialog
 } from '@jupyterlab/apputils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { FilenameSearcher, IScore } from '@jupyterlab/ui-components';
+import {
+  filterIcon,
+  FilenameSearcher,
+  IScore
+} from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
 
@@ -143,7 +147,10 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       }
     );
 
-    // connect the filebrowser toolbar to the settings registry for the plugin
+    // Add commands
+    Private.addCommands(app, drive, driveBrowser);
+
+    // Connect the filebrowser toolbar to the settings registry for the plugin.
     setToolbar(
       driveBrowser,
       createToolbarFactory(
@@ -176,9 +183,6 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 
         // Listen for your plugin setting changes using Signal
         setting.changed.connect(loadSetting);
-
-        // Add commands
-        Private.addCommands(app, drive, driveBrowser);
       })
       .catch(reason => {
         console.error(
@@ -352,7 +356,7 @@ namespace Private {
         const toggled = browser.showFileFilter;
         return toggled;
       },
-      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' }),
+      icon: filterIcon.bindprops({ stylesheet: 'menuItem' }),
       label: 'Toggle File Filter'
     });
   }
