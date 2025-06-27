@@ -147,6 +147,14 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       }
     );
 
+    const updateVisibility = () => {
+      // Visibility of command changed.
+      app.commands.notifyCommandChanged(CommandIDs.createNewDrive);
+    };
+
+    // Listen for path changes.
+    driveBrowser.model.pathChanged.connect(updateVisibility);
+
     // Add commands
     Private.addCommands(app, drive, driveBrowser);
 
@@ -318,6 +326,9 @@ namespace Private {
     browser: FileBrowser
   ): void {
     app.commands.addCommand(CommandIDs.createNewDrive, {
+      isVisible: () => {
+        return browser.model.path === 's3:';
+      },
       execute: async () => {
         return showDialog({
           title: 'New Drive',
