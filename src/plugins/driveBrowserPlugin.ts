@@ -24,7 +24,8 @@ import {
   FilenameSearcher,
   IScore,
   newFolderIcon,
-  fileIcon
+  fileIcon,
+  notebookIcon
 } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
@@ -379,7 +380,6 @@ namespace Private {
         return browser.model.path !== 's3:';
       },
       execute: () => {
-        console.log('NEW COMMAND DIR');
         app.commands.execute('filebrowser:create-new-directory');
       },
       icon: newFolderIcon.bindprops({ stylesheet: 'menuItem' }),
@@ -395,6 +395,17 @@ namespace Private {
       },
       icon: fileIcon.bindprops({ stylesheet: 'menuItem' }),
       label: 'New File'
+    });
+
+    app.commands.addCommand(CommandIDs.createNewNotebook, {
+      isVisible: () => {
+        return browser.model.path !== 's3:';
+      },
+      execute: () => {
+        app.commands.execute('notebook:create-new');
+      },
+      icon: notebookIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'New Notebook'
     });
   }
 }

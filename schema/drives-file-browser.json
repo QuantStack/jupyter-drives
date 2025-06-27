@@ -59,6 +59,19 @@
         "command": "drives:create-new-directory",
         "selector": ".jp-DirListing-content",
         "rank": 55
+      },
+      {
+        "command": "notebook:create-new",
+        "selector": ".jp-DirListing-content",
+         "args": {
+      "isContextMenu": true
+    },
+        "disabled": true
+      },
+        {
+        "command": "drives:create-new-notebook",
+        "selector": ".jp-DirListing-content",
+        "rank": 54
       }
     ]
   },
