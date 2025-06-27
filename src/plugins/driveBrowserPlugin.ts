@@ -318,6 +318,9 @@ namespace Private {
     browser: FileBrowser
   ): void {
     app.commands.addCommand(CommandIDs.createNewDrive, {
+      isVisible: () => {
+        return browser.model.path === 's3:';
+      },
       execute: async () => {
         return showDialog({
           title: 'New Drive',
