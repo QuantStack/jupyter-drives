@@ -9,12 +9,6 @@
         "label": "",
         "rank": 1
       },
-      {
-        "name": "new-directory",
-        "command": "drives:create-new-directory",
-        "label": "",
-        "rank": 10
-      },
       { "name": "uploader", "label": "", "rank": 20 },
       {
         "name": "refresh",
@@ -63,12 +57,12 @@
       {
         "command": "notebook:create-new",
         "selector": ".jp-DirListing-content",
-         "args": {
-      "isContextMenu": true
-    },
+        "args": {
+          "isContextMenu": true
+        },
         "disabled": true
       },
-        {
+      {
         "command": "drives:create-new-notebook",
         "selector": ".jp-DirListing-content",
         "rank": 54
