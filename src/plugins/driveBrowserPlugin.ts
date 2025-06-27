@@ -22,7 +22,10 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   filterIcon,
   FilenameSearcher,
-  IScore
+  IScore,
+  newFolderIcon,
+  fileIcon,
+  notebookIcon
 } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
@@ -148,8 +151,9 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     );
 
     const updateVisibility = () => {
-      // Visibility of command changed.
+      // Visibility of context menu and toolbar commands changed.
       app.commands.notifyCommandChanged(CommandIDs.createNewDrive);
+      app.commands.notifyCommandChanged(CommandIDs.createNewDirectory);
     };
 
     // Listen for path changes.
@@ -369,6 +373,39 @@ namespace Private {
       },
       icon: filterIcon.bindprops({ stylesheet: 'menuItem' }),
       label: 'Toggle File Filter'
+    });
+
+    app.commands.addCommand(CommandIDs.createNewDirectory, {
+      isVisible: () => {
+        return browser.model.path !== 's3:';
+      },
+      execute: () => {
+        app.commands.execute('filebrowser:create-new-directory');
+      },
+      icon: newFolderIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'New Folder'
+    });
+
+    app.commands.addCommand(CommandIDs.createNewFile, {
+      isVisible: () => {
+        return browser.model.path !== 's3:';
+      },
+      execute: () => {
+        app.commands.execute('filebrowser:create-new-file');
+      },
+      icon: fileIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'New File'
+    });
+
+    app.commands.addCommand(CommandIDs.createNewNotebook, {
+      isVisible: () => {
+        return browser.model.path !== 's3:';
+      },
+      execute: () => {
+        app.commands.execute('notebook:create-new');
+      },
+      icon: notebookIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'New Notebook'
     });
   }
 }

@@ -9,12 +9,6 @@
         "label": "",
         "rank": 1
       },
-      {
-        "name": "new-directory",
-        "command": "filebrowser:create-new-directory",
-        "label": "",
-        "rank": 10
-      },
       { "name": "uploader", "label": "", "rank": 20 },
       {
         "name": "refresh",
@@ -33,6 +27,45 @@
         "command": "drives:create-new-drive",
         "label": "",
         "rank": 50
+      }
+    ]
+  },
+  "jupyter.lab.menus": {
+    "context": [
+      {
+        "command": "filebrowser:create-new-file",
+        "selector": ".jp-DirListing-content",
+        "rank": 51,
+        "disabled": true
+      },
+      {
+        "command": "drives:create-new-file",
+        "selector": ".jp-DirListing-content",
+        "rank": 51
+      },
+      {
+        "command": "filebrowser:create-new-directory",
+        "selector": ".jp-DirListing-content",
+        "rank": 55,
+        "disabled": true
+      },
+      {
+        "command": "drives:create-new-directory",
+        "selector": ".jp-DirListing-content",
+        "rank": 55
+      },
+      {
+        "command": "notebook:create-new",
+        "selector": ".jp-DirListing-content",
+        "args": {
+          "isContextMenu": true
+        },
+        "disabled": true
+      },
+      {
+        "command": "drives:create-new-notebook",
+        "selector": ".jp-DirListing-content",
+        "rank": 54
       }
     ]
   },
