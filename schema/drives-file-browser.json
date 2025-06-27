@@ -27,6 +27,12 @@
         "command": "drives:toggle-file-filter",
         "label": "",
         "rank": 40
+      },
+      {
+        "name": "new-drive",
+        "command": "drives:create-new-drive",
+        "label": "",
+        "rank": 50
       }
     ]
   },
