@@ -9,6 +9,7 @@ export namespace CommandIDs {
   export const toggleBrowser = 'drives:toggle-main';
   export const createNewDrive = 'drives:create-new-drive';
   export const launcher = 'launcher:create';
+  export const toggleFileFilter = 'drives:toggle-file-filter';
 }
 
 /**
