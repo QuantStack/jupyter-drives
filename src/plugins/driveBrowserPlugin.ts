@@ -157,6 +157,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       }
       app.commands.notifyCommandChanged(CommandIDs.createNewDrive);
       app.commands.notifyCommandChanged(CommandIDs.createNewDirectory);
+      app.commands.notifyCommandChanged(CommandIDs.launcher);
     };
 
     // Listen for path changes.
