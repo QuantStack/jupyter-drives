@@ -9,6 +9,11 @@
         "label": "",
         "rank": 1
       },
+      {
+        "name": "new-directory",
+        "command": "drives:create-new-directory",
+        "rank": 10
+      },
       { "name": "uploader", "label": "", "rank": 20 },
       {
         "name": "refresh",
@@ -26,7 +31,7 @@
         "name": "new-drive",
         "command": "drives:create-new-drive",
         "label": "",
-        "rank": 50
+        "rank": 10
       }
     ]
   },
