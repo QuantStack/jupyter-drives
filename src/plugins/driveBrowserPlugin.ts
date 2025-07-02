@@ -148,6 +148,9 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       }
     );
 
+    // Add commands
+    Private.addCommands(app, drive, driveBrowser);
+
     const updateVisibility = () => {
       // Visibility of context menu and toolbar commands changed.
       if (driveBrowser.model.path !== 's3:') {
@@ -162,9 +165,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 
     // Listen for path changes.
     driveBrowser.model.pathChanged.connect(updateVisibility);
-
-    // Add commands
-    Private.addCommands(app, drive, driveBrowser);
+    updateVisibility();
 
     // Connect the filebrowser toolbar to the settings registry for the plugin.
     setToolbar(
