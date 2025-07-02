@@ -121,12 +121,10 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       restorer.add(driveBrowser, 'drive-file-browser');
     }
 
-    toolbarRegistry.addFactory(
-      FILE_BROWSER_FACTORY,
-      'uploader',
-      (fileBrowser: FileBrowser) =>
-        new Uploader({ model: fileBrowser.model, translator })
-    );
+    const uploader = new Uploader({ model: driveBrowser.model, translator });
+    toolbarRegistry.addFactory(FILE_BROWSER_FACTORY, 'uploader', () => {
+      return uploader;
+    });
 
     toolbarRegistry.addFactory(
       FILE_BROWSER_FACTORY,
@@ -152,6 +150,11 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 
     const updateVisibility = () => {
       // Visibility of context menu and toolbar commands changed.
+      if (driveBrowser.model.path !== 's3:') {
+        uploader.show();
+      } else {
+        uploader.hide();
+      }
       app.commands.notifyCommandChanged(CommandIDs.createNewDrive);
       app.commands.notifyCommandChanged(CommandIDs.createNewDirectory);
     };
