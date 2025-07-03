@@ -3,6 +3,10 @@
 
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
+.drive-browser {
+  min-width: 285px !important;
+}
+
 li {
   list-style-type: none;
 }

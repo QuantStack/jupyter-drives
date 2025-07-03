@@ -10,6 +10,9 @@ export namespace CommandIDs {
   export const createNewDrive = 'drives:create-new-drive';
   export const launcher = 'launcher:create';
   export const toggleFileFilter = 'drives:toggle-file-filter';
+  export const createNewDirectory = 'drives:create-new-directory';
+  export const createNewFile = 'drives:create-new-file';
+  export const createNewNotebook = 'drives:create-new-notebook';
 }
 
 /**

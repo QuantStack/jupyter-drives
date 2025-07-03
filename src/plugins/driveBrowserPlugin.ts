@@ -22,7 +22,10 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
   filterIcon,
   FilenameSearcher,
-  IScore
+  IScore,
+  newFolderIcon,
+  fileIcon,
+  notebookIcon
 } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
@@ -110,6 +113,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     driveBrowser.title.icon = driveBrowserIcon;
     driveBrowser.title.caption = 'Drive File Browser';
     driveBrowser.id = 'drive-file-browser';
+    driveBrowser.addClass('drive-browser');
 
     void Private.restoreBrowser(driveBrowser, commands, router, tree, labShell);
 
@@ -118,12 +122,10 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       restorer.add(driveBrowser, 'drive-file-browser');
     }
 
-    toolbarRegistry.addFactory(
-      FILE_BROWSER_FACTORY,
-      'uploader',
-      (fileBrowser: FileBrowser) =>
-        new Uploader({ model: fileBrowser.model, translator })
-    );
+    const uploader = new Uploader({ model: driveBrowser.model, translator });
+    toolbarRegistry.addFactory(FILE_BROWSER_FACTORY, 'uploader', () => {
+      return uploader;
+    });
 
     toolbarRegistry.addFactory(
       FILE_BROWSER_FACTORY,
@@ -147,16 +149,24 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       }
     );
 
+    // Add commands
+    Private.addCommands(app, drive, driveBrowser);
+
     const updateVisibility = () => {
-      // Visibility of command changed.
+      // Visibility of context menu and toolbar commands changed.
+      if (driveBrowser.model.path !== 's3:') {
+        uploader.enabled = true;
+      } else {
+        uploader.enabled = false;
+      }
       app.commands.notifyCommandChanged(CommandIDs.createNewDrive);
+      app.commands.notifyCommandChanged(CommandIDs.createNewDirectory);
+      app.commands.notifyCommandChanged(CommandIDs.launcher);
     };
 
     // Listen for path changes.
     driveBrowser.model.pathChanged.connect(updateVisibility);
-
-    // Add commands
-    Private.addCommands(app, drive, driveBrowser);
+    updateVisibility();
 
     // Connect the filebrowser toolbar to the settings registry for the plugin.
     setToolbar(
@@ -326,7 +336,7 @@ namespace Private {
     browser: FileBrowser
   ): void {
     app.commands.addCommand(CommandIDs.createNewDrive, {
-      isVisible: () => {
+      isEnabled: () => {
         return browser.model.path === 's3:';
       },
       execute: async () => {
@@ -354,7 +364,7 @@ namespace Private {
     app.contextMenu.addItem({
       command: CommandIDs.createNewDrive,
       selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
-      rank: 100
+      rank: 105
     });
 
     app.commands.addCommand(CommandIDs.toggleFileFilter, {
@@ -369,6 +379,39 @@ namespace Private {
       },
       icon: filterIcon.bindprops({ stylesheet: 'menuItem' }),
       label: 'Toggle File Filter'
+    });
+
+    app.commands.addCommand(CommandIDs.createNewDirectory, {
+      isEnabled: () => {
+        return browser.model.path !== 's3:';
+      },
+      execute: () => {
+        app.commands.execute('filebrowser:create-new-directory');
+      },
+      icon: newFolderIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'New Folder'
+    });
+
+    app.commands.addCommand(CommandIDs.createNewFile, {
+      isEnabled: () => {
+        return browser.model.path !== 's3:';
+      },
+      execute: () => {
+        app.commands.execute('filebrowser:create-new-file');
+      },
+      icon: fileIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'New File'
+    });
+
+    app.commands.addCommand(CommandIDs.createNewNotebook, {
+      isEnabled: () => {
+        return browser.model.path !== 's3:';
+      },
+      execute: () => {
+        app.commands.execute('notebook:create-new');
+      },
+      icon: notebookIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'New Notebook'
     });
   }
 }

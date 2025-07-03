@@ -44,6 +44,10 @@ function activate(
   commands.addCommand(CommandIDs.launcher, {
     label: trans.__('New Launcher'),
     icon: args => (args.toolbar ? addIcon : undefined),
+    isEnabled: () => {
+      const currentBrowser = factory?.tracker.currentWidget;
+      return currentBrowser?.model.path !== 's3:';
+    },
     execute: (args: ReadonlyPartialJSONObject) => {
       // get current file browser used
       const currentBrowser = factory?.tracker.currentWidget;
