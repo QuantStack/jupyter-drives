@@ -106,6 +106,13 @@
       "default": []
     }
   },
+  "jupyter.lab.shortcuts": [
+    {
+      "command": "drives:rename",
+      "keys": ["F2"],
+      "selector": ".jp-DirListing-content .jp-DirListing-itemText"
+    }
+  ],
   "additionalProperties": false,
   "definitions": {
     "toolbarItem": {
