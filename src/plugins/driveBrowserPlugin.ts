@@ -113,6 +113,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     driveBrowser.title.icon = driveBrowserIcon;
     driveBrowser.title.caption = 'Drive File Browser';
     driveBrowser.id = 'drive-file-browser';
+    driveBrowser.addClass('drive-browser');
 
     void Private.restoreBrowser(driveBrowser, commands, router, tree, labShell);
 
@@ -154,9 +155,9 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     const updateVisibility = () => {
       // Visibility of context menu and toolbar commands changed.
       if (driveBrowser.model.path !== 's3:') {
-        uploader.show();
+        uploader.enabled = true;
       } else {
-        uploader.hide();
+        uploader.enabled = false;
       }
       app.commands.notifyCommandChanged(CommandIDs.createNewDrive);
       app.commands.notifyCommandChanged(CommandIDs.createNewDirectory);
@@ -335,7 +336,7 @@ namespace Private {
     browser: FileBrowser
   ): void {
     app.commands.addCommand(CommandIDs.createNewDrive, {
-      isVisible: () => {
+      isEnabled: () => {
         return browser.model.path === 's3:';
       },
       execute: async () => {
@@ -363,7 +364,7 @@ namespace Private {
     app.contextMenu.addItem({
       command: CommandIDs.createNewDrive,
       selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
-      rank: 100
+      rank: 105
     });
 
     app.commands.addCommand(CommandIDs.toggleFileFilter, {
@@ -381,7 +382,7 @@ namespace Private {
     });
 
     app.commands.addCommand(CommandIDs.createNewDirectory, {
-      isVisible: () => {
+      isEnabled: () => {
         return browser.model.path !== 's3:';
       },
       execute: () => {
@@ -392,7 +393,7 @@ namespace Private {
     });
 
     app.commands.addCommand(CommandIDs.createNewFile, {
-      isVisible: () => {
+      isEnabled: () => {
         return browser.model.path !== 's3:';
       },
       execute: () => {
@@ -403,7 +404,7 @@ namespace Private {
     });
 
     app.commands.addCommand(CommandIDs.createNewNotebook, {
-      isVisible: () => {
+      isEnabled: () => {
         return browser.model.path !== 's3:';
       },
       execute: () => {
