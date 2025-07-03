@@ -31,7 +31,7 @@
         "name": "new-drive",
         "command": "drives:create-new-drive",
         "label": "",
-        "rank": 10
+        "rank": 5
       }
     ]
   },
