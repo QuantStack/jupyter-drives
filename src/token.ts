@@ -13,6 +13,7 @@ export namespace CommandIDs {
   export const createNewDirectory = 'drives:create-new-directory';
   export const createNewFile = 'drives:create-new-file';
   export const createNewNotebook = 'drives:create-new-notebook';
+  export const rename = 'drives:rename';
 }
 
 /**

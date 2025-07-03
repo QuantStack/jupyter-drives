@@ -71,6 +71,17 @@
         "command": "drives:create-new-notebook",
         "selector": ".jp-DirListing-content",
         "rank": 54
+      },
+      {
+        "command": "filebrowser:rename",
+        "selector": ".jp-DirListing-item[data-isdir]",
+        "rank": 5,
+        "disabled": true
+      },
+      {
+        "command": "drives:rename",
+        "selector": ".jp-DirListing-item[data-isdir]",
+        "rank": 5
       }
     ]
   },
