@@ -25,7 +25,8 @@ import {
   IScore,
   newFolderIcon,
   fileIcon,
-  notebookIcon
+  notebookIcon,
+  editIcon
 } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
@@ -412,6 +413,17 @@ namespace Private {
       },
       icon: notebookIcon.bindprops({ stylesheet: 'menuItem' }),
       label: 'New Notebook'
+    });
+
+    app.commands.addCommand(CommandIDs.rename, {
+      isEnabled: () => {
+        return browser.model.path !== 's3:';
+      },
+      execute: () => {
+        app.commands.execute('filebrowser:rename');
+      },
+      icon: editIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'Rename'
     });
   }
 }
