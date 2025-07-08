@@ -13,6 +13,7 @@ import {
 import { ITranslator } from '@jupyterlab/translation';
 import {
   createToolbarFactory,
+  Clipboard,
   IToolbarWidgetRegistry,
   setToolbar,
   showDialog,
@@ -28,6 +29,7 @@ import {
   notebookIcon,
   editIcon
 } from '@jupyterlab/ui-components';
+import { PageConfig, PathExt } from '@jupyterlab/coreutils';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
 
@@ -151,7 +153,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     );
 
     // Add commands
-    Private.addCommands(app, drive, driveBrowser);
+    Private.addCommands(app, drive, driveBrowser, fileBrowserFactory);
 
     const updateVisibility = () => {
       // Visibility of context menu and toolbar commands changed.
@@ -334,8 +336,11 @@ namespace Private {
   export function addCommands(
     app: JupyterFrontEnd,
     drive: Drive,
-    browser: FileBrowser
+    browser: FileBrowser,
+    factory: IFileBrowserFactory
   ): void {
+    const { tracker } = factory;
+
     app.commands.addCommand(CommandIDs.createNewDrive, {
       isEnabled: () => {
         return browser.model.path === 's3:';
@@ -424,6 +429,37 @@ namespace Private {
       },
       icon: editIcon.bindprops({ stylesheet: 'menuItem' }),
       label: 'Rename'
+    });
+
+    app.commands.addCommand(CommandIDs.copyPath, {
+      execute: () => {
+        const widget = tracker.currentWidget;
+        if (!widget) {
+          return;
+        }
+        const item = widget.selectedItems().next();
+        if (item.done) {
+          return;
+        }
+
+        let path: string = item.value.path;
+        if (PageConfig.getOption('copyAbsolutePath') === 'true') {
+          path = PathExt.joinWithLeadingSlash(
+            PageConfig.getOption('serverRoot') ?? '',
+            item.value.path
+          );
+        }
+        const parts = path.split(':');
+        path = parts[0] + '://' + parts[1];
+        Clipboard.copyToSystem(path);
+      },
+      isVisible: () =>
+        // So long as this command only handles one file at time, don't show it
+        // if multiple files are selected.
+        !!tracker.currentWidget &&
+        Array.from(tracker.currentWidget.selectedItems()).length === 1,
+      icon: fileIcon.bindprops({ stylesheet: 'menuItem' }),
+      label: 'Copy Path'
     });
   }
 }

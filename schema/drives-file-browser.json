@@ -82,6 +82,17 @@
         "command": "drives:rename",
         "selector": ".jp-DirListing-item[data-isdir]",
         "rank": 5
+      },
+      {
+        "command": "filebrowser:copy-path",
+        "selector": ".jp-DirListing-item[data-isdir]",
+        "rank": 14,
+        "disabled": true
+      },
+      {
+        "command": "drives:copy-path",
+        "selector": ".jp-DirListing-item[data-isdir]",
+        "rank": 14
       }
     ]
   },
