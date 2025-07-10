@@ -10,6 +10,7 @@ import {
   IRegisteredFileTypes
 } from './token';
 import {
+  addPublicDrive,
   saveObject,
   getContents,
   mountDrive,
@@ -651,6 +652,26 @@ export class Drive implements Contents.IDrive {
     data = await createDrive(newDriveName, {
       location: region
     });
+
+    Contents.validateContentsModel(data);
+    this._fileChanged.emit({
+      type: 'new',
+      oldValue: null,
+      newValue: data
+    });
+
+    return data;
+  }
+
+  /**
+   * Add public drive.
+   *
+   * @param options: The options used to add the public drive.
+   *
+   * @returns A promise which resolves with the contents model.
+   */
+  async addPublicDrive(driveUrl: string): Promise<Contents.IModel> {
+    data = await addPublicDrive(driveUrl);
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
