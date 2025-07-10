@@ -187,7 +187,17 @@ class JupyterDrivesManager():
             results = []
             for drive in self._drives:
                 try:
-                    results += drive.list_containers()
+                    if hasattr(drive, 'is_public'):
+                        results.append({
+                            "name": drive.url,
+                            "region": self._config.region_name,
+                            "creationDate": datetime.datetime.now(),
+                            "mounted": False if result.name not in self._content_managers else True,
+                            "provider": self._config.provider
+                        })
+                    else:
+                        results += drive.list_containers()
+                    
                 except Exception as e:
                     raise tornado.web.HTTPError(
                         status_code=httpx.codes.BAD_REQUEST,
@@ -623,6 +633,28 @@ class JupyterDrivesManager():
             )
         
         return
+    
+    async def add_public_drive(self, drive_url):
+        """Mount a drive.
+
+        Args:
+            drive_url: public URL of bucket to mount
+        """
+        try:
+            drive = {
+                "is_public": True,
+                "url": drive_url
+            };
+            print('ADDED PUBLIC DRIVE: ', drive)
+            self._drives.append(drive);
+            print(self._drives)
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason= f"The following error occured when adding the public drive: {e}"
+            )
+
+        return 
     
     async def _get_drive_location(self, drive_name):
         """Helping function for getting drive region.
