@@ -533,6 +533,33 @@ export async function createDrive(
   return data;
 }
 
+/**
+ * Add public drive.
+ *
+ * @param driveUrl The public drive URL.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function addPublicDrive(driveUrl: string) {
+  await requestAPI<any>('drives/' + driveUrl + '/', 'POST', {
+    public: true
+  });
+
+  data = {
+    name: driveUrl,
+    path: driveUrl,
+    last_modified: '',
+    created: '',
+    content: [],
+    format: 'json',
+    mimetype: '',
+    size: 0,
+    writable: true,
+    type: 'directory'
+  };
+  return data;
+}
+
 namespace Private {
   /**
    * Helping function for renaming files inside

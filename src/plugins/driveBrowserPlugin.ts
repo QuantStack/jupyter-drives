@@ -373,6 +373,38 @@ namespace Private {
       rank: 105
     });
 
+    app.commands.addCommand(CommandIDs.addPublicDrive, {
+      isEnabled: () => {
+        return browser.model.path === 's3:';
+      },
+      execute: async () => {
+        return showDialog({
+          title: 'Add Public Drive',
+          body: new Private.CreateDriveHandler(drive.name),
+          focusNodeSelector: 'input',
+          buttons: [
+            Dialog.cancelButton(),
+            Dialog.okButton({
+              label: 'Add',
+              ariaLabel: 'Add Drive'
+            })
+          ]
+        }).then(result => {
+          if (result.value) {
+            drive.addPublicDrive(result.value[0]);
+          }
+        });
+      },
+      label: 'Add Public Drive',
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.addPublicDrive,
+      selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
+      rank: 110
+    });
+
     app.commands.addCommand(CommandIDs.toggleFileFilter, {
       execute: () => {
         // Update toggled state, then let the toolbar button update
