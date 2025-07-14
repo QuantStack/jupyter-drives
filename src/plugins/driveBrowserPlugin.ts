@@ -440,7 +440,7 @@ namespace Private {
           ]
         }).then(result => {
           if (result.value) {
-            drive.addPublicDrive(result.value[0]);
+            drive.addPublicDrive(result.value);
           }
         });
       },
