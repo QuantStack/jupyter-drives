@@ -210,7 +210,7 @@ class JupyterDrivesManager():
                 for drive in self._external_drives:
                     try:
                         data.append({
-                            "name": drive['url'],
+                            "name": drive['name'],
                             "region": self._config.region_name,
                             "creationDate": datetime.now().isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
                             "mounted": False if result.name not in self._content_managers else True,
@@ -642,16 +642,16 @@ class JupyterDrivesManager():
         
         return
     
-    async def add_public_drive(self, drive_url):
+    async def add_public_drive(self, drive_name):
         """Mount a drive.
 
         Args:
-            drive_url: public URL of bucket to mount
+            drive_name: name of public bucket to mount
         """
         try:
             drive = {
                 "is_public": True,
-                "url": drive_url
+                "name": drive_name
             };
             self._external_drives.append(drive);
         except Exception as e:
