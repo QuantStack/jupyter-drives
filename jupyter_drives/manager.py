@@ -52,7 +52,7 @@ class JupyterDrivesManager():
         self._content_managers = {}
         self._max_files_listed = 1025
         self._drives = None
-        self._external_drives = []
+        self._external_drives = {}
         
         # instate fsspec file system
         self._file_system = fsspec.filesystem(self._config.provider, asynchronous=True)
@@ -207,10 +207,10 @@ class JupyterDrivesManager():
                 )
             
             if len(self._external_drives) != 0:
-                for drive in self._external_drives:
+                for drive in self._external_drives.values():
                     try:
                         data.append({
-                            "name": drive['name'],
+                            "name": drive['url'],
                             "region": self._config.region_name,
                             "creationDate": datetime.now().isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
                             "mounted": False if result.name not in self._content_managers else True,
@@ -651,9 +651,9 @@ class JupyterDrivesManager():
         try:
             drive = {
                 "is_public": True,
-                "name": drive_name
+                "url": drive_name
             };
-            self._external_drives.append(drive);
+            self._external_drives[drive_name] = drive;
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
