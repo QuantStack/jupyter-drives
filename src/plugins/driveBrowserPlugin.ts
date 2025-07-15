@@ -333,6 +333,55 @@ namespace Private {
     }
   }
 
+  /**
+   * Create the node for adding a public drive handler.
+   */
+  const addPublicDriveNode = (): HTMLElement => {
+    const body = document.createElement('div');
+
+    const drive = document.createElement('label');
+    drive.textContent = 'Name';
+    drive.className = CREATE_DRIVE_TITLE_CLASS;
+    const driveName = document.createElement('input');
+
+    body.appendChild(drive);
+    body.appendChild(driveName);
+    return body;
+  };
+
+  /**
+   * A widget used to add a public drive.
+   */
+  export class AddPublicDriveHandler extends Widget {
+    /**
+     * Construct a new "add-public-drive" dialog.
+     */
+    constructor(newDriveName: string) {
+      super({ node: addPublicDriveNode() });
+      this.onAfterAttach();
+    }
+
+    protected onAfterAttach(): void {
+      this.addClass(FILE_DIALOG_CLASS);
+      const drive = this.driveInput.value;
+      this.driveInput.setSelectionRange(0, drive.length);
+    }
+
+    /**
+     * Get the input text node for drive name.
+     */
+    get driveInput(): HTMLInputElement {
+      return this.node.getElementsByTagName('input')[0] as HTMLInputElement;
+    }
+
+    /**
+     * Get the value of the widget.
+     */
+    getValue(): string {
+      return this.driveInput.value;
+    }
+  }
+
   export function addCommands(
     app: JupyterFrontEnd,
     drive: Drive,
@@ -371,6 +420,38 @@ namespace Private {
       command: CommandIDs.createNewDrive,
       selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
       rank: 105
+    });
+
+    app.commands.addCommand(CommandIDs.addPublicDrive, {
+      isEnabled: () => {
+        return browser.model.path === 's3:';
+      },
+      execute: async () => {
+        return showDialog({
+          title: 'Add Public Drive',
+          body: new Private.AddPublicDriveHandler(drive.name),
+          focusNodeSelector: 'input',
+          buttons: [
+            Dialog.cancelButton(),
+            Dialog.okButton({
+              label: 'Add',
+              ariaLabel: 'Add Drive'
+            })
+          ]
+        }).then(result => {
+          if (result.value) {
+            drive.addPublicDrive(result.value);
+          }
+        });
+      },
+      label: 'Add Public Drive',
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.addPublicDrive,
+      selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
+      rank: 110
     });
 
     app.commands.addCommand(CommandIDs.toggleFileFilter, {

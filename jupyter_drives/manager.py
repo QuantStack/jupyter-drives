@@ -52,6 +52,7 @@ class JupyterDrivesManager():
         self._content_managers = {}
         self._max_files_listed = 1025
         self._drives = None
+        self._external_drives = {}
         
         # instate fsspec file system
         self._file_system = fsspec.filesystem(self._config.provider, asynchronous=True)
@@ -178,7 +179,7 @@ class JupyterDrivesManager():
         """
         data = []
         if self._config.access_key_id and self._config.secret_access_key:
-            if self._drives is None:
+            if self._drives is None and len(self._external_drives) == 0:
                raise tornado.web.HTTPError(
                 status_code= httpx.codes.NOT_IMPLEMENTED,
                 reason="Listing drives not supported for given provider.",
@@ -187,7 +188,7 @@ class JupyterDrivesManager():
             results = []
             for drive in self._drives:
                 try:
-                    results += drive.list_containers()
+                    results += drive.list_containers()                    
                 except Exception as e:
                     raise tornado.web.HTTPError(
                         status_code=httpx.codes.BAD_REQUEST,
@@ -204,6 +205,23 @@ class JupyterDrivesManager():
                         "provider": self._config.provider
                     }
                 )
+            
+            if len(self._external_drives) != 0:
+                for drive in self._external_drives.values():
+                    try:
+                        data.append({
+                            "name": drive['url'],
+                            "region": self._config.region_name,
+                            "creationDate": datetime.now().isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
+                            "mounted": False if result.name not in self._content_managers else True,
+                            "provider": self._config.provider
+                        })
+                    except Exception as e:
+                        raise tornado.web.HTTPError(
+                            status_code=httpx.codes.BAD_REQUEST,
+                            reason=f"The following error occured when listing drives: {e}",
+                        )
+                
         else:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
@@ -623,6 +641,26 @@ class JupyterDrivesManager():
             )
         
         return
+    
+    async def add_public_drive(self, drive_name):
+        """Mount a drive.
+
+        Args:
+            drive_name: name of public bucket to mount
+        """
+        try:
+            drive = {
+                "is_public": True,
+                "url": drive_name
+            };
+            self._external_drives[drive_name] = drive;
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason= f"The following error occured when adding the public drive: {e}"
+            )
+
+        return 
     
     async def _get_drive_location(self, drive_name):
         """Helping function for getting drive region.

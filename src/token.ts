@@ -8,6 +8,7 @@ export namespace CommandIDs {
   export const openPath = 'drives:open-path';
   export const toggleBrowser = 'drives:toggle-main';
   export const createNewDrive = 'drives:create-new-drive';
+  export const addPublicDrive = 'drives:add-public-drive';
   export const launcher = 'launcher:create';
   export const toggleFileFilter = 'drives:toggle-file-filter';
   export const createNewDirectory = 'drives:create-new-directory';
