@@ -22,7 +22,8 @@ import {
   copyObjects,
   presignedLink,
   createDrive,
-  getDrivesList
+  getDrivesList,
+  excludeDrive
 } from './requests';
 
 let data: Contents.IModel = {
@@ -672,6 +673,26 @@ export class Drive implements Contents.IDrive {
    */
   async addPublicDrive(driveUrl: string): Promise<Contents.IModel> {
     data = await addPublicDrive(driveUrl);
+
+    Contents.validateContentsModel(data);
+    this._fileChanged.emit({
+      type: 'new',
+      oldValue: null,
+      newValue: data
+    });
+
+    return data;
+  }
+
+  /**
+   * Exclude drive from browser.
+   *
+   * @param driveName: The name of drive to exclude.
+   * 
+   * @returns A promise which resolves with the contents model.
+   */
+  async excludeDrive(driveName: string): Promise<Contents.IModel> {
+    data = await excludeDrive(driveName);
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({

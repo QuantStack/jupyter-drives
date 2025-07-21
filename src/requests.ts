@@ -38,6 +38,31 @@ export async function setListingLimit(newLimit: number) {
 }
 
 /**
+ * Exclude drive from being listed inside the DriveBrowser.
+ *
+ * @returns
+ */
+export async function excludeDrive(driveName: string) {
+  await requestAPI<any>('drives/config', 'POST', {
+    exclude_drive_name: driveName
+  });
+
+  data = {
+    name: driveName,
+    path: driveName,
+    last_modified: '',
+    created: '',
+    content: [],
+    format: 'json',
+    mimetype: '',
+    size: 0,
+    writable: true,
+    type: 'directory'
+  };
+  return data;
+}
+
+/**
  * Fetch the list of available drives.
  * @returns The list of available drives.
  */
