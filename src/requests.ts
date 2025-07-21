@@ -63,6 +63,31 @@ export async function excludeDrive(driveName: string) {
 }
 
 /**
+ * Include drive in DriveBrowser listing.
+ *
+ * @returns
+ */
+export async function includeDrive(driveName: string) {
+  await requestAPI<any>('drives/config', 'POST', {
+    include_drive_name: driveName
+  });
+
+  data = {
+    name: driveName,
+    path: driveName,
+    last_modified: '',
+    created: '',
+    content: [],
+    format: 'json',
+    mimetype: '',
+    size: 0,
+    writable: true,
+    type: 'directory'
+  };
+  return data;
+}
+
+/**
  * Fetch the list of available drives.
  * @returns The list of available drives.
  */

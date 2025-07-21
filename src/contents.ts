@@ -688,11 +688,31 @@ export class Drive implements Contents.IDrive {
    * Exclude drive from browser.
    *
    * @param driveName: The name of drive to exclude.
-   * 
+   *
    * @returns A promise which resolves with the contents model.
    */
   async excludeDrive(driveName: string): Promise<Contents.IModel> {
     data = await excludeDrive(driveName);
+
+    Contents.validateContentsModel(data);
+    this._fileChanged.emit({
+      type: 'new',
+      oldValue: null,
+      newValue: data
+    });
+
+    return data;
+  }
+
+  /**
+   * Include drive in browser listing.
+   *
+   * @param driveName: The name of drive to include.
+   *
+   * @returns A promise which resolves with the contents model.
+   */
+  async includeDrive(driveName: string): Promise<Contents.IModel> {
+    data = await this.includeDrive(driveName);
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
