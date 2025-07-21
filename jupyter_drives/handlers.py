@@ -56,6 +56,8 @@ class ConfigJupyterDrivesHandler(JupyterDrivesAPIHandler):
             result = self._manager.set_listing_limit(**body)
         if 'exclude_drive_name' in body:
             result = self._manager.exclude_drive(**body)
+        if 'include_drive_name' in body:
+            result = self._manager.include_drive(**body)
         self.finish(result)
 
 class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):

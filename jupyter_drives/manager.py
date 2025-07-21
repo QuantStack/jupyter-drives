@@ -188,6 +188,22 @@ class JupyterDrivesManager():
 
         return
     
+    def include_drive(self, include_drive_name):
+        """Include drive in listing.
+
+        Args:
+            include_bucket_name: drive to include in listing
+        """
+        try:
+            self._excluded_drives.remove(include_drive_name);
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason= f"The following error occured when excluding the drive: {e}"
+            )
+
+        return
+    
     async def list_drives(self): 
         """Get list of available drives.
 
