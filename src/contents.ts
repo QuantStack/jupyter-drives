@@ -23,7 +23,8 @@ import {
   presignedLink,
   createDrive,
   getDrivesList,
-  excludeDrive
+  excludeDrive,
+  includeDrive
 } from './requests';
 
 let data: Contents.IModel = {
@@ -712,7 +713,7 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async includeDrive(driveName: string): Promise<Contents.IModel> {
-    data = await this.includeDrive(driveName);
+    data = await includeDrive(driveName);
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
