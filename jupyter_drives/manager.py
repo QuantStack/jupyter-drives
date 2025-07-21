@@ -53,6 +53,7 @@ class JupyterDrivesManager():
         self._max_files_listed = 1025
         self._drives = None
         self._external_drives = {}
+        self._excluded_drives = set()
         
         # instate fsspec file system
         self._file_system = fsspec.filesystem(self._config.provider, asynchronous=True)
@@ -171,6 +172,22 @@ class JupyterDrivesManager():
 
         return
     
+    def exclude_drive(self, exclude_drive_name):
+        """Exclude drive from listing.
+
+        Args:
+            exclude_bucket_name: drive to exclude
+        """
+        try:
+            self._excluded_drives.add(exclude_drive_name);
+        except Exception as e:
+            raise tornado.web.HTTPError(
+            status_code= httpx.codes.BAD_REQUEST,
+            reason= f"The following error occured when excluding the drive: {e}"
+            )
+
+        return
+    
     async def list_drives(self): 
         """Get list of available drives.
 
@@ -196,15 +213,16 @@ class JupyterDrivesManager():
                     )
             
             for result in results:
-                data.append(
-                    {
-                        "name": result.name,
-                        "region": self._config.region_name,
-                        "creationDate": result.extra["creation_date"],
-                        "mounted": False if result.name not in self._content_managers else True,
-                        "provider": self._config.provider
-                    }
-                )
+                if result.name not in self._excluded_drives:
+                    data.append(
+                        {
+                            "name": result.name,
+                            "region": self._config.region_name,
+                            "creationDate": result.extra["creation_date"],
+                            "mounted": False if result.name not in self._content_managers else True,
+                            "provider": self._config.provider
+                        }
+                    )
             
             if len(self._external_drives) != 0:
                 for drive in self._external_drives.values():

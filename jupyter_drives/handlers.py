@@ -52,7 +52,10 @@ class ConfigJupyterDrivesHandler(JupyterDrivesAPIHandler):
     @tornado.web.authenticated
     async def post(self):
         body = self.get_json_body()
-        result = self._manager.set_listing_limit(**body)
+        if 'new_limit' in body:
+            result = self._manager.set_listing_limit(**body)
+        if 'exclude_drive_name' in body:
+            result = self._manager.exclude_drive(**body)
         self.finish(result)
 
 class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):
