@@ -16,6 +16,8 @@ export namespace CommandIDs {
   export const createNewNotebook = 'drives:create-new-notebook';
   export const rename = 'drives:rename';
   export const copyPath = 'drives:copy-path';
+  export const excludeDrive = 'drives:exclude-drive';
+  export const includeDrive = 'drives:include-drive';
 }
 
 /**

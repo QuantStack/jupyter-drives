@@ -542,5 +542,65 @@ namespace Private {
       icon: fileIcon.bindprops({ stylesheet: 'menuItem' }),
       label: 'Copy Path'
     });
+
+    app.commands.addCommand(CommandIDs.excludeDrive, {
+      isEnabled: () => {
+        return browser.model.path === 's3:';
+      },
+      execute: () => {
+        const widget = tracker.currentWidget;
+        if (!widget) {
+          return;
+        }
+        const item = widget.selectedItems().next();
+        if (item.done) {
+          return;
+        }
+
+        const driveName: string = item.value.name;
+        drive.excludeDrive(driveName);
+      },
+      label: 'Exclude Drive',
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.excludeDrive,
+      selector:
+        '#drive-file-browser.jp-SidePanel .jp-DirListing-content .jp-DirListing-item[data-isdir]',
+      rank: 110
+    });
+
+    app.commands.addCommand(CommandIDs.includeDrive, {
+      isEnabled: () => {
+        return browser.model.path === 's3:';
+      },
+      execute: async () => {
+        return showDialog({
+          title: 'Include Drive',
+          body: new Private.AddPublicDriveHandler(drive.name),
+          focusNodeSelector: 'input',
+          buttons: [
+            Dialog.cancelButton(),
+            Dialog.okButton({
+              label: 'Add',
+              ariaLabel: 'Include Drive'
+            })
+          ]
+        }).then(result => {
+          if (result.value) {
+            drive.includeDrive(result.value);
+          }
+        });
+      },
+      label: 'Include Drive',
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.includeDrive,
+      selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
+      rank: 110
+    });
   }
 }
