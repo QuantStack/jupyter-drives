@@ -88,6 +88,14 @@ export async function includeDrive(driveName: string) {
 }
 
 /**
+ * Fetch the list of excluded drives from the filebrowser.
+ * @returns The list of excluded drives.
+ */
+export async function getExcludedDrives() {
+  return await requestAPI<IDriveInfo[]>('drives/config', 'GET');
+}
+
+/**
  * Fetch the list of available drives.
  * @returns The list of available drives.
  */
