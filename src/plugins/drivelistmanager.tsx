@@ -15,16 +15,11 @@ import { ISignal, Signal } from '@lumino/signaling';
 interface IProps {
   model: DriveListModel;
 }
-// export interface IDrive {
-//   name: string;
-//   url: string;
-// }
 
 export interface IDriveInputProps {
   isName: boolean;
   value: string;
   getValue: (event: any) => void;
-  // updateSelectedDrives: (item: string, isName: boolean) => void;
 }
 export function DriveInputComponent(props: IDriveInputProps) {
   return (
@@ -34,12 +29,7 @@ export function DriveInputComponent(props: IDriveInputProps) {
           <Search className="drive-search-input" onInput={props.getValue} />
         </div>
         <div className="column"></div>
-        <Button
-          className="input-add-drive-button"
-          onClick={() => {
-            // props.updateSelectedDrives(props.value, props.isName);
-          }}
-        >
+        <Button className="input-add-drive-button" onClick={() => {}}>
           add
         </Button>
       </div>
@@ -49,10 +39,8 @@ export function DriveInputComponent(props: IDriveInputProps) {
 interface ISearchListProps {
   isName: boolean;
   value: string;
-  // filteredList: Array<string>;
   setValue: (value: any) => void;
   availableDrives: Partial<IDriveInfo>[];
-  // updateSelectedDrives: (item: string, isName: boolean) => void;
   model: DriveListModel;
 }
 
@@ -86,7 +74,6 @@ export function DriveSearchListComponent(props: ISearchListProps) {
                   onClick={async () => {
                     await includeDrive(drive.name!);
                     await props.model.refresh();
-                    // props.updateSelectedDrives(item, true);
                   }}
                 >
                   add
@@ -133,15 +120,12 @@ export function DriveDataGridComponent(props: IDriveDataGridProps) {
 export function DriveListManagerComponent({ model }: IProps) {
   const [driveUrl, setDriveUrl] = useState('');
   const [searchDrive, setSearchDrive] = useState('');
-  // let updatedSelectedDrives = [...model.selectedDrives];
   const [selectedDrives, setSelectedDrives] = useState<Partial<IDriveInfo>[]>(
     model.selectedDrives
   );
   const [availableDrives, setAvailableDrives] = useState<Partial<IDriveInfo>[]>(
     model.availableDrives
   );
-  // const [drivesFilteredList, setDrivesFilteredList] = useState<Partial<IDriveInfo>[]>(availableDrives);
-  // const nameList: Array<string> = [];
 
   // Called after mounting.
   React.useEffect(() => {
@@ -155,30 +139,9 @@ export function DriveListManagerComponent({ model }: IProps) {
     });
   }, [model]);
 
-  // for (const item of availableDrives) {
-  //   if (item.name !== '') {
-  //     nameList.push(item.name!);
-  //   }
-  // }
-
   const getValue = (event: any) => {
     setDriveUrl(event.target.value);
   };
-
-  // const filter = (event: any) => {
-  //   const query = event.target.value;
-  //   let updatedList: Partial<IDriveInfo>[];
-
-  //   updatedList = [...drivesFilteredList];
-  //   updatedList = updatedList.filter((item: Partial<IDriveInfo>) => {
-  //     return item.name!.toLowerCase().indexOf(query.toLowerCase()) !== -1;
-  //   });
-  //   setDrivesFilteredList(updatedList);
-  //   // if (nameFilteredList.length === 1 && nameFilteredList[0] !== '') {
-  //   //   setDriveName(nameFilteredList[0]);
-  //   //   setDriveUrl('');
-  //   // }
-  // };
 
   return (
     <>
@@ -193,9 +156,6 @@ export function DriveListManagerComponent({ model }: IProps) {
               isName={false}
               value={driveUrl}
               getValue={getValue}
-              // updateSelectedDrives={(value, isName) =>
-              //   updateSelectedDrives(value, isName)
-              // }
             />
 
             <div> Available drives </div>
@@ -203,12 +163,7 @@ export function DriveListManagerComponent({ model }: IProps) {
               isName={true}
               value={searchDrive}
               setValue={setSearchDrive}
-              // filteredList={drivesFilteredList}
-              // filter={filter}
               availableDrives={availableDrives}
-              // updateSelectedDrives={(value, isName) =>
-              //   // updateSelectedDrives(value, isName)
-              // }
               model={model}
             />
           </div>
