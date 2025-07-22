@@ -188,6 +188,33 @@ class JupyterDrivesManager():
 
         return
     
+    def get_excluded_drives(self):
+        """Get list of excluded drives.
+
+        Returns: 
+            List of excluded drives and their properties.
+        """
+        data = []
+        for drive in self._excluded_drives:
+            try:
+                data.append({
+                    "name": drive,
+                    "region": self._config.region_name,
+                    "creationDate": datetime.now().isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
+                    "mounted": False if drive not in self._content_managers else True,
+                    "provider": self._config.provider
+                })
+            except Exception as e:
+                raise tornado.web.HTTPError(
+                    status_code=httpx.codes.BAD_REQUEST,
+                    reason=f"The following error occured when listing excluded drives: {e}",
+                )
+        
+        response = {
+            "data": data
+        }
+        return response
+    
     def include_drive(self, include_drive_name):
         """Include drive in listing.
 
