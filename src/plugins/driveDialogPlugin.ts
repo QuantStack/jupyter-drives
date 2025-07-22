@@ -7,13 +7,14 @@ import { ITranslator } from '@jupyterlab/translation';
 import { addJupyterLabThemeChangeListener } from '@jupyter/web-components';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
 
-import { DriveListModel, DriveListView, IDrive } from './drivelistmanager';
+import { DriveListModel, DriveListView } from './drivelistmanager';
 import { driveBrowserIcon } from '../icons';
-import { CommandIDs } from '../token';
+import { CommandIDs, IDriveInfo } from '../token';
+import { getDrivesList, getExcludedDrives } from '../requests';
 
 export const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyter-drives:widget',
-  description: 'Open a dialog to select drives to be added in the filebrowser.',
+  description: 'Open a dialog to managed listed drives in the filebrowser.',
   requires: [IFileBrowserFactory, ITranslator],
   autoStart: true,
   activate: (
@@ -25,67 +26,28 @@ export const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
     const { commands } = app;
     const { tracker } = factory;
     const trans = translator.load('jupyter_drives');
-    const selectedDrivesModelMap = new Map<IDrive[], DriveListModel>();
+    const selectedDrivesModelMap = new Map<
+      Partial<IDriveInfo>[],
+      DriveListModel
+    >();
 
-    let selectedDrives: IDrive[] = [
-      {
-        name: 'CoconutDrive',
-        url: '/coconut/url'
-      }
-    ];
+    let selectedDrives: Partial<IDriveInfo>[] = [];
+    getDrivesList().then((drives: IDriveInfo[]) => {
+      selectedDrives = drives.map((drive: IDriveInfo) => ({
+        name: drive.name,
+        region: drive.region
+      }));
+    });
 
-    const availableDrives: IDrive[] = [
-      {
-        name: 'CoconutDrive',
-        url: '/coconut/url'
-      },
-      {
-        name: 'PearDrive',
-        url: '/pear/url'
-      },
-      {
-        name: 'StrawberryDrive',
-        url: '/strawberrydrive/url'
-      },
-      {
-        name: 'BlueberryDrive',
-        url: '/blueberrydrive/url'
-      },
-      {
-        name: '',
-        url: '/mydrive/url'
-      },
-      {
-        name: 'RaspberryDrive',
-        url: '/raspberrydrive/url'
-      },
+    let availableDrives: Partial<IDriveInfo>[] = [];
+    getExcludedDrives().then((drives: IDriveInfo[]) => {
+      availableDrives = drives.map((drive: IDriveInfo) => ({
+        name: drive.name,
+        region: drive.region
+      }));
+    });
 
-      {
-        name: 'PineAppleDrive',
-        url: ''
-      },
-
-      { name: 'PomeloDrive', url: '/https://pomelodrive/url' },
-      {
-        name: 'OrangeDrive',
-        url: ''
-      },
-      {
-        name: 'TomatoDrive',
-        url: ''
-      },
-      {
-        name: '',
-        url: 'superDrive/url'
-      },
-      {
-        name: 'AvocadoDrive',
-        url: ''
-      }
-    ];
     let model = selectedDrivesModelMap.get(selectedDrives);
-
-    //const model = new DriveListModel(availableDrives, selectedDrives);
 
     commands.addCommand(CommandIDs.openDrivesDialog, {
       execute: args => {
@@ -109,8 +71,14 @@ export const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
       },
 
       icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' }),
-      caption: trans.__('Add drives to filebrowser.'),
-      label: trans.__('Add Drives To Filebrowser')
+      caption: trans.__('Manage drives listed in filebrowser.'),
+      label: trans.__('Manage listed drives')
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.openDrivesDialog,
+      selector: '#drive-file-browser.jp-SidePanel',
+      rank: 100
     });
   }
 };
