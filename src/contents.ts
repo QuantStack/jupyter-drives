@@ -697,9 +697,9 @@ export class Drive implements Contents.IDrive {
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
-      type: 'new',
-      oldValue: null,
-      newValue: data
+      type: 'delete',
+      oldValue: data,
+      newValue: null
     });
 
     return data;

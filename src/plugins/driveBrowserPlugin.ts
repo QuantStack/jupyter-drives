@@ -547,7 +547,7 @@ namespace Private {
       isVisible: () => {
         return browser.model.path === 's3:';
       },
-      execute: () => {
+      execute: async () => {
         const widget = tracker.currentWidget;
         if (!widget) {
           return;
@@ -558,7 +558,7 @@ namespace Private {
         }
 
         const driveName: string = item.value.name;
-        drive.excludeDrive(driveName);
+        await drive.excludeDrive(driveName);
       },
       label: 'Exclude Drive',
       icon: removeIcon.bindprops({ stylesheet: 'menuItem' })
@@ -587,9 +587,9 @@ namespace Private {
               ariaLabel: 'Include Drive'
             })
           ]
-        }).then(result => {
+        }).then(async result => {
           if (result.value) {
-            drive.includeDrive(result.value);
+            await drive.includeDrive(result.value);
           }
         });
       },
