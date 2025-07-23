@@ -57,43 +57,44 @@ interface ISearchListProps {
 
 export function DriveSearchListComponent(props: ISearchListProps) {
   return (
-    <div className="drive-search-list">
-      <div className="row">
-        <div className="column">
-          <Search
-            className="drive-search-input"
-            onInput={(event: any) => props.setValue(event.target.value)}
-          />
-        </div>
-        <div className="column"></div>
+    <>
+      <Search
+        className="drive-search-input"
+        onInput={(event: any) => props.setValue(event.target.value)}
+        placeholder="Search drive name"
+      />
+      <div className="drive-search-list">
+        {props.availableDrives.length === 0 ? (
+          <div className="drives-manager-header-info">
+            {'No available drives.'}
+          </div>
+        ) : (
+          props.availableDrives
+            .filter(item => {
+              return (
+                item.name!.toLowerCase().indexOf(props.value.toLowerCase()) !==
+                -1
+              );
+            })
+            .map((drive, index) => (
+              <li key={index}>
+                <div className="available-drives-section">
+                  <div>{drive.name} </div>
+                  <Button
+                    className="search-add-drive-button"
+                    onClick={async () => {
+                      await includeDrive(drive.name!);
+                      await props.model.refresh();
+                    }}
+                  >
+                    add
+                  </Button>
+                </div>
+              </li>
+            ))
+        )}
       </div>
-      {props.availableDrives
-        .filter(item => {
-          return (
-            item.name!.toLowerCase().indexOf(props.value.toLowerCase()) !== -1
-          );
-        })
-        .map((drive, index) => (
-          <li key={index}>
-            <div className="row">
-              <div className="column">
-                <div>{drive.name} </div>
-              </div>
-              <div className="column">
-                <Button
-                  className="input-add-drive-button"
-                  onClick={async () => {
-                    await includeDrive(drive.name!);
-                    await props.model.refresh();
-                  }}
-                >
-                  add
-                </Button>
-              </div>
-            </div>
-          </li>
-        ))}
-    </div>
+    </>
   );
 }
 interface IDriveDataGridProps {
