@@ -40,13 +40,7 @@ export function DriveInputComponent({
           placeholder="Enter drive name"
           value={value}
         />
-        <Button
-          className="input-add-drive-button"
-          onClick={() => {
-            onSubmit();
-            setPublicDrive('');
-          }}
-        >
+        <Button className="input-add-drive-button" onClick={onSubmit}>
           add
         </Button>
       </div>
@@ -168,10 +162,8 @@ export function DriveListManagerComponent({ model }: IProps) {
   }, [model]);
 
   const onAddedPublicDrive = async () => {
-    console.log(publicDrive);
     await addPublicDrive(publicDrive);
     setPublicDrive('');
-    console.log('publicDrve: ', publicDrive);
     await model.refresh();
   };
 
