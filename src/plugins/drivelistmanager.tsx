@@ -16,7 +16,7 @@ import {
   includeDrive
 } from '../requests';
 import { ISignal, Signal } from '@lumino/signaling';
-import { driveBrowserIcon } from '../icons';
+import { driveBrowserIcon, addIcon } from '../icons';
 
 interface IProps {
   model: DriveListModel;
@@ -87,7 +87,11 @@ export function DriveSearchListComponent(props: ISearchListProps) {
                       await props.model.refresh();
                     }}
                   >
-                    add
+                    <addIcon.react
+                      tag="span"
+                      className="available-drives-icon"
+                      height="18px"
+                    />
                   </Button>
                 </div>
               </li>

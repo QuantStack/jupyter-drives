@@ -27,18 +27,18 @@ li {
 }
 
 .search-add-drive-button {
-  background-color: var(--md-blue-700);
-  color: white;
-  width: 8px;
-
-  /* height: 1em; */
+  background-color: var(--jp-inverse-layout-color1);
+  width: 50px;
+  height: 20px;
   border-radius: 4px;
+  margin-right: 0;
 }
 
 .input-add-drive-button {
   width: 50px;
   height: 24px !important;
-  background-color: var(--jp-brand-color1);
+  background-color: var(--jp-inverse-layout-color1);
+  color: white !important;
   text-align: center;
   color: white;
   border-radius: 4px;
@@ -136,9 +136,24 @@ li {
 
 .available-drives-section {
   display: flex;
-  width: 370px;
+  width: 375px;
   height: 24px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  border-radius: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.available-drives-section:hover {
+  background-color: var(--md-blue-grey-100);
+}
+
+.available-drives-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  fill: var(--jp-ui-inverse-font-color0) !important;
+  color: var(--jp-ui-inverse-font-color0) !important;
 }
