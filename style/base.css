@@ -95,6 +95,7 @@ li {
   flex-direction: row;
   align-items: center;
   margin-left: 10px;
+  margin-bottom: 6px;
 }
 
 .drives-manager-header-title {
