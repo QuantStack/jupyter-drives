@@ -270,13 +270,14 @@ class JupyterDrivesManager():
             if len(self._external_drives) != 0:
                 for drive in self._external_drives.values():
                     try:
-                        data.append({
-                            "name": drive['url'],
-                            "region": self._config.region_name if drive['url'] not in self._content_managers else self._content_managers[drive['url']]["location"],
-                            "creationDate": datetime.now().isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
-                            "mounted": False if result.name not in self._content_managers else True,
-                            "provider": self._config.provider
-                        })
+                        if drive['url'] not in self._excluded_drives:
+                            data.append({
+                                "name": drive['url'],
+                                "region": self._config.region_name if drive['url'] not in self._content_managers else self._content_managers[drive['url']]["location"],
+                                "creationDate": datetime.now().isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
+                                "mounted": False if result.name not in self._content_managers else True,
+                                "provider": self._config.provider
+                            })
                     except Exception as e:
                         raise tornado.web.HTTPError(
                             status_code=httpx.codes.BAD_REQUEST,
