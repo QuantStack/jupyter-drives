@@ -1,22 +1,17 @@
 import * as React from 'react';
 import { VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
-import {
-  Button,
-  DataGrid,
-  DataGridCell,
-  DataGridRow,
-  Search
-} from '@jupyter/react-components';
+import { Button, Search } from '@jupyter/react-components';
 import { useState } from 'react';
 import { IDriveInfo } from '../token';
 import {
   addPublicDrive,
+  excludeDrive,
   getDrivesList,
   getExcludedDrives,
   includeDrive
 } from '../requests';
 import { ISignal, Signal } from '@lumino/signaling';
-import { driveBrowserIcon, addIcon } from '../icons';
+import { driveBrowserIcon, addIcon, removeIcon } from '../icons';
 
 interface IProps {
   model: DriveListModel;
@@ -103,38 +98,38 @@ export function DriveSearchListComponent(props: ISearchListProps) {
 }
 interface IDriveDataGridProps {
   drives: Partial<IDriveInfo>[];
+  model: DriveListModel;
 }
 
 export function DriveDataGridComponent(props: IDriveDataGridProps) {
   return (
-    <div className="drive-data-grid">
-      <DataGrid grid-template-columns="1f 1fr">
-        <DataGridRow row-type="header">
-          <DataGridCell className="data-grid-cell" grid-column="1">
-            <b> name </b>
-          </DataGridCell>
-          <DataGridCell className="data-grid-cell-secondary" grid-column="2">
-            <b> region </b>
-          </DataGridCell>
-          <DataGridCell className="data-grid-cell-button" grid-column="3" />
-        </DataGridRow>
-
-        {props.drives.map((item, index) => (
-          <DataGridRow key={item.name} row-type="default">
-            <DataGridCell className="data-grid-cell" grid-column="1">
-              {item.name}
-            </DataGridCell>
-            <DataGridCell className="data-grid-cell-secondary" grid-column="2">
-              {item.region}
-            </DataGridCell>
-            <DataGridCell className="data-grid-cell-button" grid-column="3">
-              <Button className="input-add-drive-button" onClick={() => {}}>
-                add
+    <div className="drive-search-list">
+      {props.drives.length === 0 ? (
+        <div className="drives-manager-header-info">
+          {'No selected drives.'}
+        </div>
+      ) : (
+        props.drives.map((drive, index) => (
+          <li key={index}>
+            <div className="available-drives-section">
+              <div>{drive.name} </div>
+              <Button
+                className="search-add-drive-button"
+                onClick={async () => {
+                  await excludeDrive(drive.name!);
+                  await props.model.refresh();
+                }}
+              >
+                <removeIcon.react
+                  tag="span"
+                  className="available-drives-icon"
+                  height="18px"
+                />
               </Button>
-            </DataGridCell>
-          </DataGridRow>
-        ))}
-      </DataGrid>
+            </div>
+          </li>
+        ))
+      )}
     </div>
   );
 }
@@ -180,9 +175,10 @@ export function DriveListManagerComponent({ model }: IProps) {
           </div>
         </div>
       </span>
-      <div className="row">
+      <div>
         <div className="drives-manager-section">
-          <DriveDataGridComponent drives={selectedDrives} />
+          <div className="drives-section-title">Selected drives</div>
+          <DriveDataGridComponent drives={selectedDrives} model={model} />
         </div>
 
         <div className="drives-manager-section">
