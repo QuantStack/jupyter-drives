@@ -199,7 +199,7 @@ class JupyterDrivesManager():
             try:
                 data.append({
                     "name": drive,
-                    "region": self._config.region_name,
+                    "region": self._config.region_name if drive not in self._content_managers else self._content_managers[drive]["location"],
                     "creationDate": datetime.now().isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
                     "mounted": False if drive not in self._content_managers else True,
                     "provider": self._config.provider
@@ -260,7 +260,7 @@ class JupyterDrivesManager():
                     data.append(
                         {
                             "name": result.name,
-                            "region": self._config.region_name,
+                            "region": self._config.region_name if result.name not in self._content_managers else self._content_managers[result.name]["location"],
                             "creationDate": result.extra["creation_date"],
                             "mounted": False if result.name not in self._content_managers else True,
                             "provider": self._config.provider
@@ -272,7 +272,7 @@ class JupyterDrivesManager():
                     try:
                         data.append({
                             "name": drive['url'],
-                            "region": self._config.region_name,
+                            "region": self._config.region_name if drive['url'] not in self._content_managers else self._content_managers[drive['url']]["location"],
                             "creationDate": datetime.now().isoformat(timespec='milliseconds').replace('+00:00', 'Z'),
                             "mounted": False if result.name not in self._content_managers else True,
                             "provider": self._config.provider
