@@ -423,7 +423,7 @@ namespace Private {
     });
 
     app.commands.addCommand(CommandIDs.addPublicDrive, {
-      isEnabled: () => {
+      isVisible: () => {
         return browser.model.path === 's3:';
       },
       execute: async () => {
@@ -544,7 +544,7 @@ namespace Private {
     });
 
     app.commands.addCommand(CommandIDs.excludeDrive, {
-      isEnabled: () => {
+      isVisible: () => {
         return browser.model.path === 's3:';
       },
       execute: () => {
@@ -572,7 +572,7 @@ namespace Private {
     });
 
     app.commands.addCommand(CommandIDs.includeDrive, {
-      isEnabled: () => {
+      isVisible: () => {
         return browser.model.path === 's3:';
       },
       execute: async () => {
