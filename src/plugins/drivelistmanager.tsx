@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { IDriveInfo } from '../token';
 import { getDrivesList, getExcludedDrives, includeDrive } from '../requests';
 import { ISignal, Signal } from '@lumino/signaling';
+import { driveBrowserIcon } from '../icons';
 
 interface IProps {
   model: DriveListModel;
@@ -24,11 +25,8 @@ export interface IDriveInputProps {
 export function DriveInputComponent(props: IDriveInputProps) {
   return (
     <div>
-      <div className="row">
-        <div className="column">
-          <Search className="drive-search-input" onInput={props.getValue} />
-        </div>
-        <div className="column"></div>
+      <div className="add-public-drive-section">
+        <Search className="drive-search-input" onInput={props.getValue} />
         <Button className="input-add-drive-button" onClick={() => {}}>
           add
         </Button>
@@ -70,7 +68,7 @@ export function DriveSearchListComponent(props: ISearchListProps) {
               </div>
               <div className="column">
                 <Button
-                  className="search-add-drive-button"
+                  className="input-add-drive-button"
                   onClick={async () => {
                     await includeDrive(drive.name!);
                     await props.model.refresh();
@@ -97,9 +95,10 @@ export function DriveDataGridComponent(props: IDriveDataGridProps) {
           <DataGridCell className="data-grid-cell" grid-column="1">
             <b> name </b>
           </DataGridCell>
-          <DataGridCell className="data-grid-cell" grid-column="2">
+          <DataGridCell className="data-grid-cell-secondary" grid-column="2">
             <b> region </b>
           </DataGridCell>
+          <DataGridCell className="data-grid-cell-button" grid-column="3" />
         </DataGridRow>
 
         {props.drives.map((item, index) => (
@@ -107,8 +106,13 @@ export function DriveDataGridComponent(props: IDriveDataGridProps) {
             <DataGridCell className="data-grid-cell" grid-column="1">
               {item.name}
             </DataGridCell>
-            <DataGridCell className="data-grid-cell" grid-column="2">
+            <DataGridCell className="data-grid-cell-secondary" grid-column="2">
               {item.region}
+            </DataGridCell>
+            <DataGridCell className="data-grid-cell-button" grid-column="3">
+              <Button className="input-add-drive-button" onClick={() => {}}>
+                add
+              </Button>
             </DataGridCell>
           </DataGridRow>
         ))}
@@ -144,40 +148,46 @@ export function DriveListManagerComponent({ model }: IProps) {
   };
 
   return (
-    <>
-      <div className="drive-list-manager">
-        <div>
-          <h3> Managed listed drives </h3>
+    <div className="drive-list-manager">
+      <span className="drives-manager-header">
+        <driveBrowserIcon.react
+          margin="15px 9.5px 0px 0px"
+          height="auto"
+          width="28px"
+        />
+        <div className="drives-manager-header-title">
+          {'Manage listed drives'}
+          <div className="drives-manager-header-info">
+            {'Add or remove drives from the filebrowser.'}
+          </div>
         </div>
-        <div className="row">
-          <div className="column">
-            <div> Enter public drive name</div>
-            <DriveInputComponent
-              isName={false}
-              value={driveUrl}
-              getValue={getValue}
-            />
+      </span>
+      <div className="row">
+        <div className="drives-manager-section">
+          <DriveDataGridComponent drives={selectedDrives} />
+        </div>
 
-            <div> Available drives </div>
-            <DriveSearchListComponent
-              isName={true}
-              value={searchDrive}
-              setValue={setSearchDrive}
-              availableDrives={availableDrives}
-              model={model}
-            />
-          </div>
+        <div className="drives-manager-section">
+          <div> Enter public drive name</div>
+          <DriveInputComponent
+            isName={false}
+            value={driveUrl}
+            getValue={getValue}
+          />
+        </div>
 
-          <div className="column">
-            <div className="jp-custom-datagrid">
-              <label> Listed drives </label>
-              <label> </label>
-              <DriveDataGridComponent drives={selectedDrives} />
-            </div>
-          </div>
+        <div className="drives-manager-section">
+          <div> Available drives </div>
+          <DriveSearchListComponent
+            isName={true}
+            value={searchDrive}
+            setValue={setSearchDrive}
+            availableDrives={availableDrives}
+            model={model}
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

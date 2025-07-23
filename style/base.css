@@ -11,64 +11,128 @@ li {
   list-style-type: none;
 }
 
-.column {
-  float: left;
-  width: 50%;
-}
+/* .two-column-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  margin-top: 10px;
+} */
 
 /* Clear floats after the columns */
-.row::after {
+/* .row::after {
   content: '';
   display: table;
   clear: both;
-}
+} */
 
 .drive-search-list {
   width: auto;
 }
 
 .drive-list-manager {
-  width: 800px;
-  height: 800px;
+  min-width: 400px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
 }
 
 .search-add-drive-button {
   background-color: var(--md-blue-700);
   color: white;
 
-  /* width: 8em; */
-  height: 1em;
+  width: 8px;
+  /* height: 1em; */
   border-radius: 4px;
 }
 
 .input-add-drive-button {
-  position: relative;
+  width: 50px;
+  height: 24px !important;
   background-color: var(--jp-brand-color1);
   text-align: center;
   color: white;
-  height: calc(
-    (var(--base-height-multiplier) + var(--density)) * var(--design-unit) * 1px
-  );
   border-radius: 4px;
 }
 
 .drive-search-input {
-  height: 14px;
+  height: 24px !important;
+  width: 100%;
+  flex: 1;
+  justify-content: center;
 }
 
 .drive-data-grid {
-  width: 400px;
+  width: 380px;
+  flex-direction: row;
+  grid-auto-flow: row;
 }
 
 .data-grid-cell {
   text-align: justify;
   height: 2em;
   min-width: 200px;
+  border-right: 5px;
+  border-left: 2px;
+  /* background-color: var(--jp-layout-color2); */
+}
+
+.data-grid-cell-secondary {
+  text-align: justify;
+  height: 2em;
+  min-width: 100px;
   border-right: 2px;
   border-left: 2px;
-  background-color: var(--jp-layout-color2);
+  /* background-color: var(--jp-layout-color2); */
+}
+
+.data-grid-cell-button {
+  text-align: justify;
+  height: 2em;
+  width: 50px;
+  border-right: 2px;
+  border-left: 2px;
+  /* background-color: var(--jp-layout-color2); */
 }
 
 .jp-drive-browser-search-box {
   width: 230px;
+}
+
+.drives-manager-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.drives-manager-header-title {
+  display: flex;
+  flex-direction: column;
+  padding-top: 18px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.drives-manager-header-info {
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.8rem;
+
+  /* padding-top: 5px; */
+  color: var(--md-blue-grey-600);
+}
+
+.drives-manager-section {
+  width: 380px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.add-public-drive-section {
+  display: flex;
+  width: 380px;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.2rem;
 }
