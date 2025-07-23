@@ -9,7 +9,12 @@ import {
 } from '@jupyter/react-components';
 import { useState } from 'react';
 import { IDriveInfo } from '../token';
-import { getDrivesList, getExcludedDrives, includeDrive } from '../requests';
+import {
+  addPublicDrive,
+  getDrivesList,
+  getExcludedDrives,
+  includeDrive
+} from '../requests';
 import { ISignal, Signal } from '@lumino/signaling';
 import { driveBrowserIcon } from '../icons';
 
@@ -22,12 +27,20 @@ export interface IDriveInputProps {
   value: string;
   getValue: (event: any) => void;
 }
+
 export function DriveInputComponent(props: IDriveInputProps) {
   return (
     <div>
       <div className="add-public-drive-section">
-        <Search className="drive-search-input" onInput={props.getValue} />
-        <Button className="input-add-drive-button" onClick={() => {}}>
+        <Search
+          className="drive-search-input"
+          onInput={props.getValue}
+          placeholder="Enter drive name"
+        />
+        <Button
+          className="input-add-drive-button"
+          onClick={() => addPublicDrive(props.value)}
+        >
           add
         </Button>
       </div>
@@ -168,7 +181,7 @@ export function DriveListManagerComponent({ model }: IProps) {
         </div>
 
         <div className="drives-manager-section">
-          <div> Enter public drive name</div>
+          <div className="drives-section-title"> Add public drive</div>
           <DriveInputComponent
             isName={false}
             value={driveUrl}
@@ -177,7 +190,7 @@ export function DriveListManagerComponent({ model }: IProps) {
         </div>
 
         <div className="drives-manager-section">
-          <div> Available drives </div>
+          <div className="drives-section-title"> Browser available drives </div>
           <DriveSearchListComponent
             isName={true}
             value={searchDrive}

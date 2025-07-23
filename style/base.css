@@ -19,6 +19,7 @@ li {
 } */
 
 /* Clear floats after the columns */
+
 /* .row::after {
   content: '';
   display: table;
@@ -39,8 +40,8 @@ li {
 .search-add-drive-button {
   background-color: var(--md-blue-700);
   color: white;
-
   width: 8px;
+
   /* height: 1em; */
   border-radius: 4px;
 }
@@ -73,6 +74,7 @@ li {
   min-width: 200px;
   border-right: 5px;
   border-left: 2px;
+
   /* background-color: var(--jp-layout-color2); */
 }
 
@@ -82,6 +84,7 @@ li {
   min-width: 100px;
   border-right: 2px;
   border-left: 2px;
+
   /* background-color: var(--jp-layout-color2); */
 }
 
@@ -91,6 +94,7 @@ li {
   width: 50px;
   border-right: 2px;
   border-left: 2px;
+
   /* background-color: var(--jp-layout-color2); */
 }
 
@@ -135,4 +139,8 @@ li {
   flex-direction: row;
   align-items: center;
   gap: 0.2rem;
+}
+
+.drives-section-title {
+  font-weight: 500;
 }
