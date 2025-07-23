@@ -33,7 +33,7 @@ import { PageConfig, PathExt } from '@jupyterlab/coreutils';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
 
-import { driveBrowserIcon } from '../icons';
+import { addIcon, driveBrowserIcon, removeIcon } from '../icons';
 import { Drive } from '../contents';
 import { setListingLimit } from '../requests';
 import { CommandIDs } from '../token';
@@ -561,7 +561,7 @@ namespace Private {
         drive.excludeDrive(driveName);
       },
       label: 'Exclude Drive',
-      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+      icon: removeIcon.bindprops({ stylesheet: 'menuItem' })
     });
 
     app.contextMenu.addItem({
@@ -594,7 +594,7 @@ namespace Private {
         });
       },
       label: 'Include Drive',
-      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+      icon: addIcon.bindprops({ stylesheet: 'menuItem' })
     });
 
     app.contextMenu.addItem({
