@@ -20,21 +20,32 @@ interface IProps {
 export interface IDriveInputProps {
   isName: boolean;
   value: string;
-  getValue: (event: any) => void;
+  setPublicDrive: (value: string) => void;
+  onSubmit: () => void;
 }
 
-export function DriveInputComponent(props: IDriveInputProps) {
+export function DriveInputComponent({
+  value,
+  setPublicDrive,
+  onSubmit
+}: IDriveInputProps) {
   return (
     <div>
       <div className="add-public-drive-section">
-        <Search
+        <input
           className="drive-search-input"
-          onInput={props.getValue}
+          onInput={(event: any) => {
+            setPublicDrive(event.target.value);
+          }}
           placeholder="Enter drive name"
+          value={value}
         />
         <Button
           className="input-add-drive-button"
-          onClick={() => addPublicDrive(props.value)}
+          onClick={() => {
+            onSubmit();
+            setPublicDrive('');
+          }}
         >
           add
         </Button>
@@ -135,7 +146,7 @@ export function DriveDataGridComponent(props: IDriveDataGridProps) {
 }
 
 export function DriveListManagerComponent({ model }: IProps) {
-  const [driveUrl, setDriveUrl] = useState('');
+  const [publicDrive, setPublicDrive] = useState('');
   const [searchDrive, setSearchDrive] = useState('');
   const [selectedDrives, setSelectedDrives] = useState<Partial<IDriveInfo>[]>(
     model.selectedDrives
@@ -156,8 +167,12 @@ export function DriveListManagerComponent({ model }: IProps) {
     });
   }, [model]);
 
-  const getValue = (event: any) => {
-    setDriveUrl(event.target.value);
+  const onAddedPublicDrive = async () => {
+    console.log(publicDrive);
+    await addPublicDrive(publicDrive);
+    setPublicDrive('');
+    console.log('publicDrve: ', publicDrive);
+    await model.refresh();
   };
 
   return (
@@ -185,8 +200,9 @@ export function DriveListManagerComponent({ model }: IProps) {
           <div className="drives-section-title"> Add public drive</div>
           <DriveInputComponent
             isName={false}
-            value={driveUrl}
-            getValue={getValue}
+            value={publicDrive}
+            setPublicDrive={setPublicDrive}
+            onSubmit={onAddedPublicDrive}
           />
         </div>
 
