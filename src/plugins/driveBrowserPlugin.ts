@@ -560,7 +560,7 @@ namespace Private {
         const driveName: string = item.value.name;
         await drive.excludeDrive(driveName);
       },
-      label: 'Exclude Drive',
+      label: 'Remove Drive',
       icon: removeIcon.bindprops({ stylesheet: 'menuItem' })
     });
 
