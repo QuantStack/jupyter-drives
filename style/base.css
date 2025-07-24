@@ -62,8 +62,6 @@ li {
   min-width: 200px;
   border-right: 5px;
   border-left: 2px;
-
-  /* background-color: var(--jp-layout-color2); */
 }
 
 .data-grid-cell-secondary {
@@ -72,8 +70,6 @@ li {
   min-width: 100px;
   border-right: 2px;
   border-left: 2px;
-
-  /* background-color: var(--jp-layout-color2); */
 }
 
 .data-grid-cell-button {
@@ -82,8 +78,6 @@ li {
   width: 50px;
   border-right: 2px;
   border-left: 2px;
-
-  /* background-color: var(--jp-layout-color2); */
 }
 
 .jp-drive-browser-search-box {
@@ -110,8 +104,6 @@ li {
   text-align: left;
   font-weight: 400;
   font-size: 0.8rem;
-
-  /* padding-top: 5px; */
   color: var(--md-blue-grey-600);
 }
 
