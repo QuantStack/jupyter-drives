@@ -28,8 +28,8 @@
         "rank": 40
       },
       {
-        "name": "new-drive",
-        "command": "drives:create-new-drive",
+        "name": "drives-manager",
+        "command": "drives:open-drives-dialog",
         "label": "",
         "rank": 5
       }

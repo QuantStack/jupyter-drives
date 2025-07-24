@@ -33,7 +33,7 @@ import { PageConfig, PathExt } from '@jupyterlab/coreutils';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
 
-import { driveBrowserIcon } from '../icons';
+import { driveBrowserIcon, removeIcon } from '../icons';
 import { Drive } from '../contents';
 import { setListingLimit } from '../requests';
 import { CommandIDs } from '../token';
@@ -423,7 +423,7 @@ namespace Private {
     });
 
     app.commands.addCommand(CommandIDs.addPublicDrive, {
-      isEnabled: () => {
+      isVisible: () => {
         return browser.model.path === 's3:';
       },
       execute: async () => {
@@ -541,6 +541,34 @@ namespace Private {
         Array.from(tracker.currentWidget.selectedItems()).length === 1,
       icon: fileIcon.bindprops({ stylesheet: 'menuItem' }),
       label: 'Copy Path'
+    });
+
+    app.commands.addCommand(CommandIDs.excludeDrive, {
+      isVisible: () => {
+        return browser.model.path === 's3:';
+      },
+      execute: async () => {
+        const widget = tracker.currentWidget;
+        if (!widget) {
+          return;
+        }
+        const item = widget.selectedItems().next();
+        if (item.done) {
+          return;
+        }
+
+        const driveName: string = item.value.name;
+        await drive.excludeDrive(driveName);
+      },
+      label: 'Remove Drive',
+      icon: removeIcon.bindprops({ stylesheet: 'menuItem' })
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.excludeDrive,
+      selector:
+        '#drive-file-browser.jp-SidePanel .jp-DirListing-content .jp-DirListing-item[data-isdir]',
+      rank: 110
     });
   }
 }

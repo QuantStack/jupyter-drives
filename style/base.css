@@ -11,64 +11,141 @@ li {
   list-style-type: none;
 }
 
-.column {
-  float: left;
-  width: 50%;
-}
-
-/* Clear floats after the columns */
-.row::after {
-  content: '';
-  display: table;
-  clear: both;
-}
-
 .drive-search-list {
-  width: auto;
+  display: flex;
+  width: 380px;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
 }
 
 .drive-list-manager {
-  width: 800px;
-  height: 800px;
+  min-width: 400px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
 }
 
 .search-add-drive-button {
-  background-color: var(--md-blue-700);
-  color: white;
-
-  /* width: 8em; */
-  height: 1em;
+  background-color: var(--jp-inverse-layout-color1);
+  width: 50px;
+  height: 20px;
   border-radius: 4px;
+  margin-right: 0;
 }
 
 .input-add-drive-button {
-  position: relative;
-  background-color: var(--jp-brand-color1);
+  width: 50px;
+  height: 24px !important;
+  background-color: var(--jp-inverse-layout-color1);
+  color: white !important;
   text-align: center;
-  color: white;
-  height: calc(
-    (var(--base-height-multiplier) + var(--density)) * var(--design-unit) * 1px
-  );
   border-radius: 4px;
 }
 
 .drive-search-input {
-  height: 14px;
+  height: 20px !important;
+  width: 100%;
+  flex: 1;
+  justify-content: center;
 }
 
 .drive-data-grid {
-  width: 400px;
+  width: 380px;
+  flex-direction: row;
+  grid-auto-flow: row;
 }
 
 .data-grid-cell {
   text-align: justify;
   height: 2em;
   min-width: 200px;
+  border-right: 5px;
+  border-left: 2px;
+}
+
+.data-grid-cell-secondary {
+  text-align: justify;
+  height: 2em;
+  min-width: 100px;
   border-right: 2px;
   border-left: 2px;
-  background-color: var(--jp-layout-color2);
+}
+
+.data-grid-cell-button {
+  text-align: justify;
+  height: 2em;
+  width: 50px;
+  border-right: 2px;
+  border-left: 2px;
 }
 
 .jp-drive-browser-search-box {
   width: 230px;
+}
+
+.drives-manager-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-left: 10px;
+  margin-bottom: 6px;
+}
+
+.drives-manager-header-title {
+  display: flex;
+  flex-direction: column;
+  padding-top: 18px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.drives-manager-header-info {
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--md-blue-grey-600);
+}
+
+.drives-manager-section {
+  width: 380px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.add-public-drive-section {
+  display: flex;
+  width: 380px;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.drives-section-title {
+  font-weight: 500;
+}
+
+.available-drives-section {
+  display: flex;
+  width: 375px;
+  height: 24px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.available-drives-section:hover {
+  background-color: var(--md-blue-grey-100);
+}
+
+.available-drives-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  fill: var(--jp-ui-inverse-font-color0) !important;
+  color: var(--jp-ui-inverse-font-color0) !important;
 }

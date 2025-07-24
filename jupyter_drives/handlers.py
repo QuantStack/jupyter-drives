@@ -50,9 +50,19 @@ class ConfigJupyterDrivesHandler(JupyterDrivesAPIHandler):
         return super().initialize(logger, manager)
     
     @tornado.web.authenticated
+    async def get(self):
+        result = self._manager.get_excluded_drives()
+        self.finish(json.dumps(result["data"]))
+
+    @tornado.web.authenticated
     async def post(self):
         body = self.get_json_body()
-        result = self._manager.set_listing_limit(**body)
+        if 'new_limit' in body:
+            result = self._manager.set_listing_limit(**body)
+        if 'exclude_drive_name' in body:
+            result = self._manager.exclude_drive(**body)
+        if 'include_drive_name' in body:
+            result = self._manager.include_drive(**body)
         self.finish(result)
 
 class ListJupyterDrivesHandler(JupyterDrivesAPIHandler):

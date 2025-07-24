@@ -1,43 +1,51 @@
 import * as React from 'react';
 import { VDomModel, VDomRenderer } from '@jupyterlab/ui-components';
-import {
-  Button,
-  DataGrid,
-  DataGridCell,
-  DataGridRow,
-  Search
-} from '@jupyter/react-components';
+import { Button, Search } from '@jupyter/react-components';
 import { useState } from 'react';
+import { IDriveInfo } from '../token';
+import {
+  addPublicDrive,
+  excludeDrive,
+  getDrivesList,
+  getExcludedDrives,
+  includeDrive
+} from '../requests';
+import { ISignal, Signal } from '@lumino/signaling';
+import { driveBrowserIcon, addIcon, removeIcon } from '../icons';
 
 interface IProps {
   model: DriveListModel;
-}
-export interface IDrive {
-  name: string;
-  url: string;
 }
 
 export interface IDriveInputProps {
   isName: boolean;
   value: string;
-  getValue: (event: any) => void;
-  updateSelectedDrives: (item: string, isName: boolean) => void;
+  setPublicDrive: (value: string) => void;
+  onSubmit: () => void;
 }
-export function DriveInputComponent(props: IDriveInputProps) {
+
+export function DriveInputComponent({
+  value,
+  setPublicDrive,
+  onSubmit
+}: IDriveInputProps) {
   return (
     <div>
-      <div className="row">
-        <div className="column">
-          <Search className="drive-search-input" onInput={props.getValue} />
-        </div>
-        <div className="column"></div>
+      <div className="add-public-drive-section">
+        <input
+          className="drive-search-input"
+          onInput={(event: any) => {
+            setPublicDrive(event.target.value);
+          }}
+          placeholder="Enter drive name"
+          value={value}
+        />
         <Button
           className="input-add-drive-button"
-          onClick={() => {
-            props.updateSelectedDrives(props.value, props.isName);
-          }}
+          onClick={onSubmit}
+          title="Add public drive"
         >
-          add drive
+          add
         </Button>
       </div>
     </div>
@@ -46,213 +54,236 @@ export function DriveInputComponent(props: IDriveInputProps) {
 interface ISearchListProps {
   isName: boolean;
   value: string;
-  filteredList: Array<string>;
-  filter: (value: any) => void;
-  updateSelectedDrives: (item: string, isName: boolean) => void;
+  setValue: (value: any) => void;
+  availableDrives: Partial<IDriveInfo>[];
+  model: DriveListModel;
 }
 
 export function DriveSearchListComponent(props: ISearchListProps) {
   return (
-    <div className="drive-search-list">
-      <div className="row">
-        <div className="column">
-          <Search className="drive-search-input" onInput={props.filter} />
-        </div>
-        <div className="column"></div>
-      </div>
-      {props.filteredList.map((item, index) => (
-        <li key={item}>
-          <div className="row">
-            <div className="column">
-              <div>{item} </div>
-            </div>
-            <div className="column">
-              <Button
-                className="search-add-drive-button"
-                onClick={() => {
-                  props.updateSelectedDrives(item, true);
-                }}
-              >
-                add drive
-              </Button>
-            </div>
-          </div>
-        </li>
-      ))}
-    </div>
-  );
-}
-interface IDriveDataGridProps {
-  drives: IDrive[];
-}
-
-export function DriveDataGridComponent(props: IDriveDataGridProps) {
-  return (
-    <div className="drive-data-grid">
-      <DataGrid grid-template-columns="1f 1fr">
-        <DataGridRow row-type="header">
-          <DataGridCell className="data-grid-cell" grid-column="1">
-            <b> name </b>
-          </DataGridCell>
-          <DataGridCell className="data-grid-cell" grid-column="2">
-            <b> url </b>
-          </DataGridCell>
-        </DataGridRow>
-
-        {props.drives.map((item, index) => (
-          <DataGridRow key={item.name} row-type="default">
-            <DataGridCell className="data-grid-cell" grid-column="1">
-              {item.name}
-            </DataGridCell>
-            <DataGridCell className="data-grid-cell" grid-column="2">
-              {item.url}
-            </DataGridCell>
-          </DataGridRow>
-        ))}
-      </DataGrid>
-    </div>
-  );
-}
-
-export function DriveListManagerComponent(props: IProps) {
-  const [driveUrl, setDriveUrl] = useState('');
-  const [driveName, setDriveName] = useState('');
-  let updatedSelectedDrives = [...props.model.selectedDrives];
-  const [selectedDrives, setSelectedDrives] = useState(updatedSelectedDrives);
-
-  const nameList: Array<string> = [];
-
-  for (const item of props.model.availableDrives) {
-    if (item.name !== '') {
-      nameList.push(item.name);
-    }
-  }
-  const [nameFilteredList, setNameFilteredList] = useState(nameList);
-
-  const isDriveAlreadySelected = (pickedDrive: IDrive, driveList: IDrive[]) => {
-    const isbyNameIncluded: boolean[] = [];
-    const isbyUrlIncluded: boolean[] = [];
-    let isIncluded: boolean = false;
-    driveList.forEach(item => {
-      if (pickedDrive.name !== '' && pickedDrive.name === item.name) {
-        isbyNameIncluded.push(true);
-      } else {
-        isbyNameIncluded.push(false);
-      }
-      if (pickedDrive.url !== '' && pickedDrive.url === item.url) {
-        isbyUrlIncluded.push(true);
-      } else {
-        isbyUrlIncluded.push(false);
-      }
-    });
-
-    if (isbyNameIncluded.includes(true) || isbyUrlIncluded.includes(true)) {
-      isIncluded = true;
-    }
-
-    return isIncluded;
-  };
-
-  const updateSelectedDrives = (item: string, isName: boolean) => {
-    updatedSelectedDrives = [...props.model.selectedDrives];
-    let pickedDrive: IDrive;
-    if (isName) {
-      pickedDrive = { name: item, url: '' };
-    } else {
-      if (item !== driveUrl) {
-        setDriveUrl(item);
-      }
-      pickedDrive = { name: '', url: driveUrl };
-    }
-
-    const checkDrive = isDriveAlreadySelected(
-      pickedDrive,
-      updatedSelectedDrives
-    );
-    if (checkDrive === false) {
-      updatedSelectedDrives.push(pickedDrive);
-    } else {
-      console.log('The selected drive is already in the list');
-    }
-
-    setSelectedDrives(updatedSelectedDrives);
-    props.model.setSelectedDrives(updatedSelectedDrives);
-  };
-
-  const getValue = (event: any) => {
-    setDriveUrl(event.target.value);
-  };
-
-  const filter = (event: any) => {
-    const query = event.target.value;
-    let updatedList: Array<string>;
-
-    updatedList = [...nameList];
-    updatedList = updatedList.filter(item => {
-      return item.toLowerCase().indexOf(query.toLowerCase()) !== -1;
-    });
-    setNameFilteredList(updatedList);
-    if (nameFilteredList.length === 1 && nameFilteredList[0] !== '') {
-      setDriveName(nameFilteredList[0]);
-      setDriveUrl('');
-    }
-  };
-
-  return (
     <>
-      <div className="drive-list-manager">
-        <div>
-          <h3> Select drive(s) to be added to your filebrowser </h3>
-        </div>
-        <div className="row">
-          <div className="column">
-            <div> Enter a drive URL</div>
-            <DriveInputComponent
-              isName={false}
-              value={driveUrl}
-              getValue={getValue}
-              updateSelectedDrives={(value, isName) =>
-                updateSelectedDrives(value, isName)
-              }
-            />
-
-            <div> Select drive(s) from list</div>
-            <DriveSearchListComponent
-              isName={true}
-              value={driveName}
-              filteredList={nameFilteredList}
-              filter={filter}
-              updateSelectedDrives={(value, isName) =>
-                updateSelectedDrives(value, isName)
-              }
-            />
+      <Search
+        className="drive-search-input"
+        onInput={(event: any) => props.setValue(event.target.value)}
+        placeholder="Search drive name"
+      />
+      <div className="drive-search-list">
+        {props.availableDrives.length === 0 ? (
+          <div className="drives-manager-header-info">
+            {'No available drives.'}
           </div>
-
-          <div className="column">
-            <div className="jp-custom-datagrid">
-              <label> Selected drives </label>
-              <label> </label>
-              <DriveDataGridComponent drives={selectedDrives} />
-            </div>
-          </div>
-        </div>
+        ) : (
+          props.availableDrives
+            .filter(item => {
+              return (
+                item.name!.toLowerCase().indexOf(props.value.toLowerCase()) !==
+                -1
+              );
+            })
+            .map((drive, index) => (
+              <li key={index}>
+                <div className="available-drives-section">
+                  <div>{drive.name} </div>
+                  <Button
+                    className="search-add-drive-button"
+                    onClick={async () => {
+                      await includeDrive(drive.name!);
+                      await props.model.refresh();
+                    }}
+                    title="Add drive"
+                  >
+                    <addIcon.react
+                      tag="span"
+                      className="available-drives-icon"
+                      height="18px"
+                    />
+                  </Button>
+                </div>
+              </li>
+            ))
+        )}
       </div>
     </>
   );
 }
+interface IDriveDataGridProps {
+  drives: Partial<IDriveInfo>[];
+  model: DriveListModel;
+}
+
+export function DriveDataGridComponent(props: IDriveDataGridProps) {
+  return (
+    <div className="drive-search-list">
+      {props.drives.length === 0 ? (
+        <div className="drives-manager-header-info">
+          {'No selected drives.'}
+        </div>
+      ) : (
+        props.drives.map((drive, index) => (
+          <li key={index}>
+            <div className="available-drives-section">
+              <div>{drive.name} </div>
+              <Button
+                className="search-add-drive-button"
+                onClick={async () => {
+                  await excludeDrive(drive.name!);
+                  await props.model.refresh();
+                }}
+                title="Remove drive"
+              >
+                <removeIcon.react
+                  tag="span"
+                  className="available-drives-icon"
+                  height="18px"
+                />
+              </Button>
+            </div>
+          </li>
+        ))
+      )}
+    </div>
+  );
+}
+
+export function DriveListManagerComponent({ model }: IProps) {
+  const [publicDrive, setPublicDrive] = useState('');
+  const [searchDrive, setSearchDrive] = useState('');
+  const [selectedDrives, setSelectedDrives] = useState<Partial<IDriveInfo>[]>(
+    model.selectedDrives
+  );
+  const [availableDrives, setAvailableDrives] = useState<Partial<IDriveInfo>[]>(
+    model.availableDrives
+  );
+
+  // Called after mounting.
+  React.useEffect(() => {
+    model.refresh();
+
+    model.selectedDrivesChanged.connect((_, args) => {
+      setSelectedDrives(args);
+    });
+    model.availableDrivesChanged.connect((_, args) => {
+      setAvailableDrives(args);
+    });
+  }, [model]);
+
+  const onAddedPublicDrive = async () => {
+    await addPublicDrive(publicDrive);
+    setPublicDrive('');
+    await model.refresh();
+  };
+
+  return (
+    <div className="drive-list-manager">
+      <span className="drives-manager-header">
+        <driveBrowserIcon.react
+          margin="15px 9.5px 0px 0px"
+          height="auto"
+          width="28px"
+        />
+        <div className="drives-manager-header-title">
+          {'Manage listed drives'}
+          <div className="drives-manager-header-info">
+            {'Add or remove drives from the filebrowser.'}
+          </div>
+        </div>
+      </span>
+      <div>
+        <div className="drives-manager-section">
+          <div className="drives-section-title">Selected drives</div>
+          <DriveDataGridComponent drives={selectedDrives} model={model} />
+        </div>
+
+        <div className="drives-manager-section">
+          <div className="drives-section-title"> Add public drive</div>
+          <DriveInputComponent
+            isName={false}
+            value={publicDrive}
+            setPublicDrive={setPublicDrive}
+            onSubmit={onAddedPublicDrive}
+          />
+        </div>
+
+        <div className="drives-manager-section">
+          <div className="drives-section-title"> Browser available drives </div>
+          <DriveSearchListComponent
+            isName={true}
+            value={searchDrive}
+            setValue={setSearchDrive}
+            availableDrives={availableDrives}
+            model={model}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export class DriveListModel extends VDomModel {
-  public availableDrives: IDrive[];
-  public selectedDrives: IDrive[];
+  public availableDrives: Partial<IDriveInfo>[];
+  public selectedDrives: Partial<IDriveInfo>[];
+  private _selectedDrivesChanged = new Signal<
+    DriveListModel,
+    Partial<IDriveInfo>[]
+  >(this);
+  private _availableDrivesChanged = new Signal<
+    DriveListModel,
+    Partial<IDriveInfo>[]
+  >(this);
 
-  constructor(availableDrives: IDrive[], selectedDrives: IDrive[]) {
+  constructor(
+    availableDrives: Partial<IDriveInfo>[],
+    selectedDrives: Partial<IDriveInfo>[]
+  ) {
     super();
 
     this.availableDrives = availableDrives;
     this.selectedDrives = selectedDrives;
   }
-  setSelectedDrives(selectedDrives: IDrive[]) {
+
+  setSelectedDrives(selectedDrives: Partial<IDriveInfo>[]) {
     this.selectedDrives = selectedDrives;
+  }
+
+  setAvailableDrives(availableDrives: Partial<IDriveInfo>[]) {
+    this.availableDrives = availableDrives;
+  }
+
+  get selectedDrivesChanged(): ISignal<DriveListModel, Partial<IDriveInfo>[]> {
+    return this._selectedDrivesChanged;
+  }
+
+  get availableDrivesChanged(): ISignal<DriveListModel, Partial<IDriveInfo>[]> {
+    return this._availableDrivesChanged;
+  }
+
+  refreshSelectedDrives() {
+    getDrivesList().then((drives: IDriveInfo[]) => {
+      this.setSelectedDrives(
+        drives.map((drive: IDriveInfo) => ({
+          name: drive.name,
+          region: drive.region
+        }))
+      );
+      this._selectedDrivesChanged.emit(this.selectedDrives);
+    });
+  }
+
+  refreshAvailanbleDrives() {
+    getExcludedDrives().then((drives: IDriveInfo[]) => {
+      this.setAvailableDrives(
+        drives.map((drive: IDriveInfo) => ({
+          name: drive.name,
+          region: drive.region
+        }))
+      );
+      this._availableDrivesChanged.emit(this.availableDrives);
+    });
+  }
+
+  async refresh() {
+    await this.refreshSelectedDrives();
+    await this.refreshAvailanbleDrives();
   }
 }
 
@@ -262,10 +293,6 @@ export class DriveListView extends VDomRenderer<DriveListModel> {
     this.model = model;
   }
   render() {
-    return (
-      <>
-        <DriveListManagerComponent model={this.model} />
-      </>
-    );
+    return <DriveListManagerComponent model={this.model} />;
   }
 }
