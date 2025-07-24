@@ -40,7 +40,11 @@ export function DriveInputComponent({
           placeholder="Enter drive name"
           value={value}
         />
-        <Button className="input-add-drive-button" onClick={onSubmit}>
+        <Button
+          className="input-add-drive-button"
+          onClick={onSubmit}
+          title="Add public drive"
+        >
           add
         </Button>
       </div>
@@ -86,6 +90,7 @@ export function DriveSearchListComponent(props: ISearchListProps) {
                       await includeDrive(drive.name!);
                       await props.model.refresh();
                     }}
+                    title="Add drive"
                   >
                     <addIcon.react
                       tag="span"
@@ -124,6 +129,7 @@ export function DriveDataGridComponent(props: IDriveDataGridProps) {
                   await excludeDrive(drive.name!);
                   await props.model.refresh();
                 }}
+                title="Remove drive"
               >
                 <removeIcon.react
                   tag="span"
