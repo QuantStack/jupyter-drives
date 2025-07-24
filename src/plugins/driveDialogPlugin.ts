@@ -74,11 +74,5 @@ export const openDriveDialogPlugin: JupyterFrontEndPlugin<void> = {
       caption: trans.__('Manage drives listed in filebrowser.'),
       label: trans.__('Manage listed drives')
     });
-
-    app.contextMenu.addItem({
-      command: CommandIDs.openDrivesDialog,
-      selector: '#drive-file-browser.jp-SidePanel',
-      rank: 100
-    });
   }
 };
