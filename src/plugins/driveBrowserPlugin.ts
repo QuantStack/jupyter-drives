@@ -33,7 +33,7 @@ import { PageConfig, PathExt } from '@jupyterlab/coreutils';
 import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
 
-import { addIcon, driveBrowserIcon, removeIcon } from '../icons';
+import { driveBrowserIcon, removeIcon } from '../icons';
 import { Drive } from '../contents';
 import { setListingLimit } from '../requests';
 import { CommandIDs } from '../token';
@@ -568,38 +568,6 @@ namespace Private {
       command: CommandIDs.excludeDrive,
       selector:
         '#drive-file-browser.jp-SidePanel .jp-DirListing-content .jp-DirListing-item[data-isdir]',
-      rank: 110
-    });
-
-    app.commands.addCommand(CommandIDs.includeDrive, {
-      isVisible: () => {
-        return browser.model.path === 's3:';
-      },
-      execute: async () => {
-        return showDialog({
-          title: 'Include Drive',
-          body: new Private.AddPublicDriveHandler(drive.name),
-          focusNodeSelector: 'input',
-          buttons: [
-            Dialog.cancelButton(),
-            Dialog.okButton({
-              label: 'Add',
-              ariaLabel: 'Include Drive'
-            })
-          ]
-        }).then(async result => {
-          if (result.value) {
-            await drive.includeDrive(result.value);
-          }
-        });
-      },
-      label: 'Include Drive',
-      icon: addIcon.bindprops({ stylesheet: 'menuItem' })
-    });
-
-    app.contextMenu.addItem({
-      command: CommandIDs.includeDrive,
-      selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
       rank: 110
     });
   }
