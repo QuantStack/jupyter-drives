@@ -207,7 +207,7 @@ class JupyterDrivesManager():
             except Exception as e:
                 raise tornado.web.HTTPError(
                     status_code=httpx.codes.BAD_REQUEST,
-                    reason=f"The following error occured when listing excluded drives: {e}",
+                    reason=f"The following error occurred when listing excluded drives: {e}",
                 )
         
         response = {
@@ -226,7 +226,7 @@ class JupyterDrivesManager():
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
-            reason= f"The following error occured when including the drive: {e}"
+            reason= f"The following error occurred when including the drive: {e}"
             )
 
         return
