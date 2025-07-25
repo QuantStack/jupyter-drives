@@ -1,7 +1,7 @@
 import os
 from sys import platform
 import entrypoints
-from traitlets import Enum, Unicode, default
+from traitlets import Enum, Unicode, default, Set
 from traitlets.config import Configurable
 import boto3
 
@@ -71,10 +71,27 @@ class DrivesConfig(Configurable):
         help="The source control provider.",
     )
 
+    excluded_drives = Set(
+        trait=Unicode(),
+        config=True,
+        help="List of drives that should be excluded from drive browser listing. Drive names should be separated by spaces.",
+    )
+
+    included_drives = Set(
+        trait=Unicode(),
+        config=True,
+        help="List of drives that should be included in drive browser listing. Drive names should be separated by spaces.",
+    )
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # check if credentials were already set in jupyter_notebook_config.py
         self.credentials_already_set = self.access_key_id is not None and self.secret_access_key is not None
+
+        # check list of excluded and included drives
+        self.check_excluded_and_included_drives()
+
+        # load credentials
         self.load_credentials()
     
     def load_credentials(self):
@@ -112,3 +129,25 @@ class DrivesConfig(Configurable):
         self.secret_access_key = c.secret_key
         self.region_name = s.region_name
         self.session_token = c.token
+
+    def check_excluded_and_included_drives(self):
+        # list of drives to exclude was provided
+        if len(self.excluded_drives) != 0: 
+            return
+        
+        # list of what drives to include was provided
+        if len(self.included_drives) != 0: 
+            return
+        
+        # check environment variables for excluded or included drives configuration, only one is taken into account
+        if "JP_DRIVES_EXCLUDED_DRIVES" in os.environ:
+            drives =  os.environ["JP_DRIVES_EXCLUDED_DRIVES"]
+            self.excluded_drives = drives.split(' ')
+            return
+        
+        if "JP_DRIVES_INCLUDED_DRIVES" in os.environ:
+            drives =  os.environ["JP_DRIVES_INCLUDED_DRIVES"]
+            self.included_drives = drives.split(' ')
+            return
+
+        return

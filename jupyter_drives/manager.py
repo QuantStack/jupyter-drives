@@ -53,8 +53,9 @@ class JupyterDrivesManager():
         self._max_files_listed = 1025
         self._drives = None
         self._external_drives = {}
-        self._excluded_drives = set()
-        
+        self._excluded_drives = self._config.excluded_drives if len(self._config.excluded_drives) != 0 else set()
+        self._included_drives =  self._config.included_drives if len(self._config.included_drives) != 0 else set()
+
         # instate fsspec file system
         self._file_system = fsspec.filesystem(self._config.provider, asynchronous=True)
 
@@ -255,7 +256,14 @@ class JupyterDrivesManager():
                         reason=f"The following error occured when listing drives: {e}",
                     )
             
-            for result in results:
+            if len(self._included_drives) != 0:
+                for result in results: 
+                    if result.name not in self._included_drives:
+                        self._excluded_drives.add(result.name)
+                # clear list once initialized
+                self._included_drives.clear()
+            
+            for result in results:        
                 if result.name not in self._excluded_drives:
                     data.append(
                         {
