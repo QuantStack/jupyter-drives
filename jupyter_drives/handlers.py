@@ -101,7 +101,7 @@ class ContentsJupyterDrivesHandler(JupyterDrivesAPIHandler):
         body = self.get_json_body()
         if 'location' in body:
             result = await self._manager.new_drive(drive, **body)
-        if 'public' in body:
+        elif 'public' in body:
             result = await self._manager.add_public_drive(drive)
         else:
             result = await self._manager.new_file(drive, path, **body)
