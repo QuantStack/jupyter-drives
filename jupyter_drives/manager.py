@@ -695,7 +695,7 @@ class JupyterDrivesManager():
 
         return 
     
-    async def new_drive(self, new_drive_name, location='us-east-1'):
+    async def new_drive(self, new_drive_name, location):
         """Create a new drive in the given location.
         
         Args:
@@ -703,7 +703,9 @@ class JupyterDrivesManager():
             location: (optional) region of bucket
         """
         try:
-            await self._file_system._mkdir(new_drive_name, region_name = location)      
+            # AWS returns an error if the region is set to 'us-east-1' (Their default)
+            region_name = '' if location == 'us-east-1' else location
+            await self._file_system._mkdir(new_drive_name, region_name)
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
