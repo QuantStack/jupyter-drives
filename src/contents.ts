@@ -651,9 +651,22 @@ export class Drive implements Contents.IDrive {
     newDriveName: string,
     region: string
   ): Promise<Contents.IModel> {
-    data = await createDrive(newDriveName, {
+    await createDrive(newDriveName, {
       location: region
     });
+
+    data = {
+      name: newDriveName,
+      path: newDriveName,
+      last_modified: '',
+      created: '',
+      content: [],
+      format: 'json',
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
+    };
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -673,7 +686,20 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async addPublicDrive(driveUrl: string): Promise<Contents.IModel> {
-    data = await addPublicDrive(driveUrl);
+    await addPublicDrive(driveUrl);
+
+    data = {
+      name: driveUrl,
+      path: driveUrl,
+      last_modified: '',
+      created: '',
+      content: [],
+      format: 'json',
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
+    };
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -693,7 +719,20 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async excludeDrive(driveName: string): Promise<Contents.IModel> {
-    data = await excludeDrive(driveName);
+    await excludeDrive(driveName);
+
+    data = {
+      name: driveName,
+      path: driveName,
+      last_modified: '',
+      created: '',
+      content: [],
+      format: 'json',
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
+    };
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -713,7 +752,20 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async includeDrive(driveName: string): Promise<Contents.IModel> {
-    data = await includeDrive(driveName);
+    await includeDrive(driveName);
+
+    data = {
+      name: driveName,
+      path: driveName,
+      last_modified: '',
+      created: '',
+      content: [],
+      format: 'json',
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
+    };
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({

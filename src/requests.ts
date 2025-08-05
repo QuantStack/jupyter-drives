@@ -43,23 +43,9 @@ export async function setListingLimit(newLimit: number) {
  * @returns
  */
 export async function excludeDrive(driveName: string) {
-  await requestAPI<any>('drives/config', 'POST', {
+  return await requestAPI<any>('drives/config', 'POST', {
     exclude_drive_name: driveName
   });
-
-  data = {
-    name: driveName,
-    path: driveName,
-    last_modified: '',
-    created: '',
-    content: [],
-    format: 'json',
-    mimetype: '',
-    size: 0,
-    writable: true,
-    type: 'directory'
-  };
-  return data;
 }
 
 /**
@@ -68,23 +54,9 @@ export async function excludeDrive(driveName: string) {
  * @returns
  */
 export async function includeDrive(driveName: string) {
-  await requestAPI<any>('drives/config', 'POST', {
+  return await requestAPI<any>('drives/config', 'POST', {
     include_drive_name: driveName
   });
-
-  data = {
-    name: driveName,
-    path: driveName,
-    last_modified: '',
-    created: '',
-    content: [],
-    format: 'json',
-    mimetype: '',
-    size: 0,
-    writable: true,
-    type: 'directory'
-  };
-  return data;
 }
 
 /**
@@ -572,23 +544,9 @@ export async function createDrive(
     location: string;
   }
 ) {
-  await requestAPI<any>('drives/' + newDriveName + '/', 'POST', {
+  return await requestAPI<any>('drives/' + newDriveName + '/', 'POST', {
     location: options.location
   });
-
-  data = {
-    name: newDriveName,
-    path: newDriveName,
-    last_modified: '',
-    created: '',
-    content: [],
-    format: 'json',
-    mimetype: '',
-    size: 0,
-    writable: true,
-    type: 'directory'
-  };
-  return data;
 }
 
 /**
@@ -599,23 +557,9 @@ export async function createDrive(
  * @returns A promise which resolves with the contents model.
  */
 export async function addPublicDrive(driveUrl: string) {
-  await requestAPI<any>('drives/' + driveUrl + '/', 'POST', {
+  return await requestAPI<any>('drives/' + driveUrl + '/', 'POST', {
     public: true
   });
-
-  data = {
-    name: driveUrl,
-    path: driveUrl,
-    last_modified: '',
-    created: '',
-    content: [],
-    format: 'json',
-    mimetype: '',
-    size: 0,
-    writable: true,
-    type: 'directory'
-  };
-  return data;
 }
 
 namespace Private {
