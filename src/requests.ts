@@ -221,9 +221,9 @@ export async function saveObject(
 
   return {
     response: response,
-    fileType: fileType,
-    fileMimeType: fileMimeType,
-    fileFormat: fileFormat as Contents.FileFormat
+    type: fileType,
+    mimetype: fileMimeType,
+    format: fileFormat as Contents.FileFormat
   };
 }
 
@@ -260,9 +260,9 @@ export async function createObject(
 
   return {
     response: response,
-    fileType: fileType,
-    fileMimeType: fileMimeType,
-    fileFormat: fileFormat as Contents.FileFormat
+    type: fileType,
+    mimetype: fileMimeType,
+    format: fileFormat as Contents.FileFormat
   };
 }
 

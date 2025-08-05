@@ -339,11 +339,11 @@ export class Drive implements Contents.IDrive {
           last_modified: result.response.data.last_modified,
           created: result.response.data.last_modified,
           content: result.response.data.content,
-          format: result.fileFormat,
-          mimetype: result.fileMimeType,
+          format: result.format,
+          mimetype: result.mimetype,
           size: result.response.data.size,
           writable: true,
-          type: result.fileType
+          type: result.type
         };
       } else {
         console.warn('Type of new element is undefined');
@@ -576,11 +576,11 @@ export class Drive implements Contents.IDrive {
         last_modified: result.response.last_modified,
         created: result.response.last_modified,
         content: result.response.content,
-        format: result.fileFormat,
-        mimetype: result.fileMimeType,
+        format: result.format,
+        mimetype: result.mimetype,
         size: result.response.data.size,
         writable: true,
-        type: result.fileType
+        type: result.type
       };
     } else {
       // create new element at root would mean modifying a drive
