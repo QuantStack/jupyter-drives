@@ -47,7 +47,9 @@ class JupyterDrivesManager():
     It needs them to extract the ``DrivesConfig``.
     """
     def __init__(self, config: traitlets.config.Config) -> None:
+        print("[DEBUG] JupyterDrivesManager.__init__() called11")
         self._config = DrivesConfig(config=config)
+        print("[DEBUG] JupyterDrivesManager.__init__() config loaded", self._config)
         self._client = httpx.AsyncClient()
         self._content_managers = {}
         self._max_files_listed = 1025
@@ -703,9 +705,24 @@ class JupyterDrivesManager():
             location: (optional) region of bucket
         """
         try:
-            # AWS returns an error if the region is set to 'us-east-1' (Their default)
-            region_name = '' if location == 'us-east-1' else location
-            await self._file_system._mkdir(new_drive_name, region_name)
+            # Create a region-specific S3 client for bucket creation
+            # This ensures the client matches the target region
+            async with self._s3_session.create_client(
+                's3', 
+                aws_secret_access_key=self._config.secret_access_key, 
+                aws_access_key_id=self._config.access_key_id, 
+                aws_session_token=self._config.session_token,
+                region_name=location  # Use the target region
+            ) as client:
+                if location == 'us-east-1':
+                    # For us-east-1, don't specify location constraint
+                    await client.create_bucket(Bucket=new_drive_name)
+                else:
+                    # For other regions, specify the location constraint
+                    await client.create_bucket(
+                        Bucket=new_drive_name,
+                        CreateBucketConfiguration={'LocationConstraint': location}
+                    )
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
