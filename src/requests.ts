@@ -408,23 +408,18 @@ export async function copyObjects(
       options.path,
       formattedNewPath
     );
-    data = {
-      name: options.newFileName,
-      path: PathExt.join(options.toDrive, formattedNewPath),
-      last_modified: copiedObject.data.last_modified,
-      created: '',
-      content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
+    return {
+      response: copiedObject,
+      formattedNewPath: formattedNewPath,
       format: fileFormat as Contents.FileFormat,
       mimetype: fileMimeType,
-      size: copiedObject.data.size,
-      writable: true,
       type: fileType
     };
   } catch (error) {
     // copied failed if directory didn't exist and was only part of a path
   }
 
-  return data;
+  return {};
 }
 
 /**

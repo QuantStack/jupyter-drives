@@ -663,13 +663,26 @@ export class Drive implements Contents.IDrive {
         toDrive.name
       );
 
-      data = await copyObjects(currentDrive.name, {
+      const result = await copyObjects(currentDrive.name, {
         path: relativePath,
         toPath: toRelativePath,
         newFileName: newFileName,
         toDrive: toDrive.name,
         registeredFileTypes: this._registeredFileTypes
       });
+
+      data = {
+        name: newFileName,
+        path: PathExt.join(currentDrive.name, result.formattedNewPath!),
+        last_modified: result.response!.data.last_modified,
+        created: '',
+        content: PathExt.extname(newFileName) !== '' ? null : [], // TODO: add dir check
+        format: result.format! as Contents.FileFormat,
+        mimetype: result.mimetype!,
+        size: result.response!.data.size,
+        writable: true,
+        type: result.type!
+      };
     } else {
       // create new element at root would mean modifying a drive
       console.warn('Operation not supported.');
