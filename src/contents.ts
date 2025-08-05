@@ -27,19 +27,6 @@ import {
   includeDrive
 } from './requests';
 
-let data: Contents.IModel = {
-  name: '',
-  path: '',
-  last_modified: '',
-  created: '',
-  content: [],
-  format: null,
-  mimetype: '',
-  size: 0,
-  writable: true,
-  type: ''
-};
-
 export class Drive implements Contents.IDrive {
   /**
    * Construct a new drive object.
@@ -227,6 +214,8 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel;
+
     if (localPath !== '') {
       const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
@@ -329,6 +318,18 @@ export class Drive implements Contents.IDrive {
   async newUntitled(
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: [],
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
     const path = options.path ?? '';
 
     if (path !== '') {
@@ -494,6 +495,18 @@ export class Drive implements Contents.IDrive {
     newLocalPath: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: [],
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
     if (oldLocalPath !== '') {
       const currentDrive = extractCurrentDrive(oldLocalPath, this._drivesList);
 
@@ -605,6 +618,18 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options: Partial<Contents.IModel> = {}
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: [],
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
     if (localPath !== '') {
       const currentDrive = extractCurrentDrive(localPath, this._drivesList);
       const currentPath = formatPath(localPath);
@@ -693,6 +718,18 @@ export class Drive implements Contents.IDrive {
     toDir: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: [],
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
     if (path !== '') {
       const currentDrive = extractCurrentDrive(path, this._drivesList);
       const toDrive = extractCurrentDrive(toDir, this._drivesList);
@@ -757,7 +794,7 @@ export class Drive implements Contents.IDrive {
       location: region
     });
 
-    data = {
+    const data: Contents.IModel = {
       name: newDriveName,
       path: newDriveName,
       last_modified: '',
@@ -790,7 +827,7 @@ export class Drive implements Contents.IDrive {
   async addPublicDrive(driveUrl: string): Promise<Contents.IModel> {
     await addPublicDrive(driveUrl);
 
-    data = {
+    const data: Contents.IModel = {
       name: driveUrl,
       path: driveUrl,
       last_modified: '',
@@ -823,7 +860,7 @@ export class Drive implements Contents.IDrive {
   async excludeDrive(driveName: string): Promise<Contents.IModel> {
     await excludeDrive(driveName);
 
-    data = {
+    const data: Contents.IModel = {
       name: driveName,
       path: driveName,
       last_modified: '',
@@ -856,7 +893,7 @@ export class Drive implements Contents.IDrive {
   async includeDrive(driveName: string): Promise<Contents.IModel> {
     await includeDrive(driveName);
 
-    data = {
+    const data: Contents.IModel = {
       name: driveName,
       path: driveName,
       last_modified: '',
