@@ -303,6 +303,15 @@ export async function renameObjects(
       })
     );
   }
+
+  let resp: any = {};
+  let result = {
+    response: resp,
+    formattedNewPath: formattedNewPath,
+    format: fileFormat as Contents.FileFormat,
+    mimetype: fileMimeType,
+    type: fileType
+  };
   // always rename the object (file or main directory)
   try {
     const renamedObject = await Private.renameSingleObject(
@@ -310,18 +319,15 @@ export async function renameObjects(
       options.path,
       formattedNewPath
     );
-    return {
-      response: renamedObject,
-      formattedNewPath: formattedNewPath,
-      format: fileFormat as Contents.FileFormat,
-      mimetype: fileMimeType,
-      type: fileType
+    resp = {
+      last_modified: renamedObject.data.last_modified,
+      size: renamedObject.data.size
     };
   } catch (error) {
     // renaming failed if directory didn't exist and was only part of a path
   }
 
-  return {};
+  return result;
 }
 
 /**

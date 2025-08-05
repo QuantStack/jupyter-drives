@@ -526,12 +526,16 @@ export class Drive implements Contents.IDrive {
         data = {
           name: newFileName,
           path: PathExt.join(currentDrive.name, result.formattedNewPath!),
-          last_modified: result.response.data.last_modified,
+          last_modified:
+            result.response.length > 0
+              ? result.response.data.last_modified
+              : '',
           created: '',
           content: PathExt.extname(newFileName) !== '' ? null : [], // TODO: add dir check
           format: result.format!,
           mimetype: result.mimetype!,
-          size: result.response.data.size,
+          size:
+            result.response.length > 0 ? result.response.data.size : undefined,
           writable: true,
           type: result.type!
         };
