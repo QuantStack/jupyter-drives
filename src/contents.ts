@@ -532,12 +532,26 @@ export class Drive implements Contents.IDrive {
   ): Promise<Contents.IModel> {
     if (localPath !== '') {
       const currentDrive = extractCurrentDrive(localPath, this._drivesList);
+      const currentPath = formatPath(localPath);
 
-      data = await saveObject(currentDrive.name, {
-        path: formatPath(localPath),
+      const result = await saveObject(currentDrive.name, {
+        path: currentPath,
         param: options,
         registeredFileTypes: this._registeredFileTypes
       });
+
+      data = {
+        name: currentPath,
+        path: PathExt.join(currentDrive.name, currentPath),
+        last_modified: result.response.last_modified,
+        created: result.response.last_modified,
+        content: result.response.content,
+        format: result.fileFormat,
+        mimetype: result.fileMimeType,
+        size: result.response.data.size,
+        writable: true,
+        type: result.fileType
+      };
     } else {
       // create new element at root would mean modifying a drive
       console.warn('Operation not supported.');

@@ -219,19 +219,12 @@ export async function saveObject(
     }
   );
 
-  data = {
-    name: PathExt.basename(options.path),
-    path: PathExt.join(driveName, options.path),
-    last_modified: response.data.last_modified,
-    created: response.data.last_modified,
-    content: response.data.content,
-    format: fileFormat as Contents.FileFormat,
-    mimetype: fileMimeType,
-    size: response.data.size,
-    writable: true,
-    type: fileType
+  return {
+    response: response,
+    fileType: fileType,
+    fileMimeType: fileMimeType,
+    fileFormat: fileFormat as Contents.FileFormat
   };
-  return data;
 }
 
 /**
