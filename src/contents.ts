@@ -614,9 +614,9 @@ export class Drive implements Contents.IDrive {
       data = {
         name: currentPath,
         path: PathExt.join(currentDrive.name, currentPath),
-        last_modified: result.response.last_modified,
-        created: result.response.last_modified,
-        content: result.response.content,
+        last_modified: result.response.data.last_modified as string,
+        created: result.response.data.last_modified as string,
+        content: result.response.data.content,
         format: result.format,
         mimetype: result.mimetype,
         size: result.response.data.size,
