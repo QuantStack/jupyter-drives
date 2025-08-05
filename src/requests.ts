@@ -338,23 +338,18 @@ export async function renameObjects(
       options.path,
       formattedNewPath
     );
-    data = {
-      name: options.newFileName,
-      path: PathExt.join(driveName, formattedNewPath),
-      last_modified: renamedObject.data.last_modified,
-      created: '',
-      content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
+    return {
+      response: renamedObject,
+      formattedNewPath: formattedNewPath,
       format: fileFormat as Contents.FileFormat,
       mimetype: fileMimeType,
-      size: renamedObject.data.size,
-      writable: true,
       type: fileType
     };
   } catch (error) {
     // renaming failed if directory didn't exist and was only part of a path
   }
 
-  return data;
+  return {};
 }
 
 /**

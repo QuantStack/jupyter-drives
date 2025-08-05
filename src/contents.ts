@@ -475,12 +475,25 @@ export class Drive implements Contents.IDrive {
       } catch (error) {
         // HEAD request failed for this file name, continue, as name doesn't already exist.
       } finally {
-        data = await renameObjects(currentDrive.name, {
+        const result = await renameObjects(currentDrive.name, {
           path: relativePath,
           newPath: newRelativePath,
           newFileName: newFileName,
           registeredFileTypes: this._registeredFileTypes
         });
+
+        data = {
+          name: newFileName,
+          path: PathExt.join(currentDrive.name, result.formattedNewPath!),
+          last_modified: result.response.data.last_modified,
+          created: '',
+          content: PathExt.extname(newFileName) !== '' ? null : [], // TODO: add dir check
+          format: result.format!,
+          mimetype: result.mimetype!,
+          size: result.response.data.size,
+          writable: true,
+          type: result.type!
+        };
       }
     } else {
       // create new element at root would mean modifying a drive
