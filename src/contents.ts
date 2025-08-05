@@ -322,12 +322,29 @@ export class Drive implements Contents.IDrive {
       if (options.type !== undefined) {
         // get incremented untitled name
         const name = this.incrementUntitledName(old_data, options);
-        data = await createObject(currentDrive.name, {
+        const currentPath = relativePath
+          ? PathExt.join(relativePath, name)
+          : name;
+
+        const result = await createObject(currentDrive.name, {
           name: name,
-          path: relativePath,
+          path: currentPath,
           type: options.type,
           registeredFileTypes: this._registeredFileTypes
         });
+
+        data = {
+          name: name,
+          path: PathExt.join(currentDrive.name, currentPath),
+          last_modified: result.response.data.last_modified,
+          created: result.response.data.last_modified,
+          content: result.response.data.content,
+          format: result.fileFormat,
+          mimetype: result.fileMimeType,
+          size: result.response.data.size,
+          writable: true,
+          type: result.fileType
+        };
       } else {
         console.warn('Type of new element is undefined');
       }

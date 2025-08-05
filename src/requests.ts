@@ -245,11 +245,8 @@ export async function createObject(
     registeredFileTypes: IRegisteredFileTypes;
   }
 ) {
-  const path = options.path
-    ? PathExt.join(options.path, options.name)
-    : options.name;
   const response = await requestAPI<any>(
-    'drives/' + driveName + '/' + path,
+    'drives/' + driveName + '/' + options.path,
     'POST',
     {
       type: options.type
@@ -261,19 +258,12 @@ export async function createObject(
     options.registeredFileTypes
   );
 
-  data = {
-    name: options.name,
-    path: PathExt.join(driveName, path),
-    last_modified: response.data.last_modified,
-    created: response.data.last_modified,
-    content: response.data.content,
-    format: fileFormat as Contents.FileFormat,
-    mimetype: fileMimeType,
-    size: response.data.size,
-    writable: true,
-    type: fileType
+  return {
+    response: response,
+    fileType: fileType,
+    fileMimeType: fileMimeType,
+    fileFormat: fileFormat as Contents.FileFormat
   };
-  return data;
 }
 
 /**
