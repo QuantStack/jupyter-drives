@@ -11,22 +11,6 @@ import {
 } from './token';
 
 /**
- * The data contents model.
- */
-let data: Contents.IModel = {
-  name: '',
-  path: '',
-  last_modified: '',
-  created: '',
-  content: null,
-  format: null,
-  mimetype: '',
-  size: 0,
-  writable: true,
-  type: ''
-};
-
-/**
  * Set new limit for number of objects to be listed inside the DriveBrowser, given any path.
  *
  * @returns
@@ -147,17 +131,10 @@ export async function getContents(
         }
       });
 
-      data = {
-        name: options.path ? PathExt.basename(options.path) : driveName,
-        path: PathExt.join(driveName, options.path ? options.path + '/' : ''),
-        last_modified: '',
-        created: '',
-        content: Object.values(fileList),
-        format: 'json',
-        mimetype: '',
-        size: undefined,
-        writable: true,
-        type: 'directory'
+      return {
+        isDir: isDir,
+        response: response,
+        files: Object.values(fileList)
       };
     }
     // getting the contents of a file
@@ -167,22 +144,17 @@ export async function getContents(
         options.registeredFileTypes
       );
 
-      data = {
-        name: PathExt.basename(options.path),
-        path: PathExt.join(driveName, response.data.path),
-        last_modified: response.data.last_modified,
-        created: '',
-        content: response.data.content,
+      return {
+        isDir: isDir,
+        response: response,
         format: fileFormat as Contents.FileFormat,
         mimetype: fileMimeType,
-        size: response.data.size,
-        writable: true,
         type: fileType
       };
     }
   }
 
-  return data;
+  return {};
 }
 
 /**

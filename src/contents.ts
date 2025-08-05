@@ -243,10 +243,35 @@ export class Drive implements Contents.IDrive {
         }
       }
 
-      data = await getContents(currentDrive.name, {
-        path: formatPath(localPath),
+      const currentPath = formatPath(localPath);
+      const result = await getContents(currentDrive.name, {
+        path: currentPath,
         registeredFileTypes: this._registeredFileTypes
       });
+
+      data = {
+        name: result.isDir
+          ? currentPath
+            ? PathExt.basename(currentPath)
+            : currentDrive.name
+          : PathExt.basename(currentPath),
+        path: PathExt.join(
+          currentDrive.name,
+          result.isDir
+            ? currentPath
+              ? currentPath + '/'
+              : ''
+            : result.response.data.path
+        ),
+        last_modified: result.isDir ? '' : result.response.data.last_modified,
+        created: '',
+        content: result.isDir ? result.files : result.response.data.content,
+        format: result.isDir ? 'json' : result.format!,
+        mimetype: result.isDir ? '' : result.mimetype!,
+        size: result.isDir ? undefined : result.response.data.size,
+        writable: true,
+        type: result.isDir ? 'directory' : result.type!
+      };
     } else {
       // retriving list of contents from root
       // in our case: list available drives
@@ -314,10 +339,26 @@ export class Drive implements Contents.IDrive {
         path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
 
       // get current list of contents of drive
-      const old_data = await getContents(currentDrive.name, {
+      const result = await getContents(currentDrive.name, {
         path: relativePath,
         registeredFileTypes: this._registeredFileTypes
       });
+
+      const old_data: Contents.IModel = {
+        name: relativePath ? PathExt.basename(relativePath) : currentDrive.name,
+        path: PathExt.join(
+          currentDrive.name,
+          relativePath ? relativePath + '/' : ''
+        ),
+        last_modified: '',
+        created: '',
+        content: result.files,
+        format: 'json'!,
+        mimetype: '',
+        size: undefined,
+        writable: true,
+        type: 'directory'
+      };
 
       if (options.type !== undefined) {
         // get incremented untitled name
