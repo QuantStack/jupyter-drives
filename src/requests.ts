@@ -509,7 +509,22 @@ export async function createDrive(
  */
 export async function addPublicDrive(driveUrl: string) {
   return await requestAPI<any>('drives/' + driveUrl + '/', 'POST', {
-    public: true
+    is_public: true
+  });
+}
+
+/**
+ * Add external drive.
+ *
+ * @param driveUrl The drive URL.
+ * @param location The drive region.
+ *
+ * @returns A promise which resolves with the contents model.
+ */
+export async function addExternalDrive(driveUrl: string, location: string) {
+  return await requestAPI<any>('drives/' + driveUrl + '/', 'POST', {
+    is_public: false,
+    region: location
   });
 }
 

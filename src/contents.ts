@@ -24,7 +24,8 @@ import {
   createDrive,
   getDrivesList,
   excludeDrive,
-  includeDrive
+  includeDrive,
+  addExternalDrive
 } from './requests';
 
 export class Drive implements Contents.IDrive {
@@ -826,6 +827,42 @@ export class Drive implements Contents.IDrive {
    */
   async addPublicDrive(driveUrl: string): Promise<Contents.IModel> {
     await addPublicDrive(driveUrl);
+
+    const data: Contents.IModel = {
+      name: driveUrl,
+      path: driveUrl,
+      last_modified: '',
+      created: '',
+      content: [],
+      format: 'json',
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
+    };
+
+    Contents.validateContentsModel(data);
+    this._fileChanged.emit({
+      type: 'new',
+      oldValue: null,
+      newValue: data
+    });
+
+    return data;
+  }
+
+  /**
+   * Add external drive.
+   *
+   * @param options: The options used to add the external drive.
+   *
+   * @returns A promise which resolves with the contents model.
+   */
+  async addExternalDrive(
+    driveUrl: string,
+    location: string
+  ): Promise<Contents.IModel> {
+    await addExternalDrive(driveUrl, location);
 
     const data: Contents.IModel = {
       name: driveUrl,

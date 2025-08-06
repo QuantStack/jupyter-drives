@@ -454,6 +454,38 @@ namespace Private {
       rank: 110
     });
 
+    app.commands.addCommand(CommandIDs.addExternalDrive, {
+      isVisible: () => {
+        return browser.model.path === 's3:';
+      },
+      execute: async () => {
+        return showDialog({
+          title: 'Add External Drive',
+          body: new Private.CreateDriveHandler(drive.name),
+          focusNodeSelector: 'input',
+          buttons: [
+            Dialog.cancelButton(),
+            Dialog.okButton({
+              label: 'Add',
+              ariaLabel: 'Add Drive'
+            })
+          ]
+        }).then(result => {
+          if (result.value) {
+            drive.addExternalDrive(result.value[0], result.value[1]);
+          }
+        });
+      },
+      label: 'Add External Drive',
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.addExternalDrive,
+      selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
+      rank: 110
+    });
+
     app.commands.addCommand(CommandIDs.toggleFileFilter, {
       execute: () => {
         // Update toggled state, then let the toolbar button update
