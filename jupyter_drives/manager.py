@@ -47,9 +47,7 @@ class JupyterDrivesManager():
     It needs them to extract the ``DrivesConfig``.
     """
     def __init__(self, config: traitlets.config.Config) -> None:
-        print("[DEBUG] JupyterDrivesManager.__init__() called11")
         self._config = DrivesConfig(config=config)
-        print("[DEBUG] JupyterDrivesManager.__init__() config loaded", self._config)
         self._client = httpx.AsyncClient()
         self._content_managers = {}
         self._max_files_listed = 1025
@@ -699,20 +697,22 @@ class JupyterDrivesManager():
     
     async def new_drive(self, new_drive_name, location):
         """Create a new drive in the given location.
-        
+
         Args:
             new_drive_name: name of new drive to create
             location: (optional) region of bucket
         """
+        location = location or 'us-east-1'
+
         try:
             # Create a region-specific S3 client for bucket creation
             # This ensures the client matches the target region
             async with self._s3_session.create_client(
-                's3', 
-                aws_secret_access_key=self._config.secret_access_key, 
-                aws_access_key_id=self._config.access_key_id, 
+                's3',
+                aws_secret_access_key=self._config.secret_access_key,
+                aws_access_key_id=self._config.access_key_id,
                 aws_session_token=self._config.session_token,
-                region_name=location  # Use the target region
+                region_name=location
             ) as client:
                 if location == 'us-east-1':
                     # For us-east-1, don't specify location constraint
@@ -728,7 +728,7 @@ class JupyterDrivesManager():
             status_code= httpx.codes.BAD_REQUEST,
             reason=f"The following error occured when creating the new drive: {e}",
             )
-        
+
         return
     
     async def add_public_drive(self, drive_name):
