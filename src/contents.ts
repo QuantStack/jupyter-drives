@@ -27,19 +27,6 @@ import {
   includeDrive
 } from './requests';
 
-let data: Contents.IModel = {
-  name: '',
-  path: '',
-  last_modified: '',
-  created: '',
-  content: [],
-  format: null,
-  mimetype: '',
-  size: 0,
-  writable: true,
-  type: ''
-};
-
 export class Drive implements Contents.IDrive {
   /**
    * Construct a new drive object.
@@ -227,6 +214,8 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel;
+
     if (localPath !== '') {
       const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
@@ -243,10 +232,35 @@ export class Drive implements Contents.IDrive {
         }
       }
 
-      data = await getContents(currentDrive.name, {
-        path: formatPath(localPath),
+      const currentPath = formatPath(localPath);
+      const result = await getContents(currentDrive.name, {
+        path: currentPath,
         registeredFileTypes: this._registeredFileTypes
       });
+
+      data = {
+        name: result.isDir
+          ? currentPath
+            ? PathExt.basename(currentPath)
+            : currentDrive.name
+          : PathExt.basename(currentPath),
+        path: PathExt.join(
+          currentDrive.name,
+          result.isDir
+            ? currentPath
+              ? currentPath + '/'
+              : ''
+            : result.response.data.path
+        ),
+        last_modified: result.isDir ? '' : result.response.data.last_modified,
+        created: '',
+        content: result.isDir ? result.files : result.response.data.content,
+        format: result.isDir ? 'json' : result.format!,
+        mimetype: result.isDir ? '' : result.mimetype!,
+        size: result.isDir ? undefined : result.response.data.size,
+        writable: true,
+        type: result.isDir ? 'directory' : result.type!
+      };
     } else {
       // retriving list of contents from root
       // in our case: list available drives
@@ -304,6 +318,18 @@ export class Drive implements Contents.IDrive {
   async newUntitled(
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: [],
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
     const path = options.path ?? '';
 
     if (path !== '') {
@@ -314,20 +340,53 @@ export class Drive implements Contents.IDrive {
         path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
 
       // get current list of contents of drive
-      const old_data = await getContents(currentDrive.name, {
+      const result = await getContents(currentDrive.name, {
         path: relativePath,
         registeredFileTypes: this._registeredFileTypes
       });
 
+      const old_data: Contents.IModel = {
+        name: relativePath ? PathExt.basename(relativePath) : currentDrive.name,
+        path: PathExt.join(
+          currentDrive.name,
+          relativePath ? relativePath + '/' : ''
+        ),
+        last_modified: '',
+        created: '',
+        content: result.files,
+        format: 'json'!,
+        mimetype: '',
+        size: undefined,
+        writable: true,
+        type: 'directory'
+      };
+
       if (options.type !== undefined) {
         // get incremented untitled name
         const name = this.incrementUntitledName(old_data, options);
-        data = await createObject(currentDrive.name, {
+        const currentPath = relativePath
+          ? PathExt.join(relativePath, name)
+          : name;
+
+        const result = await createObject(currentDrive.name, {
           name: name,
-          path: relativePath,
+          path: currentPath,
           type: options.type,
           registeredFileTypes: this._registeredFileTypes
         });
+
+        data = {
+          name: name,
+          path: PathExt.join(currentDrive.name, currentPath),
+          last_modified: result.response.data.last_modified,
+          created: result.response.data.last_modified,
+          content: result.response.data.content,
+          format: result.format,
+          mimetype: result.mimetype,
+          size: result.response.data.size,
+          writable: true,
+          type: result.type
+        };
       } else {
         console.warn('Type of new element is undefined');
       }
@@ -436,6 +495,18 @@ export class Drive implements Contents.IDrive {
     newLocalPath: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: [],
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
     if (oldLocalPath !== '') {
       const currentDrive = extractCurrentDrive(oldLocalPath, this._drivesList);
 
@@ -458,12 +529,29 @@ export class Drive implements Contents.IDrive {
       } catch (error) {
         // HEAD request failed for this file name, continue, as name doesn't already exist.
       } finally {
-        data = await renameObjects(currentDrive.name, {
+        const result = await renameObjects(currentDrive.name, {
           path: relativePath,
           newPath: newRelativePath,
           newFileName: newFileName,
           registeredFileTypes: this._registeredFileTypes
         });
+
+        data = {
+          name: newFileName,
+          path: PathExt.join(currentDrive.name, result.formattedNewPath!),
+          last_modified:
+            result.response.length > 0
+              ? result.response.data.last_modified
+              : '',
+          created: '',
+          content: PathExt.extname(newFileName) !== '' ? null : [], // TODO: add dir check
+          format: result.format!,
+          mimetype: result.mimetype!,
+          size:
+            result.response.length > 0 ? result.response.data.size : undefined,
+          writable: true,
+          type: result.type!
+        };
       }
     } else {
       // create new element at root would mean modifying a drive
@@ -530,14 +618,40 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options: Partial<Contents.IModel> = {}
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: [],
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
     if (localPath !== '') {
       const currentDrive = extractCurrentDrive(localPath, this._drivesList);
+      const currentPath = formatPath(localPath);
 
-      data = await saveObject(currentDrive.name, {
-        path: formatPath(localPath),
+      const result = await saveObject(currentDrive.name, {
+        path: currentPath,
         param: options,
         registeredFileTypes: this._registeredFileTypes
       });
+
+      data = {
+        name: currentPath,
+        path: PathExt.join(currentDrive.name, currentPath),
+        last_modified: result.response.data.last_modified as string,
+        created: result.response.data.last_modified as string,
+        content: result.response.data.content,
+        format: result.format,
+        mimetype: result.mimetype,
+        size: result.response.data.size,
+        writable: true,
+        type: result.type
+      };
     } else {
       // create new element at root would mean modifying a drive
       console.warn('Operation not supported.');
@@ -604,6 +718,18 @@ export class Drive implements Contents.IDrive {
     toDir: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
+    let data: Contents.IModel = {
+      name: '',
+      path: '',
+      last_modified: '',
+      created: '',
+      content: [],
+      format: null,
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: ''
+    };
     if (path !== '') {
       const currentDrive = extractCurrentDrive(path, this._drivesList);
       const toDrive = extractCurrentDrive(toDir, this._drivesList);
@@ -619,13 +745,26 @@ export class Drive implements Contents.IDrive {
         toDrive.name
       );
 
-      data = await copyObjects(currentDrive.name, {
+      const result = await copyObjects(currentDrive.name, {
         path: relativePath,
         toPath: toRelativePath,
         newFileName: newFileName,
         toDrive: toDrive.name,
         registeredFileTypes: this._registeredFileTypes
       });
+
+      data = {
+        name: newFileName,
+        path: PathExt.join(currentDrive.name, result.formattedNewPath!),
+        last_modified: result.response!.data.last_modified,
+        created: '',
+        content: PathExt.extname(newFileName) !== '' ? null : [], // TODO: add dir check
+        format: result.format! as Contents.FileFormat,
+        mimetype: result.mimetype!,
+        size: result.response!.data.size,
+        writable: true,
+        type: result.type!
+      };
     } else {
       // create new element at root would mean modifying a drive
       console.warn('Operation not supported.');
@@ -651,9 +790,22 @@ export class Drive implements Contents.IDrive {
     newDriveName: string,
     region: string
   ): Promise<Contents.IModel> {
-    data = await createDrive(newDriveName, {
+    await createDrive(newDriveName, {
       location: region
     });
+
+    const data: Contents.IModel = {
+      name: newDriveName,
+      path: newDriveName,
+      last_modified: '',
+      created: '',
+      content: [],
+      format: 'json',
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
+    };
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -673,7 +825,20 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async addPublicDrive(driveUrl: string): Promise<Contents.IModel> {
-    data = await addPublicDrive(driveUrl);
+    await addPublicDrive(driveUrl);
+
+    const data: Contents.IModel = {
+      name: driveUrl,
+      path: driveUrl,
+      last_modified: '',
+      created: '',
+      content: [],
+      format: 'json',
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
+    };
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -693,7 +858,20 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async excludeDrive(driveName: string): Promise<Contents.IModel> {
-    data = await excludeDrive(driveName);
+    await excludeDrive(driveName);
+
+    const data: Contents.IModel = {
+      name: driveName,
+      path: driveName,
+      last_modified: '',
+      created: '',
+      content: [],
+      format: 'json',
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
+    };
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({
@@ -713,7 +891,20 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async includeDrive(driveName: string): Promise<Contents.IModel> {
-    data = await includeDrive(driveName);
+    await includeDrive(driveName);
+
+    const data: Contents.IModel = {
+      name: driveName,
+      path: driveName,
+      last_modified: '',
+      created: '',
+      content: [],
+      format: 'json',
+      mimetype: '',
+      size: 0,
+      writable: true,
+      type: 'directory'
+    };
 
     Contents.validateContentsModel(data);
     this._fileChanged.emit({

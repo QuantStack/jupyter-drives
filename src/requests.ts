@@ -11,22 +11,6 @@ import {
 } from './token';
 
 /**
- * The data contents model.
- */
-let data: Contents.IModel = {
-  name: '',
-  path: '',
-  last_modified: '',
-  created: '',
-  content: null,
-  format: null,
-  mimetype: '',
-  size: 0,
-  writable: true,
-  type: ''
-};
-
-/**
  * Set new limit for number of objects to be listed inside the DriveBrowser, given any path.
  *
  * @returns
@@ -43,23 +27,9 @@ export async function setListingLimit(newLimit: number) {
  * @returns
  */
 export async function excludeDrive(driveName: string) {
-  await requestAPI<any>('drives/config', 'POST', {
+  return await requestAPI<any>('drives/config', 'POST', {
     exclude_drive_name: driveName
   });
-
-  data = {
-    name: driveName,
-    path: driveName,
-    last_modified: '',
-    created: '',
-    content: [],
-    format: 'json',
-    mimetype: '',
-    size: 0,
-    writable: true,
-    type: 'directory'
-  };
-  return data;
 }
 
 /**
@@ -68,23 +38,9 @@ export async function excludeDrive(driveName: string) {
  * @returns
  */
 export async function includeDrive(driveName: string) {
-  await requestAPI<any>('drives/config', 'POST', {
+  return await requestAPI<any>('drives/config', 'POST', {
     include_drive_name: driveName
   });
-
-  data = {
-    name: driveName,
-    path: driveName,
-    last_modified: '',
-    created: '',
-    content: [],
-    format: 'json',
-    mimetype: '',
-    size: 0,
-    writable: true,
-    type: 'directory'
-  };
-  return data;
 }
 
 /**
@@ -175,17 +131,10 @@ export async function getContents(
         }
       });
 
-      data = {
-        name: options.path ? PathExt.basename(options.path) : driveName,
-        path: PathExt.join(driveName, options.path ? options.path + '/' : ''),
-        last_modified: '',
-        created: '',
-        content: Object.values(fileList),
-        format: 'json',
-        mimetype: '',
-        size: undefined,
-        writable: true,
-        type: 'directory'
+      return {
+        isDir: isDir,
+        response: response,
+        files: Object.values(fileList)
       };
     }
     // getting the contents of a file
@@ -195,22 +144,17 @@ export async function getContents(
         options.registeredFileTypes
       );
 
-      data = {
-        name: PathExt.basename(options.path),
-        path: PathExt.join(driveName, response.data.path),
-        last_modified: response.data.last_modified,
-        created: '',
-        content: response.data.content,
+      return {
+        isDir: isDir,
+        response: response,
         format: fileFormat as Contents.FileFormat,
         mimetype: fileMimeType,
-        size: response.data.size,
-        writable: true,
         type: fileType
       };
     }
   }
 
-  return data;
+  return {};
 }
 
 /**
@@ -247,19 +191,12 @@ export async function saveObject(
     }
   );
 
-  data = {
-    name: PathExt.basename(options.path),
-    path: PathExt.join(driveName, options.path),
-    last_modified: response.data.last_modified,
-    created: response.data.last_modified,
-    content: response.data.content,
-    format: fileFormat as Contents.FileFormat,
+  return {
+    response: response,
+    type: fileType,
     mimetype: fileMimeType,
-    size: response.data.size,
-    writable: true,
-    type: fileType
+    format: fileFormat as Contents.FileFormat
   };
-  return data;
 }
 
 /**
@@ -280,11 +217,8 @@ export async function createObject(
     registeredFileTypes: IRegisteredFileTypes;
   }
 ) {
-  const path = options.path
-    ? PathExt.join(options.path, options.name)
-    : options.name;
   const response = await requestAPI<any>(
-    'drives/' + driveName + '/' + path,
+    'drives/' + driveName + '/' + options.path,
     'POST',
     {
       type: options.type
@@ -296,19 +230,12 @@ export async function createObject(
     options.registeredFileTypes
   );
 
-  data = {
-    name: options.name,
-    path: PathExt.join(driveName, path),
-    last_modified: response.data.last_modified,
-    created: response.data.last_modified,
-    content: response.data.content,
-    format: fileFormat as Contents.FileFormat,
+  return {
+    response: response,
+    type: fileType,
     mimetype: fileMimeType,
-    size: response.data.size,
-    writable: true,
-    type: fileType
+    format: fileFormat as Contents.FileFormat
   };
-  return data;
 }
 
 /**
@@ -376,6 +303,15 @@ export async function renameObjects(
       })
     );
   }
+
+  let resp: any = {};
+  let result = {
+    response: resp,
+    formattedNewPath: formattedNewPath,
+    format: fileFormat as Contents.FileFormat,
+    mimetype: fileMimeType,
+    type: fileType
+  };
   // always rename the object (file or main directory)
   try {
     const renamedObject = await Private.renameSingleObject(
@@ -383,23 +319,15 @@ export async function renameObjects(
       options.path,
       formattedNewPath
     );
-    data = {
-      name: options.newFileName,
-      path: PathExt.join(driveName, formattedNewPath),
+    resp = {
       last_modified: renamedObject.data.last_modified,
-      created: '',
-      content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
-      format: fileFormat as Contents.FileFormat,
-      mimetype: fileMimeType,
-      size: renamedObject.data.size,
-      writable: true,
-      type: fileType
+      size: renamedObject.data.size
     };
   } catch (error) {
     // renaming failed if directory didn't exist and was only part of a path
   }
 
-  return data;
+  return result;
 }
 
 /**
@@ -458,23 +386,18 @@ export async function copyObjects(
       options.path,
       formattedNewPath
     );
-    data = {
-      name: options.newFileName,
-      path: PathExt.join(options.toDrive, formattedNewPath),
-      last_modified: copiedObject.data.last_modified,
-      created: '',
-      content: PathExt.extname(options.newFileName) !== '' ? null : [], // TODO: add dir check
+    return {
+      response: copiedObject,
+      formattedNewPath: formattedNewPath,
       format: fileFormat as Contents.FileFormat,
       mimetype: fileMimeType,
-      size: copiedObject.data.size,
-      writable: true,
       type: fileType
     };
   } catch (error) {
     // copied failed if directory didn't exist and was only part of a path
   }
 
-  return data;
+  return {};
 }
 
 /**
@@ -572,23 +495,9 @@ export async function createDrive(
     location: string;
   }
 ) {
-  await requestAPI<any>('drives/' + newDriveName + '/', 'POST', {
+  return await requestAPI<any>('drives/' + newDriveName + '/', 'POST', {
     location: options.location
   });
-
-  data = {
-    name: newDriveName,
-    path: newDriveName,
-    last_modified: '',
-    created: '',
-    content: [],
-    format: 'json',
-    mimetype: '',
-    size: 0,
-    writable: true,
-    type: 'directory'
-  };
-  return data;
 }
 
 /**
@@ -599,23 +508,9 @@ export async function createDrive(
  * @returns A promise which resolves with the contents model.
  */
 export async function addPublicDrive(driveUrl: string) {
-  await requestAPI<any>('drives/' + driveUrl + '/', 'POST', {
+  return await requestAPI<any>('drives/' + driveUrl + '/', 'POST', {
     public: true
   });
-
-  data = {
-    name: driveUrl,
-    path: driveUrl,
-    last_modified: '',
-    created: '',
-    content: [],
-    format: 'json',
-    mimetype: '',
-    size: 0,
-    writable: true,
-    type: 'directory'
-  };
-  return data;
 }
 
 namespace Private {
