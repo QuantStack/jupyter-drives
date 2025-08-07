@@ -312,7 +312,6 @@ class JupyterDrivesManager():
         try:
             if provider == 's3':
                 if drive_name in self._external_drives and self._external_drives[drive_name]["is_public"] is False: 
-                    print('FOUND DRIVE IN EXTERNAL TO MOUNT: ', self._external_drives[drive_name]["location"])
                     region = self._external_drives[drive_name]["location"]
                 else:
                     region = await self._get_drive_location(drive_name)
@@ -728,9 +727,7 @@ class JupyterDrivesManager():
                 "url": drive_name,
                 "location": region
             };
-            print('ADDED DRIVE: ', drive)
             self._external_drives[drive_name] = drive;
-            print('NEW EXTERNAL DRIVEs: ', self._external_drives)
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
