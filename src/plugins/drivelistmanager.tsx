@@ -4,6 +4,7 @@ import { Button, Search } from '@jupyter/react-components';
 import { useState } from 'react';
 import { IDriveInfo } from '../token';
 import {
+  addExternalDrive,
   addPublicDrive,
   excludeDrive,
   getDrivesList,
@@ -19,15 +20,23 @@ interface IProps {
 
 export interface IDriveInputProps {
   isName: boolean;
-  value: string;
+  driveValue: string;
+  regionValue: string;
   setPublicDrive: (value: string) => void;
+  setRegion: (value: string) => void;
   onSubmit: () => void;
+  isPublic: boolean;
+  setIsPublic: (value: boolean) => void;
 }
 
 export function DriveInputComponent({
-  value,
+  driveValue,
+  regionValue,
   setPublicDrive,
-  onSubmit
+  setRegion,
+  onSubmit,
+  isPublic,
+  setIsPublic
 }: IDriveInputProps) {
   return (
     <div>
@@ -38,7 +47,7 @@ export function DriveInputComponent({
             setPublicDrive(event.target.value);
           }}
           placeholder="Enter drive name"
-          value={value}
+          value={driveValue}
         />
         <Button
           className="input-add-drive-button"
@@ -47,6 +56,24 @@ export function DriveInputComponent({
         >
           add
         </Button>
+      </div>
+      <div className="add-public-drive-section">
+        {'Public drive?'}
+        <input
+          type="checkbox"
+          checked={isPublic}
+          onChange={event => setIsPublic(event.target.checked)}
+        />
+        {!isPublic && (
+          <input
+            className="drive-region-input"
+            onInput={(event: any) => {
+              setRegion(event.target.value);
+            }}
+            placeholder="Region (e.g.: us-east-1)"
+            value={regionValue}
+          />
+        )}
       </div>
     </div>
   );
@@ -154,6 +181,8 @@ export function DriveListManagerComponent({ model }: IProps) {
   const [availableDrives, setAvailableDrives] = useState<Partial<IDriveInfo>[]>(
     model.availableDrives
   );
+  const [isPublic, setIsPublic] = useState<boolean>(false);
+  const [driveRegion, setDriveRegion] = useState<string>('');
 
   // Called after mounting.
   React.useEffect(() => {
@@ -168,7 +197,12 @@ export function DriveListManagerComponent({ model }: IProps) {
   }, [model]);
 
   const onAddedPublicDrive = async () => {
-    await addPublicDrive(publicDrive);
+    if (isPublic) {
+      await addPublicDrive(publicDrive);
+    } else {
+      await addExternalDrive(publicDrive, driveRegion);
+      setDriveRegion('');
+    }
     setPublicDrive('');
     await model.refresh();
   };
@@ -195,11 +229,15 @@ export function DriveListManagerComponent({ model }: IProps) {
         </div>
 
         <div className="drives-manager-section">
-          <div className="drives-section-title"> Add public drive</div>
+          <div className="drives-section-title"> Add external drive</div>
           <DriveInputComponent
             isName={false}
-            value={publicDrive}
+            driveValue={publicDrive}
+            regionValue={driveRegion}
             setPublicDrive={setPublicDrive}
+            setRegion={setDriveRegion}
+            isPublic={isPublic}
+            setIsPublic={setIsPublic}
             onSubmit={onAddedPublicDrive}
           />
         </div>

@@ -50,6 +50,14 @@ li {
   justify-content: center;
 }
 
+.drive-region-input {
+  height: 20px !important;
+  width: 100%;
+  flex: 1;
+  justify-content: center;
+  margin-right: 61px;
+}
+
 .drive-data-grid {
   width: 380px;
   flex-direction: row;

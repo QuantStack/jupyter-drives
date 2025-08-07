@@ -311,7 +311,10 @@ class JupyterDrivesManager():
         """
         try:
             if provider == 's3':
-                region = await self._get_drive_location(drive_name)
+                if drive_name in self._external_drives and self._external_drives[drive_name]["is_public"] is False: 
+                    region = self._external_drives[drive_name]["location"]
+                else:
+                    region = await self._get_drive_location(drive_name)
             self._initialize_content_manager(drive_name, provider, region)
         except Exception as e:
             raise tornado.web.HTTPError(
@@ -731,7 +734,7 @@ class JupyterDrivesManager():
 
         return
     
-    async def add_public_drive(self, drive_name):
+    async def add_external_drive(self, drive_name, is_public, region='us-east-1'):
         """Mount a drive.
 
         Args:
@@ -739,8 +742,9 @@ class JupyterDrivesManager():
         """
         try:
             drive = {
-                "is_public": True,
-                "url": drive_name
+                "is_public": is_public,
+                "url": drive_name,
+                "location": region
             };
             self._external_drives[drive_name] = drive;
         except Exception as e:
