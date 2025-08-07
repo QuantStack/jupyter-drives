@@ -695,21 +695,40 @@ class JupyterDrivesManager():
 
         return 
     
-    async def new_drive(self, new_drive_name, location='us-east-1'):
+    async def new_drive(self, new_drive_name, location):
         """Create a new drive in the given location.
-        
+
         Args:
             new_drive_name: name of new drive to create
             location: (optional) region of bucket
         """
+        location = location or 'us-east-1'
+
         try:
-            await self._file_system._mkdir(new_drive_name, region_name = location)      
+            # Create a region-specific S3 client for bucket creation
+            # This ensures the client matches the target region
+            async with self._s3_session.create_client(
+                's3',
+                aws_secret_access_key=self._config.secret_access_key,
+                aws_access_key_id=self._config.access_key_id,
+                aws_session_token=self._config.session_token,
+                region_name=location
+            ) as client:
+                if location == 'us-east-1':
+                    # For us-east-1, don't specify location constraint
+                    await client.create_bucket(Bucket=new_drive_name)
+                else:
+                    # For other regions, specify the location constraint
+                    await client.create_bucket(
+                        Bucket=new_drive_name,
+                        CreateBucketConfiguration={'LocationConstraint': location}
+                    )
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
             reason=f"The following error occured when creating the new drive: {e}",
             )
-        
+
         return
     
     async def add_public_drive(self, drive_name):
