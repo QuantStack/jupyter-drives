@@ -5,6 +5,7 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
+import { IStatusBar } from '@jupyterlab/statusbar';
 import {
   IFileBrowserFactory,
   FileBrowser,
@@ -37,6 +38,127 @@ import { driveBrowserIcon, removeIcon } from '../icons';
 import { Drive } from '../contents';
 import { setListingLimit } from '../requests';
 import { CommandIDs } from '../token';
+
+/**
+ * Status bar widget for displaying drive information
+ */
+class DriveStatusWidget extends Widget {
+  constructor() {
+    super();
+    this.addClass('jp-drive-status-widget');
+    this.node.textContent = 'Drives: Ready';
+    this._currentPath = '';
+    this._isLoading = false;
+
+    // Listen for custom events from getContents
+    window.addEventListener('drive-status-update', (event: Event) => {
+      const customEvent = event as CustomEvent;
+      this.handleStatusUpdate(customEvent.detail);
+    });
+  }
+
+  updateStatus(text: string) {
+    this.node.textContent = `Drives: ${text}`;
+  }
+
+  setDriveCount(count: number) {
+    this.node.textContent = `Drives: ${count} connected`;
+  }
+
+  setError(message: string) {
+    this.node.textContent = `Drives: ${message}`;
+    this.addClass('jp-drive-status-error');
+  }
+
+  clearError() {
+    this.removeClass('jp-drive-status-error');
+  }
+
+  /**
+   * Update status when navigating to a directory
+   */
+  setDirectoryLoading(path: string) {
+    console.log('[DEBUG] Setting directory loading:', path);
+    this._isLoading = true;
+    this._currentPath = path;
+    const displayPath =
+      path === '' ? 'Root' : path.split('/').pop() || 'Directory';
+    this.node.textContent = `Drives: Opening ${displayPath}...`;
+    this.addClass('jp-drive-status-loading');
+  }
+
+  /**
+   * Update status when a file is being opened
+   */
+  setFileLoading(path: string) {
+    console.log('[DEBUG] Setting file loading:', path);
+    this._isLoading = true;
+    this._currentPath = path;
+    const fileName = path.split('/').pop() || 'File';
+    this.node.textContent = `Drives: Opening ${fileName}...`;
+    this.addClass('jp-drive-status-loading');
+  }
+
+  /**
+   * Clear loading state and show current status
+   */
+  setLoaded(path: string, type: 'directory' | 'file' = 'directory') {
+    this._isLoading = false;
+    this._currentPath = path;
+    this.removeClass('jp-drive-status-loading');
+
+    if (type === 'directory') {
+      const displayPath =
+        path === '' ? 'Root' : path.split('/').pop() || 'Directory';
+      this.node.textContent = `Drives: ${displayPath}`;
+    } else {
+      const fileName = path.split('/').pop() || 'File';
+      this.node.textContent = `Drives: ${fileName}`;
+    }
+  }
+
+  /**
+   * Get current path
+   */
+  get currentPath(): string {
+    return this._currentPath;
+  }
+
+  /**
+   * Check if currently loading
+   */
+  get isLoading(): boolean {
+    return this._isLoading;
+  }
+
+  /**
+   * Handle status updates from getContents function
+   */
+  private handleStatusUpdate(detail: any) {
+    console.log('[DEBUG] Status update received:', detail);
+
+    if (detail.type === 'loading') {
+      const fullPath = detail.driveName + '/' + detail.path;
+      if (detail.path === '') {
+        this.setDirectoryLoading('');
+      } else {
+        // Determine if it's a directory or file based on path
+        const isDirectory = detail.path.endsWith('/') || detail.path === '';
+        if (isDirectory) {
+          this.setDirectoryLoading(fullPath);
+        } else {
+          this.setFileLoading(fullPath);
+        }
+      }
+    } else if (detail.type === 'loaded') {
+      const fullPath = detail.driveName + '/' + detail.path;
+      this.setLoaded(fullPath, detail.itemType);
+    }
+  }
+
+  private _currentPath: string;
+  private _isLoading: boolean;
+}
 
 /**
  * The file browser factory ID.
@@ -75,7 +197,8 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     IRouter,
     JupyterFrontEnd.ITreeResolver,
     ILabShell,
-    ILayoutRestorer
+    ILayoutRestorer,
+    IStatusBar
   ],
   activate: async (
     app: JupyterFrontEnd,
@@ -86,7 +209,8 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     router: IRouter | null,
     tree: JupyterFrontEnd.ITreeResolver | null,
     labShell: ILabShell | null,
-    restorer: ILayoutRestorer | null
+    restorer: ILayoutRestorer | null,
+    statusBar: IStatusBar | null
   ): Promise<void> => {
     console.log(
       'JupyterLab extension jupyter-drives:drives-file-browser is activated!'
@@ -123,6 +247,42 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     app.shell.add(driveBrowser, 'left', { rank: 102, type: 'File Browser' });
     if (restorer) {
       restorer.add(driveBrowser, 'drive-file-browser');
+    }
+
+    // Register status bar widget
+    if (statusBar) {
+      const driveStatusWidget = new DriveStatusWidget();
+
+      statusBar.registerStatusItem('driveBrowserStatus', {
+        item: driveStatusWidget,
+        align: 'right',
+        rank: 500,
+        isActive: () => true
+      });
+
+      // Update status when drive browser is ready
+      driveStatusWidget.updateStatus('Connected');
+
+      // Listen for drive changes and update status
+      drive.loadingContents.connect((sender, args) => {
+        const path = driveBrowser.model.path;
+        console.log('[DEBUG] Path changed:', path, 'args:', args);
+        if (args.type === 'loading') {
+          driveStatusWidget.setDirectoryLoading(path);
+        } else if (args.type === 'loaded') {
+          console.log('loaded');
+          // driveStatusWidget.setLoaded(path, args.itemType);
+        }
+        // Status updates are now handled by custom events from getContents
+      });
+
+      // Listen for model changes to update drive count
+      drive.loadingContents.connect(() => {
+        console.log('[DEBUG] Model refreshed');
+        // const items = driveBrowser.model.items();
+        // const driveCount = Array.from(items).length;
+        // driveStatusWidget.setDriveCount(driveCount);
+      });
     }
 
     const uploader = new Uploader({ model: driveBrowser.model, translator });
