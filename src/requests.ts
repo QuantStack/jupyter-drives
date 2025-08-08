@@ -105,16 +105,6 @@ export async function getContents(
     options
   );
 
-  // Emit custom event for status widget to listen to
-  const event = new CustomEvent('drive-status-update', {
-    detail: {
-      type: 'loading',
-      path: options.path,
-      driveName: driveName
-    }
-  });
-  window.dispatchEvent(event);
-
   const response = await requestAPI<any>(
     'drives/' + driveName + '/' + options.path,
     'GET'
@@ -126,17 +116,6 @@ export async function getContents(
     // listing the contents of a directory
     if (isDir) {
       console.log('debug: isDir:', isDir);
-
-      // Emit event for directory loaded
-      const loadedEvent = new CustomEvent('drive-status-update', {
-        detail: {
-          type: 'loaded',
-          path: options.path,
-          driveName: driveName,
-          itemType: 'directory'
-        }
-      });
-      window.dispatchEvent(loadedEvent);
 
       const fileList: IContentsList = {};
 
@@ -179,17 +158,6 @@ export async function getContents(
     // getting the contents of a file
     else {
       console.log('debug: isFile:');
-
-      // Emit event for file loaded
-      const loadedEvent = new CustomEvent('drive-status-update', {
-        detail: {
-          type: 'loaded',
-          path: options.path,
-          driveName: driveName,
-          itemType: 'file'
-        }
-      });
-      window.dispatchEvent(loadedEvent);
 
       const [fileType, fileMimeType, fileFormat] = getFileType(
         PathExt.extname(PathExt.basename(options.path)),
