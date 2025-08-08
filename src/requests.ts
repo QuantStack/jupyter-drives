@@ -73,7 +73,15 @@ export async function mountDrive(
     drive_name: driveName,
     provider: options.provider
   };
-  return await requestAPI<any>('drives', 'POST', body);
+  try {
+    await requestAPI<any>('drives', 'POST', body);
+  } catch (error: any) {
+    return {
+      error: error
+    };
+  }
+
+  return;
 }
 
 /**
