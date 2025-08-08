@@ -49,53 +49,29 @@ class DriveStatusWidget extends Widget {
     this.node.textContent = 'Drives: Ready';
     this._currentPath = '';
     this._isLoading = false;
-
-    // Listen for custom events from getContents
-    window.addEventListener('drive-status-update', (event: Event) => {
-      const customEvent = event as CustomEvent;
-      this.handleStatusUpdate(customEvent.detail);
-    });
   }
 
   updateStatus(text: string) {
     this.node.textContent = `Drives: ${text}`;
   }
 
-  setDriveCount(count: number) {
-    this.node.textContent = `Drives: ${count} connected`;
-  }
-
-  setError(message: string) {
-    this.node.textContent = `Drives: ${message}`;
-    this.addClass('jp-drive-status-error');
-  }
-
-  clearError() {
-    this.removeClass('jp-drive-status-error');
-  }
-
   /**
-   * Update status when navigating to a directory
+   * Update status when loading a directory or file
    */
-  setDirectoryLoading(path: string) {
-    console.log('[DEBUG] Setting directory loading:', path);
+  setLoading(path: string, type: 'directory' | 'file' = 'directory') {
+    console.log('[DEBUG] Setting loading:', path, 'type:', type);
     this._isLoading = true;
     this._currentPath = path;
-    const displayPath =
-      path === '' ? 'Root' : path.split('/').pop() || 'Directory';
-    this.node.textContent = `Drives: Opening ${displayPath}...`;
-    this.addClass('jp-drive-status-loading');
-  }
 
-  /**
-   * Update status when a file is being opened
-   */
-  setFileLoading(path: string) {
-    console.log('[DEBUG] Setting file loading:', path);
-    this._isLoading = true;
-    this._currentPath = path;
-    const fileName = path.split('/').pop() || 'File';
-    this.node.textContent = `Drives: Opening ${fileName}...`;
+    if (type === 'directory') {
+      const displayPath =
+        path === '' ? 'Root' : path.split('/').pop() || 'Directory';
+      this.node.textContent = `Drives: Opening ${displayPath}...`;
+    } else {
+      const fileName = path.split('/').pop() || 'File';
+      this.node.textContent = `Drives: Opening ${fileName}...`;
+    }
+
     this.addClass('jp-drive-status-loading');
   }
 
@@ -129,31 +105,6 @@ class DriveStatusWidget extends Widget {
    */
   get isLoading(): boolean {
     return this._isLoading;
-  }
-
-  /**
-   * Handle status updates from getContents function
-   */
-  private handleStatusUpdate(detail: any) {
-    console.log('[DEBUG] Status update received:', detail);
-
-    if (detail.type === 'loading') {
-      const fullPath = detail.driveName + '/' + detail.path;
-      if (detail.path === '') {
-        this.setDirectoryLoading('');
-      } else {
-        // Determine if it's a directory or file based on path
-        const isDirectory = detail.path.endsWith('/') || detail.path === '';
-        if (isDirectory) {
-          this.setDirectoryLoading(fullPath);
-        } else {
-          this.setFileLoading(fullPath);
-        }
-      }
-    } else if (detail.type === 'loaded') {
-      const fullPath = detail.driveName + '/' + detail.path;
-      this.setLoaded(fullPath, detail.itemType);
-    }
   }
 
   private _currentPath: string;
@@ -265,23 +216,14 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
 
       // Listen for drive changes and update status
       drive.loadingContents.connect((sender, args) => {
-        const path = driveBrowser.model.path;
+        const { path, type, itemType } = args;
         console.log('[DEBUG] Path changed:', path, 'args:', args);
-        if (args.type === 'loading') {
-          driveStatusWidget.setDirectoryLoading(path);
-        } else if (args.type === 'loaded') {
+        if (type === 'loading') {
+          driveStatusWidget.setLoading(path, itemType);
+        } else if (type === 'loaded') {
           console.log('loaded');
-          // driveStatusWidget.setLoaded(path, args.itemType);
+          // driveStatusWidget.setLoaded(path, itemType);
         }
-        // Status updates are now handled by custom events from getContents
-      });
-
-      // Listen for model changes to update drive count
-      drive.loadingContents.connect(() => {
-        console.log('[DEBUG] Model refreshed');
-        // const items = driveBrowser.model.items();
-        // const driveCount = Array.from(items).length;
-        // driveStatusWidget.setDriveCount(driveCount);
       });
     }
 

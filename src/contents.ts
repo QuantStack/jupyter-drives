@@ -221,15 +221,8 @@ export class Drive implements Contents.IDrive {
   ): Promise<Contents.IModel> {
     let data: Contents.IModel;
 
-    this._loadingContents.emit({
-      type: 'loading',
-      path: localPath,
-      driveName: this._name,
-      itemType: 'directory'
-    });
-
     if (localPath !== '') {
-      console.log('debug: get() called with localPath:', localPath);
+      console.log('debug: IF get() called with localPath:', localPath);
       const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
       // when accessed the first time, mount drive
@@ -249,6 +242,13 @@ export class Drive implements Contents.IDrive {
       const result = await getContents(currentDrive.name, {
         path: currentPath,
         registeredFileTypes: this._registeredFileTypes
+      });
+
+      this._loadingContents.emit({
+        type: 'loading',
+        path: localPath,
+        driveName: this._name,
+        itemType: result.isDir ? 'directory' : 'file'
       });
 
       data = {
@@ -275,6 +275,15 @@ export class Drive implements Contents.IDrive {
         type: result.isDir ? 'directory' : result.type!
       };
     } else {
+      console.log('debug: ELSE get() called with localPath:', localPath);
+
+      this._loadingContents.emit({
+        type: 'loading',
+        path: localPath,
+        driveName: this._name,
+        itemType: 'directory'
+      });
+
       // retriving list of contents from root
       // in our case: list available drives
       const drivesListInfo: Contents.IModel[] = [];
