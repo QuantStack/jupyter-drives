@@ -9,7 +9,8 @@ import {
   excludeDrive,
   getDrivesList,
   getExcludedDrives,
-  includeDrive
+  includeDrive,
+  mountDrive
 } from '../requests';
 import { ISignal, Signal } from '@lumino/signaling';
 import { driveBrowserIcon, addIcon, removeIcon } from '../icons';
@@ -27,6 +28,7 @@ export interface IDriveInputProps {
   onSubmit: () => void;
   isPublic: boolean;
   setIsPublic: (value: boolean) => void;
+  mountError: string;
 }
 
 export function DriveInputComponent({
@@ -36,7 +38,8 @@ export function DriveInputComponent({
   setRegion,
   onSubmit,
   isPublic,
-  setIsPublic
+  setIsPublic,
+  mountError
 }: IDriveInputProps) {
   return (
     <div>
@@ -75,6 +78,11 @@ export function DriveInputComponent({
           />
         )}
       </div>
+      {mountError && (
+        <div className="add-public-drive-section">
+          <p className="error">{mountError}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -183,6 +191,7 @@ export function DriveListManagerComponent({ model }: IProps) {
   );
   const [isPublic, setIsPublic] = useState<boolean>(false);
   const [driveRegion, setDriveRegion] = useState<string>('');
+  const [mountError, setMountError] = useState<string>('');
 
   // Called after mounting.
   React.useEffect(() => {
@@ -197,14 +206,24 @@ export function DriveListManagerComponent({ model }: IProps) {
   }, [model]);
 
   const onAddedPublicDrive = async () => {
-    if (isPublic) {
-      await addPublicDrive(publicDrive);
+    // Check if user has access to drive.
+    const result = await mountDrive(publicDrive, {
+      provider: 's3'
+    });
+    if (result && result.error) {
+      // Show error in case of failure.
+      setMountError(result.error.message);
     } else {
-      await addExternalDrive(publicDrive, driveRegion);
+      // Proceed with adding the drive otherwise.
+      if (isPublic) {
+        await addPublicDrive(publicDrive);
+      } else {
+        await addExternalDrive(publicDrive, driveRegion);
+        setDriveRegion('');
+      }
       setDriveRegion('');
+      await model.refresh();
     }
-    setPublicDrive('');
-    await model.refresh();
   };
 
   return (
@@ -239,6 +258,7 @@ export function DriveListManagerComponent({ model }: IProps) {
             isPublic={isPublic}
             setIsPublic={setIsPublic}
             onSubmit={onAddedPublicDrive}
+            mountError={mountError}
           />
         </div>
 
