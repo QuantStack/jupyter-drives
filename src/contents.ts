@@ -38,6 +38,10 @@ export class Drive implements Contents.IDrive {
     this._serverSettings = ServerConnection.makeSettings();
     this._name = options.name ?? '';
     this._drivesList = options.drivesList ?? [];
+
+    this.fileChanged.connect((sender, args) => {
+      console.log('fileChanged', args);
+    });
   }
 
   /**
@@ -219,7 +223,10 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
+    console.log('[DEBUG] get() called with localPath:', localPath);
     let data: Contents.IModel;
+
+    const isFromClick = this.isUserInitiated();
 
     if (localPath !== '') {
       console.log('debug: IF get() called with localPath:', localPath);
@@ -244,12 +251,13 @@ export class Drive implements Contents.IDrive {
         registeredFileTypes: this._registeredFileTypes
       });
 
-      this._loadingContents.emit({
-        type: 'loading',
-        path: localPath,
-        driveName: this._name,
-        itemType: result.isDir ? 'directory' : 'file'
-      });
+      isFromClick &&
+        this._loadingContents.emit({
+          type: 'loading',
+          path: localPath,
+          driveName: this._name,
+          itemType: result.isDir ? 'directory' : 'file'
+        });
 
       data = {
         name: result.isDir
@@ -277,12 +285,13 @@ export class Drive implements Contents.IDrive {
     } else {
       console.log('debug: ELSE get() called with localPath:', localPath);
 
-      this._loadingContents.emit({
-        type: 'loading',
-        path: localPath,
-        driveName: this._name,
-        itemType: 'directory'
-      });
+      isFromClick &&
+        this._loadingContents.emit({
+          type: 'loading',
+          path: localPath,
+          driveName: this._name,
+          itemType: 'directory'
+        });
 
       // retriving list of contents from root
       // in our case: list available drives
@@ -326,13 +335,32 @@ export class Drive implements Contents.IDrive {
     }
 
     Contents.validateContentsModel(data);
-    this._loadingContents.emit({
-      type: 'loaded',
-      path: localPath,
-      driveName: this._name,
-      itemType: 'directory'
-    });
+
+    isFromClick &&
+      this._loadingContents.emit({
+        type: 'loaded',
+        path: localPath,
+        driveName: this._name,
+        itemType: 'directory'
+      });
     return data;
+  }
+
+  // This is dumb?
+  isUserInitiated() {
+    const stack = new Error().stack;
+
+    // Check if it's from a click event by examining the call stack
+    const isFromClick =
+      stack?.includes('evtDblClick') ||
+      stack?.includes('handleOpen') ||
+      stack?.includes('_evtClick');
+
+    console.log('[DEBUG] Call stack analysis:');
+    console.log('  - Is from click event:', isFromClick);
+    console.log('  - Call stack:', stack?.split('\n').join('\n    '));
+
+    return isFromClick;
   }
 
   /**

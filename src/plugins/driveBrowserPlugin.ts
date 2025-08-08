@@ -358,6 +358,7 @@ namespace Private {
         }
       } else {
         await browser.model.restore(browser.id);
+        console.log('PROOF');
         await browser.model.refresh();
       }
       browser.removeClass(restoring);
