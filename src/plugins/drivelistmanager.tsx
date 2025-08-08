@@ -29,6 +29,7 @@ export interface IDriveInputProps {
   isPublic: boolean;
   setIsPublic: (value: boolean) => void;
   mountError: string;
+  resetMountError: () => void;
 }
 
 export function DriveInputComponent({
@@ -39,7 +40,8 @@ export function DriveInputComponent({
   onSubmit,
   isPublic,
   setIsPublic,
-  mountError
+  mountError,
+  resetMountError
 }: IDriveInputProps) {
   return (
     <div>
@@ -48,6 +50,7 @@ export function DriveInputComponent({
           className="drive-search-input"
           onInput={(event: any) => {
             setPublicDrive(event.target.value);
+            resetMountError();
           }}
           placeholder="Enter drive name"
           value={driveValue}
@@ -72,6 +75,7 @@ export function DriveInputComponent({
             className="drive-region-input"
             onInput={(event: any) => {
               setRegion(event.target.value);
+              resetMountError();
             }}
             placeholder="Region (e.g.: us-east-1)"
             value={regionValue}
@@ -259,6 +263,7 @@ export function DriveListManagerComponent({ model }: IProps) {
             setIsPublic={setIsPublic}
             onSubmit={onAddedPublicDrive}
             mountError={mountError}
+            resetMountError={() => setMountError('')}
           />
         </div>
 
