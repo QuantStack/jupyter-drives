@@ -212,7 +212,8 @@ export function DriveListManagerComponent({ model }: IProps) {
   const onAddedPublicDrive = async () => {
     // Check if user has access to drive.
     const result = await mountDrive(publicDrive, {
-      provider: 's3'
+      provider: 's3',
+      location: isPublic ? '' : driveRegion
     });
     if (result && result.error) {
       // Show error in case of failure.
