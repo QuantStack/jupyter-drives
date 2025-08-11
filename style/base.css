@@ -188,7 +188,6 @@ li {
 .jp-drive-status-loading {
   color: var(--jp-ui-font-color1);
   background-color: var(--jp-layout-color3);
-  border-color: var(--jp-brand-color1);
   animation: pulse 1.5s ease-in-out infinite;
 }
 

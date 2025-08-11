@@ -46,13 +46,17 @@ import { CommandIDs } from '../token';
 class DriveStatusWidget extends Widget {
   constructor() {
     super();
-    this.addClass('jp-drive-status-widget');
+    this.node.classList.add(
+      'jp-drive-status-widget',
+      'jp-drive-status-loading',
+      'lm-mod-hidden'
+    );
     this.node.textContent = '';
     this._isLoading = false;
   }
 
   updateStatus(text: string) {
-    this.node.textContent = `Drives: ${text}`;
+    this.node.textContent = `${text}`;
   }
 
   /**
@@ -64,13 +68,12 @@ class DriveStatusWidget extends Widget {
     if (type === 'directory') {
       const displayPath =
         path === '' ? 'Root' : path.split('/').pop() || 'Directory';
-      this.updateStatus(displayPath);
+      this.updateStatus(`Opening: ${displayPath}`);
     } else {
       const fileName = path.split('/').pop() || 'File';
-      this.updateStatus(fileName);
+      this.updateStatus(`Opening: ${fileName}`);
     }
-
-    this.addClass('jp-drive-status-loading');
+    this.removeClass('lm-mod-hidden');
   }
 
   /**
@@ -78,7 +81,7 @@ class DriveStatusWidget extends Widget {
    */
   setLoaded(path?: string) {
     this._isLoading = false;
-    this.removeClass('jp-drive-status-loading');
+    this.addClass('lm-mod-hidden');
 
     this.updateStatus('');
   }
@@ -195,27 +198,21 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
         isActive: () => true
       });
 
-      // Item being opened
+      // Item/dir being opened
       //@ts-expect-error listing is protected
       driveBrowser.listing.onItemOpened.connect((_, args) => {
-        console.log('[search] PLEASE]', args);
         const { path, type } = args;
         driveStatusWidget.setLoading(path, type);
-        console.log('loaded');
       });
 
-      // Item done opening
-      docWidgetOpener.opened.connect((_, args) => {
-        console.log('[search] opened signal', args);
-
-        const { context } = args;
-
-        const { contentsModel } = context;
-        console.log('contentsModel', contentsModel);
+      const doneLoading = (_: any, args: any) => {
         driveStatusWidget.setLoaded();
-      });
+      };
+      // Item done opening
+      docWidgetOpener.opened.connect(doneLoading);
 
-      driveStatusWidget.updateStatus('Connected');
+      // Directory done opening
+      driveBrowser.model.pathChanged.connect(doneLoading);
     }
 
     const uploader = new Uploader({ model: driveBrowser.model, translator });
