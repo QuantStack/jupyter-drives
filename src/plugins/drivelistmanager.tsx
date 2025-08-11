@@ -224,9 +224,10 @@ export function DriveListManagerComponent({ model }: IProps) {
         await addPublicDrive(publicDrive);
       } else {
         await addExternalDrive(publicDrive, driveRegion);
-        setDriveRegion('');
       }
+      setPublicDrive('');
       setDriveRegion('');
+      setIsPublic(false);
       await model.refresh();
     }
   };
