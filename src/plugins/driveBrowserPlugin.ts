@@ -51,12 +51,16 @@ class DriveStatusWidget extends Widget {
       'jp-drive-status-loading',
       'lm-mod-hidden'
     );
-    this.node.textContent = '';
+
+    this._textSpan = document.createElement('span');
+    this._textSpan.textContent = '';
+    this.node.appendChild(this._textSpan);
+
     this._isLoading = false;
   }
 
   updateStatus(text: string) {
-    this.node.textContent = `${text}`;
+    this._textSpan.textContent = text;
   }
 
   /**
@@ -94,6 +98,7 @@ class DriveStatusWidget extends Widget {
   }
 
   private _isLoading: boolean;
+  private _textSpan: HTMLSpanElement;
 }
 
 /**
