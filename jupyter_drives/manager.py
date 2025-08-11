@@ -303,7 +303,7 @@ class JupyterDrivesManager():
         }
         return response
     
-    async def mount_drive(self, drive_name, provider):
+    async def mount_drive(self, drive_name, provider, location=''):
         """Mount a drive.
 
         Args:
@@ -311,7 +311,9 @@ class JupyterDrivesManager():
         """
         try:
             if provider == 's3':
-                if drive_name in self._external_drives and self._external_drives[drive_name]["is_public"] is False: 
+                if location: 
+                    region = location
+                elif drive_name in self._external_drives and self._external_drives[drive_name]["is_public"] is False: 
                     region = self._external_drives[drive_name]["location"]
                 else:
                     region = await self._get_drive_location(drive_name)

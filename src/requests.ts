@@ -67,11 +67,12 @@ export async function getDrivesList() {
  */
 export async function mountDrive(
   driveName: string,
-  options: { provider: string }
+  options: { provider: string; location?: string }
 ) {
   const body: ReadonlyJSONObject = {
     drive_name: driveName,
-    provider: options.provider
+    provider: options.provider,
+    location: options.location ?? ''
   };
   try {
     await requestAPI<any>('drives', 'POST', body);
