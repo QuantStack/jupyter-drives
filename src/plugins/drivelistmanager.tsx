@@ -68,7 +68,10 @@ export function DriveInputComponent({
         <input
           type="checkbox"
           checked={isPublic}
-          onChange={event => setIsPublic(event.target.checked)}
+          onChange={event => {
+            setIsPublic(event.target.checked);
+            setRegion('');
+          }}
         />
         {!isPublic && (
           <input
@@ -213,7 +216,7 @@ export function DriveListManagerComponent({ model }: IProps) {
     // Check if user has access to drive.
     const result = await mountDrive(publicDrive, {
       provider: 's3',
-      location: isPublic ? '' : driveRegion
+      location: driveRegion
     });
     if (result && result.error) {
       // Show error in case of failure.
