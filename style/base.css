@@ -157,3 +157,8 @@ li {
   fill: var(--jp-ui-inverse-font-color0) !important;
   color: var(--jp-ui-inverse-font-color0) !important;
 }
+
+.error {
+  color: var(--md-red-600);
+  font-size: 0.7rem;
+}

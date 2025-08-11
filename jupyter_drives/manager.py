@@ -319,7 +319,7 @@ class JupyterDrivesManager():
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
-            reason= f"The following error occured when mouting the drive: {e}"
+            reason= f"{e}"
             )
 
         return 
@@ -771,7 +771,7 @@ class JupyterDrivesManager():
         except Exception as e:
              raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
-            reason=f"The following error occured when retriving the drive location: {e}",
+            reason=f"{e}",
             )
     
         return location
