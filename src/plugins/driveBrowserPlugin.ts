@@ -5,6 +5,7 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
+import { IDocumentWidgetOpener } from '@jupyterlab/docmanager';
 import { IStatusBar } from '@jupyterlab/statusbar';
 import {
   IFileBrowserFactory,
@@ -46,8 +47,7 @@ class DriveStatusWidget extends Widget {
   constructor() {
     super();
     this.addClass('jp-drive-status-widget');
-    this.node.textContent = 'Drives: Ready';
-    this._currentPath = '';
+    this.node.textContent = '';
     this._isLoading = false;
   }
 
@@ -58,18 +58,16 @@ class DriveStatusWidget extends Widget {
   /**
    * Update status when loading a directory or file
    */
-  setLoading(path: string, type: 'directory' | 'file' = 'directory') {
-    console.log('[DEBUG] Setting loading:', path, 'type:', type);
+  setLoading(path: string, type: string) {
     this._isLoading = true;
-    this._currentPath = path;
 
     if (type === 'directory') {
       const displayPath =
         path === '' ? 'Root' : path.split('/').pop() || 'Directory';
-      this.node.textContent = `Drives: Opening ${displayPath}...`;
+      this.updateStatus(displayPath);
     } else {
       const fileName = path.split('/').pop() || 'File';
-      this.node.textContent = `Drives: Opening ${fileName}...`;
+      this.updateStatus(fileName);
     }
 
     this.addClass('jp-drive-status-loading');
@@ -78,26 +76,11 @@ class DriveStatusWidget extends Widget {
   /**
    * Clear loading state and show current status
    */
-  setLoaded(path: string, type: 'directory' | 'file' = 'directory') {
+  setLoaded(path?: string) {
     this._isLoading = false;
-    this._currentPath = path;
     this.removeClass('jp-drive-status-loading');
 
-    if (type === 'directory') {
-      const displayPath =
-        path === '' ? 'Root' : path.split('/').pop() || 'Directory';
-      this.node.textContent = `Drives: ${displayPath}`;
-    } else {
-      const fileName = path.split('/').pop() || 'File';
-      this.node.textContent = `Drives: ${fileName}`;
-    }
-  }
-
-  /**
-   * Get current path
-   */
-  get currentPath(): string {
-    return this._currentPath;
+    this.updateStatus('');
   }
 
   /**
@@ -107,7 +90,6 @@ class DriveStatusWidget extends Widget {
     return this._isLoading;
   }
 
-  private _currentPath: string;
   private _isLoading: boolean;
 }
 
@@ -142,7 +124,8 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     IFileBrowserFactory,
     IToolbarWidgetRegistry,
     ISettingRegistry,
-    ITranslator
+    ITranslator,
+    IDocumentWidgetOpener
   ],
   optional: [
     IRouter,
@@ -157,6 +140,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     toolbarRegistry: IToolbarWidgetRegistry,
     settingsRegistry: ISettingRegistry,
     translator: ITranslator,
+    docWidgetOpener: IDocumentWidgetOpener,
     router: IRouter | null,
     tree: JupyterFrontEnd.ITreeResolver | null,
     labShell: ILabShell | null,
@@ -211,20 +195,27 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
         isActive: () => true
       });
 
-      // Update status when drive browser is ready
-      driveStatusWidget.updateStatus('Connected');
-
-      // Listen for drive changes and update status
-      drive.loadingContents.connect((sender, args) => {
-        const { path, type, itemType } = args;
-        console.log('[DEBUG] Path changed:', path, 'args:', args);
-        if (type === 'loading') {
-          driveStatusWidget.setLoading(path, itemType);
-        } else if (type === 'loaded') {
-          console.log('loaded');
-          // driveStatusWidget.setLoaded(path, itemType);
-        }
+      // Item being opened
+      //@ts-expect-error listing is protected
+      driveBrowser.listing.onItemOpened.connect((_, args) => {
+        console.log('[search] PLEASE]', args);
+        const { path, type } = args;
+        driveStatusWidget.setLoading(path, type);
+        console.log('loaded');
       });
+
+      // Item done opening
+      docWidgetOpener.opened.connect((_, args) => {
+        console.log('[search] opened signal', args);
+
+        const { context } = args;
+
+        const { contentsModel } = context;
+        console.log('contentsModel', contentsModel);
+        driveStatusWidget.setLoaded();
+      });
+
+      driveStatusWidget.updateStatus('Connected');
     }
 
     const uploader = new Uploader({ model: driveBrowser.model, translator });
