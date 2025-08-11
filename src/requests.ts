@@ -98,25 +98,17 @@ export async function getContents(
   driveName: string,
   options: { path: string; registeredFileTypes: IRegisteredFileTypes }
 ) {
-  console.log(
-    'debug: getContents() called with driveName:',
-    driveName,
-    'options:',
-    options
-  );
-
   const response = await requestAPI<any>(
     'drives/' + driveName + '/' + options.path,
     'GET'
   );
+
   // checking if we are dealing with a directory or a file
   const isDir: boolean = response.data.length !== undefined;
 
   if (response.data) {
     // listing the contents of a directory
     if (isDir) {
-      console.log('debug: isDir:', isDir);
-
       const fileList: IContentsList = {};
 
       response.data.forEach((row: any) => {
@@ -157,8 +149,6 @@ export async function getContents(
     }
     // getting the contents of a file
     else {
-      console.log('debug: isFile:');
-
       const [fileType, fileMimeType, fileFormat] = getFileType(
         PathExt.extname(PathExt.basename(options.path)),
         options.registeredFileTypes
