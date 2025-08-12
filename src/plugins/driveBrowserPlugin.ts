@@ -199,8 +199,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       statusBar.registerStatusItem('driveBrowserStatus', {
         item: driveStatusWidget,
         align: 'right',
-        rank: 500,
-        isActive: () => true
+        rank: 500
       });
 
       // Item/dir being opened
@@ -210,9 +209,10 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
         driveStatusWidget.setLoading(path, type);
       });
 
-      const doneLoading = (_: any, args: any) => {
+      const doneLoading = () => {
         driveStatusWidget.setLoaded();
       };
+
       // Item done opening
       docWidgetOpener.opened.connect(doneLoading);
 
