@@ -47,8 +47,8 @@ class DriveStatusWidget extends Widget {
   constructor() {
     super();
     this.node.classList.add(
-      'jp-drive-status-widget',
-      'jp-drive-status-loading',
+      'drive-status-widget',
+      'drive-status-loading',
       'lm-mod-hidden'
     );
 

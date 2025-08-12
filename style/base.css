@@ -164,7 +164,7 @@ li {
 }
 
 /* Status bar widget styling */
-.jp-drive-status-widget {
+.drive-status-widget {
   font-size: 12px;
   font-weight: 500;
   color: var(--jp-ui-font-color1);
@@ -175,17 +175,17 @@ li {
   transition: all 0.2s ease;
 }
 
-.jp-drive-status-widget:hover {
+.drive-status-widget:hover {
   background-color: var(--jp-layout-color3);
 }
 
-.jp-drive-status-error {
+.drive-status-error {
   color: var(--jp-error-color1);
   background-color: var(--jp-error-color0);
   border-color: var(--jp-error-color1);
 }
 
-.jp-drive-status-loading {
+.drive-status-loading {
   color: var(--jp-ui-font-color1);
   background-color: var(--jp-layout-color3);
   animation: pulse 1.5s ease-in-out infinite;
