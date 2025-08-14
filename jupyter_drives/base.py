@@ -123,13 +123,6 @@ class DrivesConfig(Configurable):
                 self.provider = os.environ["JP_DRIVES_PROVIDER"]
             return
 
-        s = boto3.Session()
-        c = s.get_credentials()
-        self.access_key_id = c.access_key
-        self.secret_access_key = c.secret_key
-        self.region_name = s.region_name
-        self.session_token = c.token
-
     def check_excluded_and_included_drives(self):
         # list of drives to exclude was provided
         if len(self.excluded_drives) != 0: 
