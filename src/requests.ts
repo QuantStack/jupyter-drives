@@ -102,6 +102,7 @@ export async function getContents(
     'drives/' + driveName + '/' + options.path,
     'GET'
   );
+
   // checking if we are dealing with a directory or a file
   const isDir: boolean = response.data.length !== undefined;
 

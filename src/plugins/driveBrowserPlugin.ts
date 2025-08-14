@@ -5,6 +5,8 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
+import { IDocumentWidgetOpener } from '@jupyterlab/docmanager';
+import { IStatusBar } from '@jupyterlab/statusbar';
 import {
   IFileBrowserFactory,
   FileBrowser,
@@ -39,6 +41,67 @@ import { setListingLimit } from '../requests';
 import { CommandIDs } from '../token';
 
 /**
+ * Status bar widget for displaying drive information
+ */
+class DriveStatusWidget extends Widget {
+  constructor() {
+    super();
+    this.node.classList.add(
+      'drive-status-widget',
+      'drive-status-loading',
+      'lm-mod-hidden'
+    );
+
+    this._textSpan = document.createElement('span');
+    this._textSpan.textContent = '';
+    this.node.appendChild(this._textSpan);
+
+    this._isLoading = false;
+  }
+
+  updateStatus(text: string) {
+    this._textSpan.textContent = text;
+  }
+
+  /**
+   * Update status when loading a directory or file
+   */
+  setLoading(path: string, type: string) {
+    this._isLoading = true;
+
+    if (type === 'directory') {
+      const displayPath =
+        path === '' ? 'Root' : path.split('/').pop() || 'Directory';
+      this.updateStatus(`Opening: ${displayPath}`);
+    } else {
+      const fileName = path.split('/').pop() || 'File';
+      this.updateStatus(`Opening: ${fileName}`);
+    }
+    this.removeClass('lm-mod-hidden');
+  }
+
+  /**
+   * Clear loading state and show current status
+   */
+  setLoaded(path?: string) {
+    this._isLoading = false;
+    this.addClass('lm-mod-hidden');
+
+    this.updateStatus('');
+  }
+
+  /**
+   * Check if currently loading
+   */
+  get isLoading(): boolean {
+    return this._isLoading;
+  }
+
+  private _isLoading: boolean;
+  private _textSpan: HTMLSpanElement;
+}
+
+/**
  * The file browser factory ID.
  */
 const FILE_BROWSER_FACTORY = 'DriveBrowser';
@@ -69,13 +132,15 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     IFileBrowserFactory,
     IToolbarWidgetRegistry,
     ISettingRegistry,
-    ITranslator
+    ITranslator,
+    IDocumentWidgetOpener
   ],
   optional: [
     IRouter,
     JupyterFrontEnd.ITreeResolver,
     ILabShell,
-    ILayoutRestorer
+    ILayoutRestorer,
+    IStatusBar
   ],
   activate: async (
     app: JupyterFrontEnd,
@@ -83,10 +148,12 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     toolbarRegistry: IToolbarWidgetRegistry,
     settingsRegistry: ISettingRegistry,
     translator: ITranslator,
+    docWidgetOpener: IDocumentWidgetOpener,
     router: IRouter | null,
     tree: JupyterFrontEnd.ITreeResolver | null,
     labShell: ILabShell | null,
-    restorer: ILayoutRestorer | null
+    restorer: ILayoutRestorer | null,
+    statusBar: IStatusBar | null
   ): Promise<void> => {
     console.log(
       'JupyterLab extension jupyter-drives:drives-file-browser is activated!'
@@ -123,6 +190,34 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     app.shell.add(driveBrowser, 'left', { rank: 102, type: 'File Browser' });
     if (restorer) {
       restorer.add(driveBrowser, 'drive-file-browser');
+    }
+
+    // Register status bar widget
+    if (statusBar) {
+      const driveStatusWidget = new DriveStatusWidget();
+
+      statusBar.registerStatusItem('driveBrowserStatus', {
+        item: driveStatusWidget,
+        align: 'right',
+        rank: 500
+      });
+
+      // Item/dir being opened
+      //@ts-expect-error listing is protected
+      driveBrowser.listing.onItemOpened.connect((_, args) => {
+        const { path, type } = args;
+        driveStatusWidget.setLoading(path, type);
+      });
+
+      const doneLoading = () => {
+        driveStatusWidget.setLoaded();
+      };
+
+      // Item done opening
+      docWidgetOpener.opened.connect(doneLoading);
+
+      // Directory done opening
+      driveBrowser.model.pathChanged.connect(doneLoading);
     }
 
     const uploader = new Uploader({ model: driveBrowser.model, translator });
