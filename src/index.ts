@@ -2,13 +2,15 @@ import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 import {
   driveFileBrowser,
   openDriveDialogPlugin,
-  launcherPlugin
+  launcherPlugin,
+  sessionContextPatch
 } from './plugins';
 
 const plugins: JupyterFrontEndPlugin<any>[] = [
   driveFileBrowser,
   openDriveDialogPlugin,
-  launcherPlugin
+  launcherPlugin,
+  sessionContextPatch
 ];
 
 export default plugins;
