@@ -37,7 +37,7 @@ import { Widget } from '@lumino/widgets';
 
 import { driveBrowserIcon, removeIcon } from '../icons';
 import { Drive } from '../contents';
-import { setListingLimit } from '../requests';
+import { getContents, setListingLimit } from '../requests';
 import { CommandIDs } from '../token';
 
 /**
@@ -696,6 +696,82 @@ namespace Private {
       selector:
         '#drive-file-browser.jp-SidePanel .jp-DirListing-content .jp-DirListing-item[data-isdir]',
       rank: 110
+    });
+
+    app.commands.addCommand(CommandIDs.copyToFilebrowser, {
+      isVisible: () => {
+        // So long as this command only handles one file at time, don't show it
+        // if multiple files are selected.
+        return (
+          !!tracker.currentWidget &&
+          Array.from(tracker.currentWidget.selectedItems()).length === 1 &&
+          browser.model.path !== 's3:'
+        );
+      },
+      isEnabled: () => {
+        return (
+          !!tracker.currentWidget &&
+          tracker.currentWidget?.selectedItems().next()!.value &&
+          tracker.currentWidget?.selectedItems().next()!.value.type !==
+            'directory'
+        );
+      },
+      execute: async () => {
+        let currentPath: string = tracker.currentWidget?.selectedItems().next()
+          .value.path;
+        Clipboard.copyToSystem(currentPath);
+      },
+      label: 'Copy to Filebrowser',
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.copyToFilebrowser,
+      selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
+      rank: 105
+    });
+
+    app.commands.addCommand(CommandIDs.pasteToFilebrowser, {
+      isVisible: () => {
+        return (
+          !!factory.tracker.currentWidget &&
+          factory.tracker.currentWidget!.id === 'filebrowser'
+        );
+      },
+      execute: async (args: any) => {
+        // Get path from clipboard.
+        let currentPath = await navigator.clipboard.readText();
+        // Remove leading drive suffix.
+        currentPath = currentPath.substring(currentPath.indexOf(':') + 1);
+        const driveName = currentPath.substring(0, currentPath.indexOf('/'));
+        // Remove drive name.
+        currentPath = currentPath.substring(currentPath.indexOf('/') + 1);
+        const fileName = PathExt.basename(currentPath);
+
+        const filebrowser = factory.tracker.find(fb => fb.id === 'filebrowser');
+
+        // Save new file.
+        const toDir = factory.tracker.currentWidget!.model.path;
+        app.serviceManager.contents.save(PathExt.join(toDir, fileName), {
+          type: 'file',
+          format: 'text',
+          content: (
+            await getContents(driveName, {
+              path: currentPath,
+              registeredFileTypes: drive.registeredFileTypes
+            })
+          ).response.data.content
+        });
+        await filebrowser?.model.refresh();
+      },
+      label: 'Paste from Drive',
+      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+    });
+
+    app.contextMenu.addItem({
+      command: CommandIDs.pasteToFilebrowser,
+      selector: '.jp-FileBrowser-listing',
+      rank: 105
     });
   }
 }
