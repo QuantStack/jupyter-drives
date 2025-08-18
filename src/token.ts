@@ -19,6 +19,8 @@ export namespace CommandIDs {
   export const copyPath = 'drives:copy-path';
   export const excludeDrive = 'drives:exclude-drive';
   export const includeDrive = 'drives:include-drive';
+  export const copyToFilebrowser = 'drives:copy-to-filebrowser';
+  export const pasteToFilebrowser = 'drives:paste-to-filebrowser';
 }
 
 /**
