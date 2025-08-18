@@ -756,7 +756,11 @@ namespace Private {
         const toDir = factory.tracker.currentWidget!.model.path;
         app.serviceManager.contents.save(PathExt.join(toDir, fileName), {
           type: 'file',
-          format: 'text',
+          format:
+            PathExt.extname(fileName) === '.txt' ||
+            PathExt.extname(fileName) === '.ipynb'
+              ? 'text'
+              : 'base64',
           content: (
             await getContents(driveName, {
               path: currentPath,
