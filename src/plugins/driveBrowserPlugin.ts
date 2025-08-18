@@ -29,7 +29,9 @@ import {
   newFolderIcon,
   fileIcon,
   notebookIcon,
-  editIcon
+  editIcon,
+  copyIcon,
+  pasteIcon
 } from '@jupyterlab/ui-components';
 import { PageConfig, PathExt } from '@jupyterlab/coreutils';
 import { CommandRegistry } from '@lumino/commands';
@@ -722,13 +724,13 @@ namespace Private {
         Clipboard.copyToSystem(currentPath);
       },
       label: 'Copy to Filebrowser',
-      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+      icon: copyIcon.bindprops({ stylesheet: 'menuItem' })
     });
 
     app.contextMenu.addItem({
       command: CommandIDs.copyToFilebrowser,
       selector: '#drive-file-browser.jp-SidePanel .jp-DirListing-content',
-      rank: 105
+      rank: 10
     });
 
     app.commands.addCommand(CommandIDs.pasteToFilebrowser, {
@@ -765,13 +767,13 @@ namespace Private {
         await filebrowser?.model.refresh();
       },
       label: 'Paste from Drive',
-      icon: driveBrowserIcon.bindprops({ stylesheet: 'menuItem' })
+      icon: pasteIcon.bindprops({ stylesheet: 'menuItem' })
     });
 
     app.contextMenu.addItem({
       command: CommandIDs.pasteToFilebrowser,
       selector: '.jp-FileBrowser-listing',
-      rank: 105
+      rank: 10
     });
   }
 }
