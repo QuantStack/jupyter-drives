@@ -2,6 +2,7 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Signal, ISignal } from '@lumino/signaling';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 import { PathExt } from '@jupyterlab/coreutils';
+import { Notification } from '@jupyterlab/apputils';
 
 import {
   extractCurrentDrive,
@@ -186,15 +187,26 @@ export class Drive implements Contents.IDrive {
    */
   async getDownloadUrl(path: string): Promise<string> {
     let link = '';
-    if (path !== '') {
-      const currentDrive = extractCurrentDrive(path, this._drivesList);
+    let warning = '';
+    let error = '';
+    try {
+      if (path !== '') {
+        const currentDrive = extractCurrentDrive(path, this._drivesList);
+        link = await presignedLink(currentDrive.name, {
+          path: formatPath(path)
+        });
+      } else {
+        // download URL for drive not supported
+        warning = 'Operation not supported.';
+      }
+    } catch (err) {
+      error = 'Download failed: ' + err;
+    }
 
-      link = await presignedLink(currentDrive.name, {
-        path: formatPath(path)
+    if (error || warning) {
+      Notification.emit(warning ?? error, warning ? 'warning' : 'error', {
+        autoClose: 5000
       });
-    } else {
-      // download URL for drive not supported
-      console.warn('Operation not supported.');
     }
 
     return link;
@@ -215,53 +227,62 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options?: Contents.IFetchOptions
   ): Promise<Contents.IModel> {
+    let error: string = '';
     let data: Contents.IModel;
 
     if (localPath !== '') {
       const currentDrive = extractCurrentDrive(localPath, this._drivesList);
-
       // when accessed the first time, mount drive
       if (currentDrive.mounted === false) {
         try {
           const driveName = currentDrive.name;
-          await mountDrive(driveName, {
+          const mounting = await mountDrive(driveName, {
             provider: currentDrive.provider
           });
-          this._drivesList.filter(x => x.name === driveName)[0].mounted = true;
+          if (mounting && mounting.error) {
+            error = mounting.error.message;
+          } else {
+            this._drivesList.filter(x => x.name === driveName)[0].mounted =
+              true;
+          }
         } catch (e) {
-          // it will give an error if drive is already mounted
+          // it will give an error if drive is already mounted.
         }
       }
 
-      const currentPath = formatPath(localPath);
-      const result = await getContents(currentDrive.name, {
-        path: currentPath,
-        registeredFileTypes: this._registeredFileTypes
-      });
+      try {
+        const currentPath = formatPath(localPath);
+        const result = await getContents(currentDrive.name, {
+          path: currentPath,
+          registeredFileTypes: this._registeredFileTypes
+        });
 
-      data = {
-        name: result.isDir
-          ? currentPath
-            ? PathExt.basename(currentPath)
-            : currentDrive.name
-          : PathExt.basename(currentPath),
-        path: PathExt.join(
-          currentDrive.name,
-          result.isDir
+        data = {
+          name: result.isDir
             ? currentPath
-              ? currentPath + '/'
-              : ''
-            : result.response.data.path
-        ),
-        last_modified: result.isDir ? '' : result.response.data.last_modified,
-        created: '',
-        content: result.isDir ? result.files : result.response.data.content,
-        format: result.isDir ? 'json' : result.format!,
-        mimetype: result.isDir ? '' : result.mimetype!,
-        size: result.isDir ? undefined : result.response.data.size,
-        writable: true,
-        type: result.isDir ? 'directory' : result.type!
-      };
+              ? PathExt.basename(currentPath)
+              : currentDrive.name
+            : PathExt.basename(currentPath),
+          path: PathExt.join(
+            currentDrive.name,
+            result.isDir
+              ? currentPath
+                ? currentPath + '/'
+                : ''
+              : result.response.data.path
+          ),
+          last_modified: result.isDir ? '' : result.response.data.last_modified,
+          created: '',
+          content: result.isDir ? result.files : result.response.data.content,
+          format: result.isDir ? 'json' : result.format!,
+          mimetype: result.isDir ? '' : result.mimetype!,
+          size: result.isDir ? undefined : result.response.data.size,
+          writable: true,
+          type: result.isDir ? 'directory' : result.type!
+        };
+      } catch (err) {
+        error = 'Failed retrieving contents: ' + err;
+      }
     } else {
       // retriving list of contents from root
       // in our case: list available drives
@@ -283,11 +304,8 @@ export class Drive implements Contents.IDrive {
             type: 'directory'
           });
         }
-      } catch (error) {
-        console.log(
-          'Failed loading available drives list, with error: ',
-          error
-        );
+      } catch (err) {
+        error = 'Failed loading available drives list: ' + err;
       }
 
       data = {
@@ -304,8 +322,14 @@ export class Drive implements Contents.IDrive {
       };
     }
 
-    Contents.validateContentsModel(data);
-    return data;
+    if (error) {
+      Notification.emit(error, 'error', {
+        autoClose: 5000
+      });
+    }
+
+    Contents.validateContentsModel(data!);
+    return data!;
   }
 
   /**
@@ -332,68 +356,82 @@ export class Drive implements Contents.IDrive {
       type: ''
     };
     const path = options.path ?? '';
+    let error = '';
+    let warning = '';
 
     if (path !== '') {
-      const currentDrive = extractCurrentDrive(path, this._drivesList);
+      try {
+        const currentDrive = extractCurrentDrive(path, this._drivesList);
 
-      // eliminate drive name from path
-      const relativePath =
-        path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
+        // eliminate drive name from path
+        const relativePath =
+          path.indexOf('/') !== -1 ? path.substring(path.indexOf('/') + 1) : '';
 
-      // get current list of contents of drive
-      const result = await getContents(currentDrive.name, {
-        path: relativePath,
-        registeredFileTypes: this._registeredFileTypes
-      });
-
-      const old_data: Contents.IModel = {
-        name: relativePath ? PathExt.basename(relativePath) : currentDrive.name,
-        path: PathExt.join(
-          currentDrive.name,
-          relativePath ? relativePath + '/' : ''
-        ),
-        last_modified: '',
-        created: '',
-        content: result.files,
-        format: 'json'!,
-        mimetype: '',
-        size: undefined,
-        writable: true,
-        type: 'directory'
-      };
-
-      if (options.type !== undefined) {
-        // get incremented untitled name
-        const name = this.incrementUntitledName(old_data, options);
-        const currentPath = relativePath
-          ? PathExt.join(relativePath, name)
-          : name;
-
-        const result = await createObject(currentDrive.name, {
-          name: name,
-          path: currentPath,
-          type: options.type,
+        // get current list of contents of drive
+        const result = await getContents(currentDrive.name, {
+          path: relativePath,
           registeredFileTypes: this._registeredFileTypes
         });
 
-        data = {
-          name: name,
-          path: PathExt.join(currentDrive.name, currentPath),
-          last_modified: result.response.data.last_modified,
-          created: result.response.data.last_modified,
-          content: result.response.data.content,
-          format: result.format,
-          mimetype: result.mimetype,
-          size: result.response.data.size,
+        const old_data: Contents.IModel = {
+          name: relativePath
+            ? PathExt.basename(relativePath)
+            : currentDrive.name,
+          path: PathExt.join(
+            currentDrive.name,
+            relativePath ? relativePath + '/' : ''
+          ),
+          last_modified: '',
+          created: '',
+          content: result.files,
+          format: 'json'!,
+          mimetype: '',
+          size: undefined,
           writable: true,
-          type: result.type
+          type: 'directory'
         };
-      } else {
-        console.warn('Type of new element is undefined');
+
+        if (options.type !== undefined) {
+          // get incremented untitled name
+          const name = this.incrementUntitledName(old_data, options);
+          const currentPath = relativePath
+            ? PathExt.join(relativePath, name)
+            : name;
+
+          const result = await createObject(currentDrive.name, {
+            name: name,
+            path: currentPath,
+            type: options.type,
+            registeredFileTypes: this._registeredFileTypes
+          });
+
+          data = {
+            name: name,
+            path: PathExt.join(currentDrive.name, currentPath),
+            last_modified: result.response.data.last_modified,
+            created: result.response.data.last_modified,
+            content: result.response.data.content,
+            format: result.format,
+            mimetype: result.mimetype,
+            size: result.response.data.size,
+            writable: true,
+            type: result.type
+          };
+        } else {
+          warning = 'Type of new element is undefined';
+        }
+      } catch (err) {
+        error = 'Failed to create object: ' + err;
       }
     } else {
       // create new element at root would mean creating a new drive
-      console.warn('Operation not supported.');
+      warning = 'Operation not supported.';
+    }
+
+    if (error || warning) {
+      Notification.emit(warning ?? error, warning ? 'warning' : 'error', {
+        autoClose: 5000
+      });
     }
 
     Contents.validateContentsModel(data);
@@ -467,9 +505,15 @@ export class Drive implements Contents.IDrive {
   async delete(localPath: string): Promise<void> {
     const currentDrive = extractCurrentDrive(localPath, this._drivesList);
 
-    await deleteObjects(currentDrive.name, {
-      path: formatPath(localPath)
-    });
+    try {
+      await deleteObjects(currentDrive.name, {
+        path: formatPath(localPath)
+      });
+    } catch (err) {
+      Notification.emit('Failed deleting object: ' + err, 'error', {
+        autoClose: 5000
+      });
+    }
 
     this._fileChanged.emit({
       type: 'delete',
@@ -496,6 +540,8 @@ export class Drive implements Contents.IDrive {
     newLocalPath: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
+    let error = '';
+    let warning = '';
     let data: Contents.IModel = {
       name: '',
       path: '',
@@ -509,54 +555,69 @@ export class Drive implements Contents.IDrive {
       type: ''
     };
     if (oldLocalPath !== '') {
-      const currentDrive = extractCurrentDrive(oldLocalPath, this._drivesList);
-
-      // eliminate drive name from path
-      const relativePath = formatPath(oldLocalPath);
-      const newRelativePath = formatPath(newLocalPath);
-
-      // extract new file name
-      let newFileName = PathExt.basename(newRelativePath);
-
       try {
-        // check if object with chosen name already exists
-        await checkObject(currentDrive.name, {
-          path: newRelativePath
-        });
-        newFileName = await this.incrementName(
-          newRelativePath,
-          currentDrive.name
+        const currentDrive = extractCurrentDrive(
+          oldLocalPath,
+          this._drivesList
         );
-      } catch (error) {
-        // HEAD request failed for this file name, continue, as name doesn't already exist.
-      } finally {
-        const result = await renameObjects(currentDrive.name, {
-          path: relativePath,
-          newPath: newRelativePath,
-          newFileName: newFileName,
-          registeredFileTypes: this._registeredFileTypes
-        });
 
-        data = {
-          name: newFileName,
-          path: PathExt.join(currentDrive.name, result.formattedNewPath!),
-          last_modified:
-            result.response.length > 0
-              ? result.response.data.last_modified
-              : '',
-          created: '',
-          content: PathExt.extname(newFileName) !== '' ? null : [], // TODO: add dir check
-          format: result.format!,
-          mimetype: result.mimetype!,
-          size:
-            result.response.length > 0 ? result.response.data.size : undefined,
-          writable: true,
-          type: result.type!
-        };
+        // eliminate drive name from path
+        const relativePath = formatPath(oldLocalPath);
+        const newRelativePath = formatPath(newLocalPath);
+
+        // extract new file name
+        let newFileName = PathExt.basename(newRelativePath);
+
+        try {
+          // check if object with chosen name already exists
+          await checkObject(currentDrive.name, {
+            path: newRelativePath
+          });
+          newFileName = await this.incrementName(
+            newRelativePath,
+            currentDrive.name
+          );
+        } catch (error) {
+          // HEAD request failed for this file name, continue, as name doesn't already exist.
+        } finally {
+          const result = await renameObjects(currentDrive.name, {
+            path: relativePath,
+            newPath: newRelativePath,
+            newFileName: newFileName,
+            registeredFileTypes: this._registeredFileTypes
+          });
+
+          data = {
+            name: newFileName,
+            path: PathExt.join(currentDrive.name, result.formattedNewPath!),
+            last_modified:
+              result.response.length > 0
+                ? result.response.data.last_modified
+                : '',
+            created: '',
+            content: PathExt.extname(newFileName) !== '' ? null : [], // TODO: add dir check
+            format: result.format!,
+            mimetype: result.mimetype!,
+            size:
+              result.response.length > 0
+                ? result.response.data.size
+                : undefined,
+            writable: true,
+            type: result.type!
+          };
+        }
+      } catch (err) {
+        error = 'Failed renmaing object: ' + err;
       }
     } else {
       // create new element at root would mean modifying a drive
-      console.warn('Operation not supported.');
+      warning = 'Operation not supported.';
+    }
+
+    if (error || warning) {
+      Notification.emit(warning ?? error, warning ? 'warning' : 'error', {
+        autoClose: 5000
+      });
     }
 
     Contents.validateContentsModel(data);
@@ -619,6 +680,8 @@ export class Drive implements Contents.IDrive {
     localPath: string,
     options: Partial<Contents.IModel> = {}
   ): Promise<Contents.IModel> {
+    let error = '';
+    let warning = '';
     let data: Contents.IModel = {
       name: '',
       path: '',
@@ -632,30 +695,40 @@ export class Drive implements Contents.IDrive {
       type: ''
     };
     if (localPath !== '') {
-      const currentDrive = extractCurrentDrive(localPath, this._drivesList);
-      const currentPath = formatPath(localPath);
+      try {
+        const currentDrive = extractCurrentDrive(localPath, this._drivesList);
+        const currentPath = formatPath(localPath);
 
-      const result = await saveObject(currentDrive.name, {
-        path: currentPath,
-        param: options,
-        registeredFileTypes: this._registeredFileTypes
-      });
+        const result = await saveObject(currentDrive.name, {
+          path: currentPath,
+          param: options,
+          registeredFileTypes: this._registeredFileTypes
+        });
 
-      data = {
-        name: currentPath,
-        path: PathExt.join(currentDrive.name, currentPath),
-        last_modified: result.response.data.last_modified as string,
-        created: result.response.data.last_modified as string,
-        content: result.response.data.content,
-        format: result.format,
-        mimetype: result.mimetype,
-        size: result.response.data.size,
-        writable: true,
-        type: result.type
-      };
+        data = {
+          name: currentPath,
+          path: PathExt.join(currentDrive.name, currentPath),
+          last_modified: result.response.data.last_modified as string,
+          created: result.response.data.last_modified as string,
+          content: result.response.data.content,
+          format: result.format,
+          mimetype: result.mimetype,
+          size: result.response.data.size,
+          writable: true,
+          type: result.type
+        };
+      } catch (err) {
+        error = 'Failed saving object: ' + err;
+      }
     } else {
       // create new element at root would mean modifying a drive
-      console.warn('Operation not supported.');
+      warning = 'Operation not supported.';
+    }
+
+    if (error || warning) {
+      Notification.emit(warning ?? error, warning ? 'warning' : 'error', {
+        autoClose: 5000
+      });
     }
 
     Contents.validateContentsModel(data);
@@ -719,6 +792,8 @@ export class Drive implements Contents.IDrive {
     toDir: string,
     options: Contents.ICreateOptions = {}
   ): Promise<Contents.IModel> {
+    let warning = '';
+    let error = '';
     let data: Contents.IModel = {
       name: '',
       path: '',
@@ -732,43 +807,53 @@ export class Drive implements Contents.IDrive {
       type: ''
     };
     if (path !== '') {
-      const currentDrive = extractCurrentDrive(path, this._drivesList);
-      const toDrive = extractCurrentDrive(toDir, this._drivesList);
+      try {
+        const currentDrive = extractCurrentDrive(path, this._drivesList);
+        const toDrive = extractCurrentDrive(toDir, this._drivesList);
 
-      // eliminate drive name from path
-      const relativePath = formatPath(path);
-      const toRelativePath = formatPath(toDir);
+        // eliminate drive name from path
+        const relativePath = formatPath(path);
+        const toRelativePath = formatPath(toDir);
 
-      // construct new file or directory name for the copy
-      const newFileName = await this.incrementCopyName(
-        relativePath,
-        toRelativePath,
-        toDrive.name
-      );
+        // construct new file or directory name for the copy
+        const newFileName = await this.incrementCopyName(
+          relativePath,
+          toRelativePath,
+          toDrive.name
+        );
 
-      const result = await copyObjects(currentDrive.name, {
-        path: relativePath,
-        toPath: toRelativePath,
-        newFileName: newFileName,
-        toDrive: toDrive.name,
-        registeredFileTypes: this._registeredFileTypes
-      });
+        const result = await copyObjects(currentDrive.name, {
+          path: relativePath,
+          toPath: toRelativePath,
+          newFileName: newFileName,
+          toDrive: toDrive.name,
+          registeredFileTypes: this._registeredFileTypes
+        });
 
-      data = {
-        name: newFileName,
-        path: PathExt.join(currentDrive.name, result.formattedNewPath!),
-        last_modified: result.response!.data.last_modified,
-        created: '',
-        content: PathExt.extname(newFileName) !== '' ? null : [], // TODO: add dir check
-        format: result.format! as Contents.FileFormat,
-        mimetype: result.mimetype!,
-        size: result.response!.data.size,
-        writable: true,
-        type: result.type!
-      };
+        data = {
+          name: newFileName,
+          path: PathExt.join(currentDrive.name, result.formattedNewPath!),
+          last_modified: result.response!.data.last_modified,
+          created: '',
+          content: PathExt.extname(newFileName) !== '' ? null : [], // TODO: add dir check
+          format: result.format! as Contents.FileFormat,
+          mimetype: result.mimetype!,
+          size: result.response!.data.size,
+          writable: true,
+          type: result.type!
+        };
+      } catch (err) {
+        error = 'Failed copying object: ' + err;
+      }
     } else {
       // create new element at root would mean modifying a drive
-      console.warn('Operation not supported.');
+      warning = 'Operation not supported.';
+    }
+
+    if (error || warning) {
+      Notification.emit(warning ?? error, warning ? 'warning' : 'error', {
+        autoClose: 5000
+      });
     }
 
     this._fileChanged.emit({
@@ -791,9 +876,15 @@ export class Drive implements Contents.IDrive {
     newDriveName: string,
     region: string
   ): Promise<Contents.IModel> {
-    await createDrive(newDriveName, {
-      location: region
-    });
+    try {
+      await createDrive(newDriveName, {
+        location: region
+      });
+    } catch (err) {
+      Notification.emit('Failed creating drive: ' + err, 'error', {
+        autoClose: 5000
+      });
+    }
 
     const data: Contents.IModel = {
       name: newDriveName,
@@ -814,7 +905,6 @@ export class Drive implements Contents.IDrive {
       oldValue: null,
       newValue: data
     });
-
     return data;
   }
 
@@ -826,7 +916,13 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async addPublicDrive(driveUrl: string): Promise<Contents.IModel> {
-    await addPublicDrive(driveUrl);
+    try {
+      await addPublicDrive(driveUrl);
+    } catch (err) {
+      Notification.emit('Failed adding drive: ' + err, 'error', {
+        autoClose: 5000
+      });
+    }
 
     const data: Contents.IModel = {
       name: driveUrl,
@@ -847,7 +943,6 @@ export class Drive implements Contents.IDrive {
       oldValue: null,
       newValue: data
     });
-
     return data;
   }
 
@@ -862,7 +957,13 @@ export class Drive implements Contents.IDrive {
     driveUrl: string,
     location: string
   ): Promise<Contents.IModel> {
-    await addExternalDrive(driveUrl, location);
+    try {
+      await addExternalDrive(driveUrl, location);
+    } catch (err) {
+      Notification.emit('Failed adding drive: ' + err, 'error', {
+        autoClose: 5000
+      });
+    }
 
     const data: Contents.IModel = {
       name: driveUrl,
@@ -883,7 +984,6 @@ export class Drive implements Contents.IDrive {
       oldValue: null,
       newValue: data
     });
-
     return data;
   }
 
@@ -895,7 +995,13 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async excludeDrive(driveName: string): Promise<Contents.IModel> {
-    await excludeDrive(driveName);
+    try {
+      await excludeDrive(driveName);
+    } catch (err) {
+      Notification.emit('Failed removing drive: ' + err, 'error', {
+        autoClose: 5000
+      });
+    }
 
     const data: Contents.IModel = {
       name: driveName,
@@ -916,7 +1022,6 @@ export class Drive implements Contents.IDrive {
       oldValue: data,
       newValue: null
     });
-
     return data;
   }
 
@@ -928,7 +1033,13 @@ export class Drive implements Contents.IDrive {
    * @returns A promise which resolves with the contents model.
    */
   async includeDrive(driveName: string): Promise<Contents.IModel> {
-    await includeDrive(driveName);
+    try {
+      await includeDrive(driveName);
+    } catch (err) {
+      Notification.emit('Failed adding drive: ' + err, 'error', {
+        autoClose: 5000
+      });
+    }
 
     const data: Contents.IModel = {
       name: driveName,
@@ -949,7 +1060,6 @@ export class Drive implements Contents.IDrive {
       oldValue: null,
       newValue: data
     });
-
     return data;
   }
 
