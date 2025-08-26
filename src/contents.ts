@@ -28,6 +28,7 @@ import {
   includeDrive,
   addExternalDrive
 } from './requests';
+import { DrivesResponseError } from './handler';
 
 export class Drive implements Contents.IDrive {
   /**
@@ -200,7 +201,7 @@ export class Drive implements Contents.IDrive {
         warning = 'Operation not supported.';
       }
     } catch (err) {
-      error = 'Download failed: ' + err;
+      error = (err as DrivesResponseError).message;
     }
 
     if (error || warning) {
@@ -281,7 +282,7 @@ export class Drive implements Contents.IDrive {
           type: result.isDir ? 'directory' : result.type!
         };
       } catch (err) {
-        error = 'Failed retrieving contents: ' + err;
+        error = (err as DrivesResponseError).message;
       }
     } else {
       // retriving list of contents from root
@@ -305,7 +306,7 @@ export class Drive implements Contents.IDrive {
           });
         }
       } catch (err) {
-        error = 'Failed loading available drives list: ' + err;
+        error = (err as DrivesResponseError).message;
       }
 
       data = {
@@ -421,7 +422,7 @@ export class Drive implements Contents.IDrive {
           warning = 'Type of new element is undefined';
         }
       } catch (err) {
-        error = 'Failed to create object: ' + err;
+        error = (err as DrivesResponseError).message;
       }
     } else {
       // create new element at root would mean creating a new drive
@@ -510,7 +511,7 @@ export class Drive implements Contents.IDrive {
         path: formatPath(localPath)
       });
     } catch (err) {
-      Notification.emit('Failed deleting object: ' + err, 'error', {
+      Notification.emit((err as DrivesResponseError).message, 'error', {
         autoClose: 5000
       });
     }
@@ -607,7 +608,7 @@ export class Drive implements Contents.IDrive {
           };
         }
       } catch (err) {
-        error = 'Failed renmaing object: ' + err;
+        error = (err as DrivesResponseError).message;
       }
     } else {
       // create new element at root would mean modifying a drive
@@ -718,7 +719,7 @@ export class Drive implements Contents.IDrive {
           type: result.type
         };
       } catch (err) {
-        error = 'Failed saving object: ' + err;
+        error = (err as DrivesResponseError).message;
       }
     } else {
       // create new element at root would mean modifying a drive
@@ -843,7 +844,7 @@ export class Drive implements Contents.IDrive {
           type: result.type!
         };
       } catch (err) {
-        error = 'Failed copying object: ' + err;
+        error = (err as DrivesResponseError).message;
       }
     } else {
       // create new element at root would mean modifying a drive
@@ -881,7 +882,7 @@ export class Drive implements Contents.IDrive {
         location: region
       });
     } catch (err) {
-      Notification.emit('Failed creating drive: ' + err, 'error', {
+      Notification.emit((err as DrivesResponseError).message, 'error', {
         autoClose: 5000
       });
     }
@@ -919,7 +920,7 @@ export class Drive implements Contents.IDrive {
     try {
       await addPublicDrive(driveUrl);
     } catch (err) {
-      Notification.emit('Failed adding drive: ' + err, 'error', {
+      Notification.emit((err as DrivesResponseError).message, 'error', {
         autoClose: 5000
       });
     }
@@ -960,7 +961,7 @@ export class Drive implements Contents.IDrive {
     try {
       await addExternalDrive(driveUrl, location);
     } catch (err) {
-      Notification.emit('Failed adding drive: ' + err, 'error', {
+      Notification.emit((err as DrivesResponseError).message, 'error', {
         autoClose: 5000
       });
     }
@@ -998,7 +999,7 @@ export class Drive implements Contents.IDrive {
     try {
       await excludeDrive(driveName);
     } catch (err) {
-      Notification.emit('Failed removing drive: ' + err, 'error', {
+      Notification.emit((err as DrivesResponseError).message, 'error', {
         autoClose: 5000
       });
     }
@@ -1036,7 +1037,7 @@ export class Drive implements Contents.IDrive {
     try {
       await includeDrive(driveName);
     } catch (err) {
-      Notification.emit('Failed adding drive: ' + err, 'error', {
+      Notification.emit((err as DrivesResponseError).message, 'error', {
         autoClose: 5000
       });
     }
