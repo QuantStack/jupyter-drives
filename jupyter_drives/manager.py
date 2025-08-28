@@ -487,7 +487,7 @@ class JupyterDrivesManager():
             if options_format == 'json':
                 formatted_content = json.dumps(content, indent=2)
                 formatted_content = formatted_content.encode("utf-8")
-            elif options_format == 'base64' and (content_format == 'base64' or content_type == 'PDF' or content_type == 'notebook'):
+            elif options_format == 'base64' and (content_format == 'base64' or (content_format == 'text' and content_type != 'PDF') or content_type == 'PDF' or content_type == 'notebook'):
                 # transform base64 encoding to a UTF-8 byte array for saving or storing
                 byte_characters = base64.b64decode(content)
                 
