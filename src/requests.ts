@@ -197,7 +197,8 @@ export async function saveObject(
       content: options.param.content,
       options_format: options.param.format,
       content_format: fileFormat,
-      content_type: fileType
+      content_type: fileType,
+      options_chunk: options.param.chunk
     }
   );
 
