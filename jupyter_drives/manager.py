@@ -50,6 +50,7 @@ class JupyterDrivesManager():
         self._config = DrivesConfig(config=config)
         self._client = httpx.AsyncClient()
         self._content_managers = {}
+        self._multipartUploads = {};
         self._max_files_listed = 1025
         self._drives = None
         self._external_drives = {}
@@ -468,7 +469,7 @@ class JupyterDrivesManager():
         }
         return response
 
-    async def save_file(self, drive_name, path, content, options_format, content_format, content_type):
+    async def save_file(self, drive_name, path, content, options_format, content_format, content_type, options_chunk=None):
         """Save file with new content.
         
         Args:
@@ -487,6 +488,12 @@ class JupyterDrivesManager():
             if options_format == 'json':
                 formatted_content = json.dumps(content, indent=2)
                 formatted_content = formatted_content.encode("utf-8")
+
+                if options_chunk:
+                    if options_chunk == 1:
+                        self._multipartUploads[path] = '';
+                    
+                    self._multipartUploads[path] = json.dumps(self._multipartUploads[path] + formatted_content,indent = 2);
             elif options_format == 'base64' and (content_format == 'base64' or content_type == 'PDF' or content_type == 'notebook'):
                 # transform base64 encoding to a UTF-8 byte array for saving or storing
                 byte_characters = base64.b64decode(content)
@@ -499,23 +506,48 @@ class JupyterDrivesManager():
                 
                 # combine byte arrays
                 formatted_content = b"".join(byte_arrays)
+
+                if options_chunk:
+                    if options_chunk == 1:
+                        self._multipartUploads[path] = b""
+                    self._multipartUploads[path] = self._multipartUploads[path] + formatted_content
             elif options_format == 'text':
                 formatted_content = content.encode("utf-8")
+
+                if options_chunk: 
+                    if options_chunk == 1:
+                        self._multipartUploads[path] = b""
+                    self._multipartUploads[path] = self._multipartUploads[path] + formatted_content
             else:
                 formatted_content = content
+                if options_chunk:
+                    if options_chunk == 1:
+                        self._multipartUploads[path] = ""
+                    self._multipartUploads[path] = self._multipartUploads[path] + formatted_content;
 
-            if formatted_content is None or formatted_content == '':
-                formatted_content = b''
+            if options_chunk is None or options_chunk == -1:
+                if formatted_content is None or formatted_content == '':
+                    formatted_content = b''
 
-            await self._file_system._pipe(drive_name + '/' + path, formatted_content)
-            metadata = await self._file_system._info(drive_name + '/' + path)
+                await self._file_system._pipe(drive_name + '/' + path, self._multipartUploads[path] if options_chunk == -1 else formatted_content)
+                metadata = await self._file_system._info(drive_name + '/' + path)
 
-            data = {
-                "path": path,
-                "content": content,
-                "last_modified": metadata["LastModified"].isoformat(),
-                "size": metadata["size"]
-            }
+                data = {
+                    "path": path,
+                    "content": content,
+                    "last_modified": metadata["LastModified"].isoformat(),
+                    "size": metadata["size"]
+                }
+            else: 
+                data = {
+                    "path": path,
+                    "content": content,
+                    "last_modified": datetime.now().isoformat(),
+                    "size": 0
+                }
+            
+            if options_chunk == -1: 
+                del self._multipartUploads[path]
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
