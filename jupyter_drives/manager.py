@@ -319,6 +319,12 @@ class JupyterDrivesManager():
                 else:
                     region = await self._get_drive_location(drive_name)
             self._initialize_content_manager(drive_name, provider, region)
+
+            # check if user is able to access drive
+            check = await self._file_system._exists(drive_name + '/')
+            if check is False:
+                raise Exception('Failed to mount drive. Access denied.')
+
         except Exception as e:
             raise tornado.web.HTTPError(
             status_code= httpx.codes.BAD_REQUEST,
