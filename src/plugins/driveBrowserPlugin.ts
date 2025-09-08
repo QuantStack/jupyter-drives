@@ -19,7 +19,8 @@ import {
   IToolbarWidgetRegistry,
   setToolbar,
   showDialog,
-  Dialog
+  Dialog,
+  Notification
 } from '@jupyterlab/apputils';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import {
@@ -39,8 +40,9 @@ import { Widget } from '@lumino/widgets';
 
 import { driveBrowserIcon, removeIcon } from '../icons';
 import { Drive } from '../contents';
-import { getContents, setListingLimit } from '../requests';
+import { getContents, mountDrive, setListingLimit } from '../requests';
 import { CommandIDs } from '../token';
+import { DrivesResponseError } from '../handler';
 
 /**
  * Status bar widget for displaying drive information
@@ -535,9 +537,23 @@ namespace Private {
               ariaLabel: 'Add Drive'
             })
           ]
-        }).then(result => {
+        }).then(async result => {
           if (result.value) {
-            drive.addPublicDrive(result.value);
+            const response = await mountDrive(result.value, {
+              provider: 's3'
+            });
+            if (response && response.error) {
+              // Show error in case of failure.
+              Notification.emit(
+                (response.error as DrivesResponseError).message,
+                'error',
+                {
+                  autoClose: 5000
+                }
+              );
+            } else {
+              drive.addPublicDrive(result.value);
+            }
           }
         });
       },
