@@ -583,9 +583,24 @@ namespace Private {
               ariaLabel: 'Add Drive'
             })
           ]
-        }).then(result => {
+        }).then(async result => {
           if (result.value) {
-            drive.addExternalDrive(result.value[0], result.value[1]);
+            const response = await mountDrive(result.value[0], {
+              provider: 's3',
+              location: result.value[1]
+            });
+            if (response && response.error) {
+              // Show error in case of failure.
+              Notification.emit(
+                (response.error as DrivesResponseError).message,
+                'error',
+                {
+                  autoClose: 5000
+                }
+              );
+            } else {
+              drive.addExternalDrive(result.value[0], result.value[1]);
+            }
           }
         });
       },
