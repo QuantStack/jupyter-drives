@@ -2,6 +2,54 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.2.0
+
+([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.1.4...b5aa85afd3c3e9b7125d14185292e2f31c97feef))
+
+### Enhancements made
+
+- Update error handling logic for adding public or external drives [#109](https://github.com/QuantStack/jupyter-drives/pull/109) ([@DenisaCG](https://github.com/DenisaCG))
+- Add support for multipart uploads [#105](https://github.com/QuantStack/jupyter-drives/pull/105) ([@DenisaCG](https://github.com/DenisaCG))
+- Set up the error handling UI [#103](https://github.com/QuantStack/jupyter-drives/pull/103) ([@DenisaCG](https://github.com/DenisaCG))
+- Add logic to copy files from the `DrivesBrowser` to the `FileBrowser` [#100](https://github.com/QuantStack/jupyter-drives/pull/100) ([@DenisaCG](https://github.com/DenisaCG))
+- Change extension icon to a bucket [#99](https://github.com/QuantStack/jupyter-drives/pull/99) ([@gjmooney](https://github.com/gjmooney))
+- Add status widget for loading indicator [#96](https://github.com/QuantStack/jupyter-drives/pull/96) ([@gjmooney](https://github.com/gjmooney))
+- Integrate error handling for adding external drive operation [#94](https://github.com/QuantStack/jupyter-drives/pull/94) ([@DenisaCG](https://github.com/DenisaCG))
+- Add support for cross-account drives [#93](https://github.com/QuantStack/jupyter-drives/pull/93) ([@DenisaCG](https://github.com/DenisaCG))
+- Update backend configuration for including and excluding buckets [#90](https://github.com/QuantStack/jupyter-drives/pull/90) ([@DenisaCG](https://github.com/DenisaCG))
+- Add support for including and excluding drives from listing [#89](https://github.com/QuantStack/jupyter-drives/pull/89) ([@DenisaCG](https://github.com/DenisaCG))
+- Add support for public buckets [#88](https://github.com/QuantStack/jupyter-drives/pull/88) ([@DenisaCG](https://github.com/DenisaCG))
+- Update `Copy Path` functionality [#87](https://github.com/QuantStack/jupyter-drives/pull/87) ([@DenisaCG](https://github.com/DenisaCG))
+- Update drive browser commands visibility [#85](https://github.com/QuantStack/jupyter-drives/pull/85) ([@DenisaCG](https://github.com/DenisaCG))
+
+### Bugs fixed
+
+- Fix upload functionality [#104](https://github.com/QuantStack/jupyter-drives/pull/104) ([@DenisaCG](https://github.com/DenisaCG))
+- Add session context patch to include drive name in path [#97](https://github.com/QuantStack/jupyter-drives/pull/97) ([@gjmooney](https://github.com/gjmooney))
+- Update mount function to allow optional location parameter [#95](https://github.com/QuantStack/jupyter-drives/pull/95) ([@DenisaCG](https://github.com/DenisaCG))
+- Create new bucket in different region [#91](https://github.com/QuantStack/jupyter-drives/pull/91) ([@gjmooney](https://github.com/gjmooney))
+- Disable `rename` functionality for drives [#86](https://github.com/QuantStack/jupyter-drives/pull/86) ([@DenisaCG](https://github.com/DenisaCG))
+- Create new drive command visibility [#84](https://github.com/QuantStack/jupyter-drives/pull/84) ([@DenisaCG](https://github.com/DenisaCG))
+- Fix toggle file filter button for drive browser [#83](https://github.com/QuantStack/jupyter-drives/pull/83) ([@DenisaCG](https://github.com/DenisaCG))
+
+### Maintenance and upkeep improvements
+
+- Clean up [#98](https://github.com/QuantStack/jupyter-drives/pull/98) ([@DenisaCG](https://github.com/DenisaCG))
+- Refactor requests [#92](https://github.com/QuantStack/jupyter-drives/pull/92) ([@DenisaCG](https://github.com/DenisaCG))
+
+### Documentation improvements
+
+- Mention `jupyter_server_config.py` in the README [#82](https://github.com/QuantStack/jupyter-drives/pull/82) ([@jtpio](https://github.com/jtpio))
+- Update README.md to mention restart [#79](https://github.com/QuantStack/jupyter-drives/pull/79) ([@gogakoreli](https://github.com/gogakoreli))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2025-02-26&to=2025-09-15&type=c))
+
+[@DenisaCG](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3ADenisaCG+updated%3A2025-02-26..2025-09-15&type=Issues) | [@github-actions](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agithub-actions+updated%3A2025-02-26..2025-09-15&type=Issues) | [@gjmooney](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agjmooney+updated%3A2025-02-26..2025-09-15&type=Issues) | [@gogakoreli](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agogakoreli+updated%3A2025-02-26..2025-09-15&type=Issues) | [@jtpio](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Ajtpio+updated%3A2025-02-26..2025-09-15&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.4
 
 ([Full Changelog](https://github.com/QuantStack/jupyter-drives/compare/v0.1.3...ad898413e4d4c9db68c6dc466cbdd7eff6a6dc96))
@@ -15,8 +63,6 @@
 ([GitHub contributors page for this release](https://github.com/QuantStack/jupyter-drives/graphs/contributors?from=2025-01-14&to=2025-02-26&type=c))
 
 [@gogakoreli](https://github.com/search?q=repo%3AQuantStack%2Fjupyter-drives+involves%3Agogakoreli+updated%3A2025-01-14..2025-02-26&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.3
 
