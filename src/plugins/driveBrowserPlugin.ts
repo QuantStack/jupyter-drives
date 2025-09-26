@@ -196,6 +196,43 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       restorer.add(driveBrowser, 'drive-file-browser');
     }
 
+    const updateRootIcons = () => {
+      const listing = driveBrowser.model;
+
+      if (listing.items) {
+        // Get all items at root level
+        const rootItems = Array.from(listing.items()).filter(item => {
+          return driveBrowser.model.path === 's3:';
+        });
+
+        rootItems.forEach(item => {
+          // Find the DOM element for this item
+          const itemElements = driveBrowser.node.querySelectorAll('li.jp-DirListing-item');
+          itemElements.forEach(element => {
+            const itemName = element.querySelector('.jp-DirListing-itemText')?.textContent;
+            if (itemName === item.name) {
+              // Replace the icon
+              const iconElement = element.querySelector('.jp-DirListing-itemIcon');
+              if (iconElement) {
+                iconElement.innerHTML = driveBrowserIcon.svgstr;
+                iconElement.classList.add('jp-icon', 'jp-icon-3', 'icon-selectable');
+              }
+            }
+          });
+        });
+      }
+    };
+
+    driveBrowser.model.pathChanged.connect(() => {
+      setTimeout(updateRootIcons, 50);
+    });
+    driveBrowser.model.refreshed.connect(() => {
+      setTimeout(updateRootIcons, 50);
+    });
+
+    // Initial update
+    setTimeout(updateRootIcons, 50);
+
     // Register status bar widget
     if (statusBar) {
       const driveStatusWidget = new DriveStatusWidget();
