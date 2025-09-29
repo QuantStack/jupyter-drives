@@ -302,7 +302,7 @@ export class Drive implements Contents.IDrive {
             mimetype: '',
             size: undefined,
             writable: true,
-            type: 'directory'
+            type: 'drive'
           });
         }
       } catch (err) {

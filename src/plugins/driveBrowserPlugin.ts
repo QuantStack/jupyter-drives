@@ -162,7 +162,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     console.log(
       'JupyterLab extension jupyter-drives:drives-file-browser is activated!'
     );
-    const { commands } = app;
+    const { commands, docRegistry } = app;
 
     // create drive for drive file browser
     const drive = new Drive({
@@ -196,42 +196,17 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
       restorer.add(driveBrowser, 'drive-file-browser');
     }
 
-    const updateRootIcons = () => {
-      const listing = driveBrowser.model;
-
-      if (listing.items) {
-        // Get all items at root level
-        const rootItems = Array.from(listing.items()).filter(item => {
-          return driveBrowser.model.path === 's3:';
-        });
-
-        rootItems.forEach(item => {
-          // Find the DOM element for this item
-          const itemElements = driveBrowser.node.querySelectorAll('li.jp-DirListing-item');
-          itemElements.forEach(element => {
-            const itemName = element.querySelector('.jp-DirListing-itemText')?.textContent;
-            if (itemName === item.name) {
-              // Replace the icon
-              const iconElement = element.querySelector('.jp-DirListing-itemIcon');
-              if (iconElement) {
-                iconElement.innerHTML = driveBrowserIcon.svgstr;
-                iconElement.classList.add('jp-icon', 'jp-icon-3', 'icon-selectable');
-              }
-            }
-          });
-        });
-      }
-    };
-
-    driveBrowser.model.pathChanged.connect(() => {
-      setTimeout(updateRootIcons, 50);
+    // Registering the custom directory file type
+    docRegistry.addFileType({
+      name: 'drive',
+      displayName: 'Drive',
+      contentType: 'directory',
+      fileFormat: 'json',
+      mimeTypes: ['text/directory'],
+      extensions: [],
+      icon: driveBrowserIcon,
+      pattern: '^'
     });
-    driveBrowser.model.refreshed.connect(() => {
-      setTimeout(updateRootIcons, 50);
-    });
-
-    // Initial update
-    setTimeout(updateRootIcons, 50);
 
     // Register status bar widget
     if (statusBar) {
