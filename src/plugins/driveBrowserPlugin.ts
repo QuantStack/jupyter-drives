@@ -162,7 +162,7 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     console.log(
       'JupyterLab extension jupyter-drives:drives-file-browser is activated!'
     );
-    const { commands } = app;
+    const { commands, docRegistry } = app;
 
     // create drive for drive file browser
     const drive = new Drive({
@@ -195,6 +195,18 @@ export const driveFileBrowser: JupyterFrontEndPlugin<void> = {
     if (restorer) {
       restorer.add(driveBrowser, 'drive-file-browser');
     }
+
+    // Registering the custom directory file type
+    docRegistry.addFileType({
+      name: 'drive',
+      displayName: 'Drive',
+      contentType: 'directory',
+      fileFormat: 'json',
+      mimeTypes: ['text/directory'],
+      extensions: [],
+      icon: driveBrowserIcon,
+      pattern: '^'
+    });
 
     // Register status bar widget
     if (statusBar) {
